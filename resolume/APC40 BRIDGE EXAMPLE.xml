@@ -1,0 +1,1602 @@
+<?xml version="1.0" encoding="utf-8"?>
+<MidiShortcutPreset name="APC40 BRIDGE EXAMPLE" presetId="-947334531">
+	<versionInfo name="Resolume Arena" majorVersion="7" minorVersion="25" microVersion="4" revision="3572"/>
+	<ShortcutManager name="MIDIShortcutManagerShortcuts">
+		<Shortcut name="Shortcut" uniqueId="1793100000001" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/1/clips/1/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/1/clips/1/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/1/clips/1/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/1/clips/1/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037928080" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.84251968503937002541"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="1"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.50393700787401574104"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000002" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/1/clips/2/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/1/clips/2/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/1/clips/2/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/1/clips/2/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037930128" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.84251968503937002541"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="1"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.50393700787401574104"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000003" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/1/clips/3/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/1/clips/3/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/1/clips/3/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/1/clips/3/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037932176" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.84251968503937002541"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="1"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.5"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000004" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/1/clips/4/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/1/clips/4/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/1/clips/4/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/1/clips/4/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037934224" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.84251968503937002541"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="1"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.5"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000005" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/2/clips/1/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/2/clips/1/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/2/clips/1/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/2/clips/1/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037928336" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.086614173228346455491"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.99212598425196851792"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.50393700787401574104"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000006" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/2/clips/2/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/2/clips/2/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/2/clips/2/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/2/clips/2/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037930384" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.086614173228346455491"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.99212598425196851792"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.5"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000007" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/2/clips/3/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/2/clips/3/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/2/clips/3/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/2/clips/3/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037932432" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.086614173228346455491"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.99212598425196851792"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.5"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000008" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/2/clips/4/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/2/clips/4/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/2/clips/4/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/2/clips/4/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037934480" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.086614173228346455491"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.99212598425196851792"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.5"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000009" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/4/clips/1/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/4/clips/1/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/4/clips/1/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/4/clips/1/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037928592" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.14173228346456692717"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.96850393700787396067"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.149606299212598437"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000010" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/4/clips/2/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/4/clips/2/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/4/clips/2/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/4/clips/2/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037930640" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.14173228346456692717"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.96850393700787396067"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.50393700787401574104"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000011" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/4/clips/3/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/4/clips/3/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/4/clips/3/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/4/clips/3/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037932688" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.14173228346456692717"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.96850393700787396067"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.5"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000012" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/4/clips/4/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/4/clips/4/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/4/clips/4/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/4/clips/4/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037934736" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.14173228346456692717"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.96850393700787396067"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.5"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000013" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/5/clips/1/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/5/clips/1/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/5/clips/1/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/5/clips/1/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037928848" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.12598425196850393526"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.9606299212598424786"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.50393700787401574104"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000014" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/5/clips/2/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/5/clips/2/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/5/clips/2/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/5/clips/2/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037930896" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.12598425196850393526"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.9606299212598424786"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.50393700787401574104"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000015" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/5/clips/3/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/5/clips/3/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/5/clips/3/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/5/clips/3/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037932944" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.12598425196850393526"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.9606299212598424786"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.5"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000016" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/5/clips/4/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/5/clips/4/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/5/clips/4/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/5/clips/4/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037934992" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.12598425196850393526"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.9606299212598424786"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.50393700787401574104"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000017" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/7/clips/1/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/7/clips/1/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/7/clips/1/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/7/clips/1/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037929104" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.29133858267716533641"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.33070866141732285781"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.28346456692913385433"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000018" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/7/clips/2/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/7/clips/2/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/7/clips/2/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/7/clips/2/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037931152" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.29133858267716533641"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.33070866141732285781"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.5"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000019" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/7/clips/3/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/7/clips/3/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/7/clips/3/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/7/clips/3/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037933200" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.29133858267716533641"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.33070866141732285781"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.5"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000020" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/7/clips/4/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/7/clips/4/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/7/clips/4/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/7/clips/4/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037935248" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.29133858267716533641"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.33070866141732285781"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.50393700787401574104"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000021" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/8/clips/1/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/8/clips/1/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/8/clips/1/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/8/clips/1/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037929360" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.299212598425196874"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.32283464566929132022"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.50393700787401574104"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000022" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/8/clips/2/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/8/clips/2/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/8/clips/2/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/8/clips/2/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037931408" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.299212598425196874"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.32283464566929132022"/>
+				<Value first="Empty" second="0.700787401574803126"/>
+				<Value first="Previewing" second="0.50393700787401574104"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000023" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/8/clips/3/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/8/clips/3/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/8/clips/3/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/8/clips/3/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037933456" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.299212598425196874"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.32283464566929132022"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.50393700787401574104"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000024" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/8/clips/4/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/8/clips/4/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/8/clips/4/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/8/clips/4/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037935504" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.299212598425196874"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.32283464566929132022"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.50393700787401574104"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000025" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/10/clips/1/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/10/clips/1/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/10/clips/1/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/10/clips/1/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037929616" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.094488188976377951445"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.11023622047244094335"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.16535433070866142891"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000026" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/10/clips/2/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/10/clips/2/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/10/clips/2/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/10/clips/2/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037931664" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.094488188976377951445"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.11023622047244094335"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.16535433070866142891"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000027" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/10/clips/3/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/10/clips/3/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/10/clips/3/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/10/clips/3/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037933712" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.094488188976377951445"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.11023622047244094335"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.16535433070866142891"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000028" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/10/clips/4/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/10/clips/4/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/10/clips/4/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/10/clips/4/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037935760" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.094488188976377951445"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.11023622047244094335"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.16535433070866142891"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000029" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/11/clips/1/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/11/clips/1/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/11/clips/1/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/11/clips/1/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037929872" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.78740157480314965088"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.76377952755905509363"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.41732283464566927167"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000030" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/11/clips/2/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/11/clips/2/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/11/clips/2/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/11/clips/2/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037931920" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.78740157480314965088"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.76377952755905509363"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.086614173228346455491"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000031" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/11/clips/3/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/11/clips/3/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/11/clips/3/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/11/clips/3/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037933968" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.78740157480314965088"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.76377952755905509363"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.086614173228346455491"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000032" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/11/clips/4/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/11/clips/4/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/11/clips/4/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/11/clips/4/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037936016" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="0.78740157480314965088"/>
+				<Value first="Connected &amp; previewing" second="1.0"/>
+				<Value first="Disconnected" second="0.76377952755905509363"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Previewing" second="0.086614173228346455491"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000033" paramNodeName="ParamRange" behaviour="8" >
+			<ShortcutPath name="InputPath" path="/composition/layers/1/video/opacity" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/1/video/opacity" translationType="1" allowedTranslationTypes="11"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<RawInputMessage key="144115188075857840" value="0" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000034" paramNodeName="ParamRange" behaviour="8" >
+			<ShortcutPath name="InputPath" path="/composition/layers/1/video/effects/colorize/effect/color/hue" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/1/video/effects/colorize/effect/color/hue" translationType="1" allowedTranslationTypes="11"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<ValueRange min="0" max="0.63870999999999999996"/>
+			<RawInputMessage key="144115188075868336" value="0" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000035" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/layers/1/video/effects/colorize/bypassed" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/1/video/effects/colorize/bypassed" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037936272" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0.03937007874015748"/>
+				<Value first="On" second="0.023622047244094488"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000036" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/1/clips/5/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/1/clips/5/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/1/clips/5/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/1/clips/5/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037940880" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="1"/>
+				<Value first="Connected &amp; previewing" second="1"/>
+				<Value first="Disconnected" second="0"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Off" second="0"/>
+				<Value first="Previewing" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000037" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/1/clear" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/1/clear" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037944976" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000038" paramNodeName="ParamRange" behaviour="8" >
+			<ShortcutPath name="InputPath" path="/composition/layers/2/video/opacity" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/2/video/opacity" translationType="1" allowedTranslationTypes="11"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<RawInputMessage key="144115188075857841" value="0" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000039" paramNodeName="ParamRange" behaviour="8" >
+			<ShortcutPath name="InputPath" path="/composition/layers/2/video/effects/colorize/effect/color/hue" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/2/video/effects/colorize/effect/color/hue" translationType="1" allowedTranslationTypes="11"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<ValueRange min="0" max="0.63870999999999999996"/>
+			<RawInputMessage key="144115188075868592" value="0" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000040" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/layers/2/video/effects/colorize/bypassed" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/2/video/effects/colorize/bypassed" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037936528" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0.03937007874015748"/>
+				<Value first="On" second="0.023622047244094488"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000041" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/2/clips/5/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/2/clips/5/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/2/clips/5/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/2/clips/5/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037940881" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="1"/>
+				<Value first="Connected &amp; previewing" second="1"/>
+				<Value first="Disconnected" second="0"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Off" second="0"/>
+				<Value first="Previewing" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000042" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/2/clear" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/2/clear" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037944977" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000043" paramNodeName="ParamRange" behaviour="8" >
+			<ShortcutPath name="InputPath" path="/composition/layers/4/video/opacity" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/4/video/opacity" translationType="1" allowedTranslationTypes="11"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<RawInputMessage key="144115188075857842" value="0" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000044" paramNodeName="ParamRange" behaviour="8" >
+			<ShortcutPath name="InputPath" path="/composition/layers/4/video/effects/colorize/effect/color/hue" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/4/video/effects/colorize/effect/color/hue" translationType="1" allowedTranslationTypes="11"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<ValueRange min="0" max="0.63870999999999999996"/>
+			<RawInputMessage key="144115188075868848" value="0" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000045" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/layers/4/video/effects/colorize/bypassed" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/4/video/effects/colorize/bypassed" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037936784" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0.03937007874015748"/>
+				<Value first="On" second="0.023622047244094488"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000046" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/4/clips/5/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/4/clips/5/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/4/clips/5/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/4/clips/5/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037940882" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="1"/>
+				<Value first="Connected &amp; previewing" second="1"/>
+				<Value first="Disconnected" second="0"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Off" second="0"/>
+				<Value first="Previewing" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000047" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/4/clear" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/4/clear" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037944978" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000048" paramNodeName="ParamRange" behaviour="8" >
+			<ShortcutPath name="InputPath" path="/composition/layers/5/video/opacity" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/5/video/opacity" translationType="1" allowedTranslationTypes="11"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<RawInputMessage key="144115188075857843" value="0" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000049" paramNodeName="ParamRange" behaviour="8" >
+			<ShortcutPath name="InputPath" path="/composition/layers/5/video/effects/colorize/effect/color/hue" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/5/video/effects/colorize/effect/color/hue" translationType="1" allowedTranslationTypes="11"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<ValueRange min="0" max="0.63870999999999999996"/>
+			<RawInputMessage key="144115188075869104" value="0" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000050" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/layers/5/video/effects/colorize/bypassed" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/5/video/effects/colorize/bypassed" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037937040" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0.03937007874015748"/>
+				<Value first="On" second="0.023622047244094488"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000051" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/5/clips/5/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/5/clips/5/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/5/clips/5/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/5/clips/5/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037940883" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="1"/>
+				<Value first="Connected &amp; previewing" second="1"/>
+				<Value first="Disconnected" second="0"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Off" second="0"/>
+				<Value first="Previewing" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000052" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/5/clear" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/5/clear" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037944979" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000053" paramNodeName="ParamRange" behaviour="8" >
+			<ShortcutPath name="InputPath" path="/composition/layers/7/video/opacity" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/7/video/opacity" translationType="1" allowedTranslationTypes="11"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<RawInputMessage key="144115188075857844" value="0" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000054" paramNodeName="ParamRange" behaviour="8" >
+			<ShortcutPath name="InputPath" path="/composition/layers/7/video/effects/colorize/effect/color/hue" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/7/video/effects/colorize/effect/color/hue" translationType="1" allowedTranslationTypes="11"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<ValueRange min="0" max="0.63870999999999999996"/>
+			<RawInputMessage key="144115188075869360" value="0" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000055" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/layers/7/video/effects/colorize/bypassed" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/7/video/effects/colorize/bypassed" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037937296" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0.03937007874015748"/>
+				<Value first="On" second="0.023622047244094488"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000056" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/7/clips/5/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/7/clips/5/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/7/clips/5/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/7/clips/5/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037940884" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="1"/>
+				<Value first="Connected &amp; previewing" second="1"/>
+				<Value first="Disconnected" second="0"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Off" second="0"/>
+				<Value first="Previewing" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000057" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/7/clear" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/7/clear" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037944980" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000058" paramNodeName="ParamRange" behaviour="8" >
+			<ShortcutPath name="InputPath" path="/composition/layers/8/video/opacity" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/8/video/opacity" translationType="1" allowedTranslationTypes="11"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<RawInputMessage key="144115188075857845" value="0" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000059" paramNodeName="ParamRange" behaviour="8" >
+			<ShortcutPath name="InputPath" path="/composition/layers/8/video/effects/colorize/effect/color/hue" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/8/video/effects/colorize/effect/color/hue" translationType="1" allowedTranslationTypes="11"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<ValueRange min="0" max="0.63870999999999999996"/>
+			<RawInputMessage key="144115188075869616" value="0" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000060" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/layers/8/video/effects/colorize/bypassed" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/8/video/effects/colorize/bypassed" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037937552" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0.03937007874015748"/>
+				<Value first="On" second="0.023622047244094488"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000061" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/8/clips/5/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/8/clips/5/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/8/clips/5/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/8/clips/5/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037940885" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="1"/>
+				<Value first="Connected &amp; previewing" second="1"/>
+				<Value first="Disconnected" second="0"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Off" second="0"/>
+				<Value first="Previewing" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000062" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/8/clear" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/8/clear" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037944981" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000063" paramNodeName="ParamRange" behaviour="8" >
+			<ShortcutPath name="InputPath" path="/composition/layers/10/video/opacity" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/10/video/opacity" translationType="1" allowedTranslationTypes="11"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<RawInputMessage key="144115188075857846" value="0" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000064" paramNodeName="ParamRange" behaviour="8" >
+			<ShortcutPath name="InputPath" path="/composition/layers/10/video/effects/colorize/effect/color/hue" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/10/video/effects/colorize/effect/color/hue" translationType="1" allowedTranslationTypes="11"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<ValueRange min="0" max="0.63870999999999999996"/>
+			<RawInputMessage key="144115188075869872" value="0" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000065" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/layers/10/video/effects/colorize/bypassed" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/10/video/effects/colorize/bypassed" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037937808" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0.03937007874015748"/>
+				<Value first="On" second="0.023622047244094488"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000066" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/10/clips/5/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/10/clips/5/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/10/clips/5/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/10/clips/5/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037940886" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="1"/>
+				<Value first="Connected &amp; previewing" second="1"/>
+				<Value first="Disconnected" second="0"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Off" second="0"/>
+				<Value first="Previewing" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000067" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/10/clear" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/10/clear" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037944982" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000068" paramNodeName="ParamRange" behaviour="8" >
+			<ShortcutPath name="InputPath" path="/composition/layers/11/video/opacity" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/11/video/opacity" translationType="1" allowedTranslationTypes="11"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<RawInputMessage key="144115188075857847" value="0" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000069" paramNodeName="ParamRange" behaviour="8" >
+			<ShortcutPath name="InputPath" path="/composition/layers/11/video/effects/colorize/effect/color/hue" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/11/video/effects/colorize/effect/color/hue" translationType="1" allowedTranslationTypes="11"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<ValueRange min="0" max="0.63870999999999999996"/>
+			<RawInputMessage key="144115188075870128" value="0" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000070" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/layers/11/video/effects/colorize/bypassed" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/11/video/effects/colorize/bypassed" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037938064" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0.03937007874015748"/>
+				<Value first="On" second="0.023622047244094488"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000071" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/11/clips/5/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/11/clips/5/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/11/clips/5/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/11/clips/5/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037940887" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="1"/>
+				<Value first="Connected &amp; previewing" second="1"/>
+				<Value first="Disconnected" second="0"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Off" second="0"/>
+				<Value first="Previewing" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000072" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/11/clear" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/11/clear" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037944983" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000073" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/3/clips/1/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/3/clips/1/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/3/clips/1/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/3/clips/1/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037941392" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="1"/>
+				<Value first="Connected &amp; previewing" second="1"/>
+				<Value first="Disconnected" second="0"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Off" second="0"/>
+				<Value first="Previewing" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000074" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/3/clips/2/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/3/clips/2/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/3/clips/2/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/3/clips/2/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037941393" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="1"/>
+				<Value first="Connected &amp; previewing" second="1"/>
+				<Value first="Disconnected" second="0"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Off" second="0"/>
+				<Value first="Previewing" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000075" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/3/clips/3/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/3/clips/3/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/3/clips/3/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/3/clips/3/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037941136" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="1"/>
+				<Value first="Connected &amp; previewing" second="1"/>
+				<Value first="Disconnected" second="0"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Off" second="0"/>
+				<Value first="Previewing" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000076" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/groups/1/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/1/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037941137" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="1"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000077" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/groups/1/video/effects/strobe/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/1/video/effects/strobe/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037940624" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="1"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000078" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/groups/1/video/effects/trails/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/1/video/effects/trails/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037940368" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="1"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000079" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/groups/1/video/effects/mirror/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/1/video/effects/mirror/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037940625" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="1"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000080" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/groups/1/video/effects/invertrgb/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/1/video/effects/invertrgb/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037940369" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="1"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000081" paramNodeName="ParamRange" behaviour="8" >
+			<ShortcutPath name="InputPath" path="/composition/layers/3/video/effects/colorize/effect/color/hue" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/3/video/effects/colorize/effect/color/hue" translationType="1" allowedTranslationTypes="11"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<ValueRange min="0" max="0.63870999999999999996"/>
+			<RawInputMessage key="144115188075860144" value="0" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000082" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/layers/3/video/effects/colorize/bypassed" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/3/video/effects/colorize/bypassed" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037942928" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="1"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000083" paramNodeName="ParamRange" behaviour="8" >
+			<ShortcutPath name="InputPath" path="/composition/groups/1/speed" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/1/speed" translationType="1" allowedTranslationTypes="1"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<ValueRange min="0.25019939772161353675" max="1"/>
+			<RawInputMessage key="144115188075861168" value="0.25" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000084" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/1/clear" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/1/clear" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037943952" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000085" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/2/clear" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/2/clear" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037943952" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000086" paramNodeName="ParamRange" behaviour="16392" >
+			<ShortcutPath name="InputPath" path="/composition/groups/1/video/effects/strobe/effect/frequency" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/1/video/effects/strobe/effect/frequency" translationType="1" allowedTranslationTypes="1"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<RawInputMessage key="144115188075868080" value="-0.015625" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000087" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/6/clips/1/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/6/clips/1/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/6/clips/1/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/6/clips/1/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037941394" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="1"/>
+				<Value first="Connected &amp; previewing" second="1"/>
+				<Value first="Disconnected" second="0"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Off" second="0"/>
+				<Value first="Previewing" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000088" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/6/clips/2/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/6/clips/2/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/6/clips/2/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/6/clips/2/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037941395" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="1"/>
+				<Value first="Connected &amp; previewing" second="1"/>
+				<Value first="Disconnected" second="0"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Off" second="0"/>
+				<Value first="Previewing" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000089" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/6/clips/3/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/6/clips/3/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/6/clips/3/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/6/clips/3/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037941138" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="1"/>
+				<Value first="Connected &amp; previewing" second="1"/>
+				<Value first="Disconnected" second="0"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Off" second="0"/>
+				<Value first="Previewing" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000090" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/groups/2/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/2/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037941139" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="1"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000091" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/groups/2/video/effects/strobe/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/2/video/effects/strobe/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037940626" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="1"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000092" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/groups/2/video/effects/trails/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/2/video/effects/trails/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037940370" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="1"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000093" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/groups/2/video/effects/mirror/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/2/video/effects/mirror/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037940627" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="1"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000094" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/groups/2/video/effects/invertrgb/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/2/video/effects/invertrgb/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037940371" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="1"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000095" paramNodeName="ParamRange" behaviour="8" >
+			<ShortcutPath name="InputPath" path="/composition/layers/6/video/effects/colorize/effect/color/hue" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/6/video/effects/colorize/effect/color/hue" translationType="1" allowedTranslationTypes="11"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<ValueRange min="0" max="0.63870999999999999996"/>
+			<RawInputMessage key="144115188075860400" value="0" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000096" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/layers/6/video/effects/colorize/bypassed" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/6/video/effects/colorize/bypassed" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037943184" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="1"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000097" paramNodeName="ParamRange" behaviour="8" >
+			<ShortcutPath name="InputPath" path="/composition/groups/2/speed" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/2/speed" translationType="1" allowedTranslationTypes="1"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<ValueRange min="0.25019939772161353675" max="1"/>
+			<RawInputMessage key="144115188075861424" value="0.25" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000098" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/4/clear" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/4/clear" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037944208" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000099" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/5/clear" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/5/clear" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037944208" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000100" paramNodeName="ParamRange" behaviour="16392" >
+			<ShortcutPath name="InputPath" path="/composition/groups/2/video/effects/strobe/effect/frequency" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/2/video/effects/strobe/effect/frequency" translationType="1" allowedTranslationTypes="1"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<RawInputMessage key="144115188075868080" value="-0.015625" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000101" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/9/clips/1/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/9/clips/1/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/9/clips/1/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/9/clips/1/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037941396" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="1"/>
+				<Value first="Connected &amp; previewing" second="1"/>
+				<Value first="Disconnected" second="0"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Off" second="0"/>
+				<Value first="Previewing" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000102" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/9/clips/2/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/9/clips/2/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/9/clips/2/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/9/clips/2/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037941397" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="1"/>
+				<Value first="Connected &amp; previewing" second="1"/>
+				<Value first="Disconnected" second="0"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Off" second="0"/>
+				<Value first="Previewing" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000103" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/9/clips/3/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/9/clips/3/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/9/clips/3/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/9/clips/3/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037941140" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="1"/>
+				<Value first="Connected &amp; previewing" second="1"/>
+				<Value first="Disconnected" second="0"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Off" second="0"/>
+				<Value first="Previewing" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000104" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/groups/3/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/3/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037941141" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="1"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000105" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/groups/3/video/effects/strobe/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/3/video/effects/strobe/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037940628" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="1"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000106" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/groups/3/video/effects/trails/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/3/video/effects/trails/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037940372" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="1"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000107" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/groups/3/video/effects/mirror/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/3/video/effects/mirror/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037940629" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="1"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000108" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/groups/3/video/effects/invertrgb/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/3/video/effects/invertrgb/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037940373" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="1"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000109" paramNodeName="ParamRange" behaviour="8" >
+			<ShortcutPath name="InputPath" path="/composition/layers/9/video/effects/colorize/effect/color/hue" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/9/video/effects/colorize/effect/color/hue" translationType="1" allowedTranslationTypes="11"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<ValueRange min="0" max="0.63870999999999999996"/>
+			<RawInputMessage key="144115188075860656" value="0" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000110" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/layers/9/video/effects/colorize/bypassed" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/9/video/effects/colorize/bypassed" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037943440" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="1"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000111" paramNodeName="ParamRange" behaviour="8" >
+			<ShortcutPath name="InputPath" path="/composition/groups/3/speed" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/3/speed" translationType="1" allowedTranslationTypes="1"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<ValueRange min="0.25019939772161353675" max="1"/>
+			<RawInputMessage key="144115188075861680" value="0.25" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000112" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/7/clear" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/7/clear" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037944464" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000113" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/8/clear" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/8/clear" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037944464" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000114" paramNodeName="ParamRange" behaviour="16392" >
+			<ShortcutPath name="InputPath" path="/composition/groups/3/video/effects/strobe/effect/frequency" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/3/video/effects/strobe/effect/frequency" translationType="1" allowedTranslationTypes="1"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<RawInputMessage key="144115188075868080" value="-0.015625" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000115" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/12/clips/1/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/12/clips/1/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/12/clips/1/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/12/clips/1/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037941398" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="1"/>
+				<Value first="Connected &amp; previewing" second="1"/>
+				<Value first="Disconnected" second="0"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Off" second="0"/>
+				<Value first="Previewing" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000116" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/12/clips/2/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/12/clips/2/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/12/clips/2/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/12/clips/2/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037941399" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="1"/>
+				<Value first="Connected &amp; previewing" second="1"/>
+				<Value first="Disconnected" second="0"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Off" second="0"/>
+				<Value first="Previewing" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000117" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/12/clips/3/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/12/clips/3/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/12/clips/3/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/12/clips/3/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037941142" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="1"/>
+				<Value first="Connected &amp; previewing" second="1"/>
+				<Value first="Disconnected" second="0"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Off" second="0"/>
+				<Value first="Previewing" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000118" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/groups/4/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/4/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037941143" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="1"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000119" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/groups/4/video/effects/strobe/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/4/video/effects/strobe/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037940630" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="1"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000120" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/groups/4/video/effects/trails/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/4/video/effects/trails/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037940374" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="1"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000121" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/groups/4/video/effects/mirror/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/4/video/effects/mirror/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037940631" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="1"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000122" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/groups/4/video/effects/invertrgb/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/4/video/effects/invertrgb/bypassed" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037940375" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="1"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000123" paramNodeName="ParamRange" behaviour="8" >
+			<ShortcutPath name="InputPath" path="/composition/layers/12/video/effects/colorize/effect/color/hue" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/12/video/effects/colorize/effect/color/hue" translationType="1" allowedTranslationTypes="11"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<ValueRange min="0" max="0.63870999999999999996"/>
+			<RawInputMessage key="144115188075860912" value="0" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000124" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/layers/12/video/effects/colorize/bypassed" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/12/video/effects/colorize/bypassed" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037943696" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="1"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000125" paramNodeName="ParamRange" behaviour="8" >
+			<ShortcutPath name="InputPath" path="/composition/groups/4/speed" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/4/speed" translationType="1" allowedTranslationTypes="1"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<ValueRange min="0.25019939772161353675" max="1"/>
+			<RawInputMessage key="144115188075861936" value="0.25" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000126" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/10/clear" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/10/clear" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037944720" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000127" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/11/clear" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/11/clear" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037944720" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000128" paramNodeName="ParamRange" behaviour="16392" >
+			<ShortcutPath name="InputPath" path="/composition/groups/4/video/effects/strobe/effect/frequency" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/groups/4/video/effects/strobe/effect/frequency" translationType="1" allowedTranslationTypes="1"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<RawInputMessage key="144115188075868080" value="-0.015625" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000129" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/14/clips/1/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/14/clips/1/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/14/clips/1/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/14/clips/1/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037949072" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="1"/>
+				<Value first="Connected &amp; previewing" second="1"/>
+				<Value first="Disconnected" second="0"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Off" second="0"/>
+				<Value first="Previewing" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000130" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/14/clips/2/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/14/clips/2/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/14/clips/2/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/14/clips/2/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037949328" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="1"/>
+				<Value first="Connected &amp; previewing" second="1"/>
+				<Value first="Disconnected" second="0"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Off" second="0"/>
+				<Value first="Previewing" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000131" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/14/clips/3/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/14/clips/3/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/14/clips/3/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/14/clips/3/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037949584" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="1"/>
+				<Value first="Connected &amp; previewing" second="1"/>
+				<Value first="Disconnected" second="0"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Off" second="0"/>
+				<Value first="Previewing" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000132" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/14/clips/4/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/14/clips/4/connect" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="InputSiblingPath" path="/composition/layers/14/clips/4/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<ShortcutPath name="OutputSiblingPath" path="/composition/layers/14/clips/4/connected" translationType="1" allowedTranslationTypes="-1"/>
+			<RawInputMessage key="72057594037949840" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Connected" second="1"/>
+				<Value first="Connected &amp; previewing" second="1"/>
+				<Value first="Disconnected" second="0"/>
+				<Value first="Empty" second="0"/>
+				<Value first="Off" second="0"/>
+				<Value first="Previewing" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000133" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/tempocontroller/tempotap" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/tempocontroller/tempotap" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037950096" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="1"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000134" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/tempocontroller/resync" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/tempocontroller/resync" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037948816" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="1"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000135" paramNodeName="ParamRange" behaviour="8" >
+			<ShortcutPath name="InputPath" path="/composition/master" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/master" translationType="1" allowedTranslationTypes="1"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<RawInputMessage key="144115188075859632" value="1" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000136" paramNodeName="ParamRange" behaviour="8" >
+			<ShortcutPath name="InputPath" path="/composition/layers/13/video/opacity" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/13/video/opacity" translationType="1" allowedTranslationTypes="11"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<RawInputMessage key="144115188075859888" value="1" numSteps="128"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000137" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/layers/13/bypassed" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/13/bypassed" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037948560" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="1"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000138" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/13/connectprevclip" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/13/connectprevclip" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037953680" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="1"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000139" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/13/connectnextclip" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/13/connectnextclip" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037953936" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="1"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000140" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/layers/13/clear" translationType="1" allowedTranslationTypes="11"/>
+			<ShortcutPath name="OutputPath" path="/composition/layers/13/clear" translationType="1" allowedTranslationTypes="11"/>
+			<RawInputMessage key="72057594037954192" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="0"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000141" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/disconnectall" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/disconnectall" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037951888" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="1"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000142" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/tempocontroller/tempotap" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/tempocontroller/tempotap" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037953424" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="1"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000143" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/tempocontroller/resync" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/tempocontroller/resync" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037951120" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="1"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000144" paramNodeName="ParamRange" behaviour="16392" >
+			<ShortcutPath name="InputPath" path="/composition/tempocontroller/tempo" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/tempocontroller/tempo" translationType="1" allowedTranslationTypes="1"/>
+			<Subtarget type="5" optionIndex="-1"/>
+			<ValueRange min="0" max="0.35833333333333333703"/>
+			<RawInputMessage key="144115188075859376" value="-0.0020833333333333333044" numSteps="480"/>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000145" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/decks/1/select" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/decks/1/select" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037950352" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="1"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000146" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/decks/2/select" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/decks/2/select" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037950608" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="1"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000147" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/decks/3/select" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/decks/3/select" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037950864" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="1"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000148" paramNodeName="RangedParam[bool]" behaviour="4" >
+			<ShortcutPath name="InputPath" path="/composition/decks/4/select" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/decks/4/select" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037951376" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="1"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000149" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/selectprevdeck" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/selectprevdeck" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037952144" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="1"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000150" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/selectnextdeck" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/selectnextdeck" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037952400" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="1"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000151" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/connectprevcolumn" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/connectprevcolumn" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037952912" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="1"/>
+			</NamedValues>
+		</Shortcut>
+		<Shortcut name="Shortcut" uniqueId="1793100000152" paramNodeName="ParamEvent" behaviour="1028" >
+			<ShortcutPath name="InputPath" path="/composition/connectnextcolumn" translationType="1" allowedTranslationTypes="1"/>
+			<ShortcutPath name="OutputPath" path="/composition/connectnextcolumn" translationType="1" allowedTranslationTypes="1"/>
+			<RawInputMessage key="72057594037952656" value="0" numSteps="128"/>
+			<NamedValues>
+				<Value first="Off" second="0"/>
+				<Value first="On" second="1"/>
+			</NamedValues>
+		</Shortcut>
+	</ShortcutManager>
+</MidiShortcutPreset>
