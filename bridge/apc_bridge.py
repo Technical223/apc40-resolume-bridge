@@ -37,12 +37,13 @@ DEFAULT_CFG = {
     "from_resolume_port": "APC VIRT B",
     "arena_process": "Arena.exe",
     "apc_mode": 66,                      # 0x42 Alternate Ableton Live mode (host owns all LEDs)
-    "hue_max": 0.6387,                   # same range as the hue knobs in Resolume
+    "hue_max": 0.63871,                  # = Max of the hue knob range in Resolume (1.0 = full hue circle)
     "knob_ccs": [48, 49, 50, 51, 52, 53, 54, 55],
     "color_notes": [32, 33, 34, 35, 36, 37, 38, 39],
     "white_velocity": 3,
     "palette": [[0, 5], [20, 9], [55, 13], [90, 17], [120, 21], [145, 25],
-                [165, 29], [180, 33], [200, 37], [220, 41], [240, 45]],
+                [165, 29], [180, 33], [200, 37], [220, 41], [240, 45],
+                [260, 49], [300, 53], [335, 57]],
     "poll_seconds": 2.0,
     # single-colour buttons: lit all the time, blinking while active
     "always_lit": True,

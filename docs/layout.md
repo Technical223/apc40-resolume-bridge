@@ -17,7 +17,7 @@ Grupy mají efekty Strobe, Trails, Mirror, Invert (vypnuté). Každá grupa je p
 |---|---|
 | Grid, řady 1–4 (zdola) | klipy 1–4, sloupec = vrstva nad faderem (1, 2, 4, 5, 7, 8, 10, 11) |
 | Grid, horní řada | **BARVA**: odstín z knobu nad ní, stisk = colorize zap/vyp (bridge) |
-| Track knoby 1–8 | hue vrstvy (0–0,6387) |
+| Track knoby 1–8 | hue vrstvy (0–0,63871, viz README „Rozsah hue“) |
 | Fadery 1–8 | opacity vrstvy |
 | Activator 1–8 | klip 5 |
 | A\|B 1–8 | clear vrstvy |

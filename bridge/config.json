@@ -4,7 +4,7 @@
   "from_resolume_port": "APC VIRT B",
   "arena_process": "Arena.exe",
   "apc_mode": 66,
-  "hue_max": 0.6387,
+  "hue_max": 0.63871,
   "knob_ccs": [
     48,
     49,
@@ -70,6 +70,18 @@
     [
       240,
       45
+    ],
+    [
+      260,
+      49
+    ],
+    [
+      300,
+      53
+    ],
+    [
+      335,
+      57
     ]
   ],
   "poll_seconds": 2.0,

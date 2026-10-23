@@ -95,8 +95,30 @@ Na konci vyskočí „Hotovo. Bridge běží na pozadí…“. Bridge teď ček�
 - **Ukázkový preset `APC40 BRIDGE EXAMPLE`** instalátor nakopíruje do `Dokumenty\Resolume Arena\Shortcuts\MIDI`. Rozložení kompozice, se kterým počítá, je v [`docs/layout.md`](docs/layout.md).
 - **Vlastní mapping:** v *Shortcuts → Edit MIDI* shortcuty přeuč. Učí se z `APC VIRT A`, to je v pořádku.
 - **Horní řada gridu (noty 32–39)** má v presetu přepínač colorize vrstvy. Barvu padu kreslí bridge, Resolume do ní nemluví.
-- **Track knoby (CC 48–55)** mají v presetu hue colorize, rozsah 0–0,6387 (červená → zelená → modrá).
+- **Track knoby (CC 48–55)** mají v presetu hue colorize s rozsahem 0–0,63871 (červená → zelená → modrá), viz níže.
 - **Ulož kompozici.** Vybraný MIDI preset se pamatuje v ní.
+
+### Rozsah hue: knob a barva padu musí sedět
+
+![Rozsah hue](docs/img/hue-range.svg)
+
+Hue v Colorize jde dokola: 0 je červená a 1 je **zase červená**. Když knob mapuješ na celý rozsah, obě krajní polohy dají stejnou barvu a modrá je někde uprostřed. Proto má ukázkový preset knoby omezené na **0–0,63871** (končí na modré).
+
+Bridge Resolume nevidí, jen počítá barvu padu z polohy knobu. Proto **musí horní mez v Resolume odpovídat `hue_max` v `config.json`**, jinak pad ukazuje jinou barvu, než jakou má vrstva.
+
+**Kde se mez nastavuje v Resolume:**
+1. *Shortcuts → Edit MIDI*.
+2. Klikni na parametr **Hue** v efektu Colorize dané vrstvy (ten, na kterém je knob namapovaný).
+3. V panelu **Shortcuts** u tohoto mappingu nastav rozsah: **Min 0**, **Max 0,63871**.
+4. Totéž pro každý hue knob (všech 8), pak ulož kompozici.
+
+| Chceš | Max v Resolume | `hue_max` v `config.json` |
+|---|---|---|
+| **A (výchozí)**: červená → modrá, krajní polohy se nepletou | `0.63871` | `0.63871` |
+| **B**: celý kruh včetně fialové a růžové | `1` (nech plný rozsah) | `1.0` |
+| Vlastní mez | tvoje číslo | stejné číslo |
+
+Po změně `config.json` spusť znovu `START.bat`. Pad v režimu B ukazuje i fialovou a růžovou, v obou režimech jde o nejbližší barvu z palety APC (`palette`).
 
 ## 4. Každodenní použití
 
@@ -126,8 +148,8 @@ Na konci vyskočí „Hotovo. Bridge běží na pozadí…“. Bridge teď ček�
 | `arena_process` | `Arena.exe` | proces, který bridge hlídá |
 | `knob_ccs` | 48–55 | track knoby, ze kterých se bere odstín |
 | `color_notes` | 32–39 | pady, které odstín ukazují |
-| `hue_max` | 0.6387 | horní mez hue (stejná jako rozsah knobu v Resolume) |
-| `palette` | 11 barev | úhel odstínu → číslo barvy APC |
+| `hue_max` | 0.63871 | horní mez hue, **musí se rovnat Max knobu v Resolume**; `1.0` = celý kruh ([Rozsah hue](#rozsah-hue-knob-a-barva-padu-musí-sedět)) |
+| `palette` | 14 barev | úhel odstínu → číslo barvy APC (červená → modrá → fialová → růžová) |
 | `white_velocity` | 3 | barva padu při vypnutém colorize |
 | `always_lit` | `true` | jednobarevná tlačítka svítí trvale |
 | `lit_track_notes` / `lit_global_notes` | viz soubor | která tlačítka svítí |
@@ -148,7 +170,8 @@ Po změně `config.json` spusť znovu `START.bat`.
 | Resolume nevidí `APC VIRT A` | loopMIDI neběží | spusť loopMIDI, zapni jeho autostart |
 | Hlášení „Resolume Arena běží“ | instalátor nemůže měnit nastavení za běhu | zavři Arenu a spusť `START.bat` znovu |
 | Jiný kontroler (APC20…) spouští totéž | preset „libovolné zařízení“ slyší všechny vstupy | v *Preferences → MIDI* ten kontroler vypni |
-| Pad má jinou barvu než vrstva | pad ukazuje polohu knobu, hue jsi měnil myší | otoč knobem |
+| Pad má jinou barvu než vrstva | hue jsi měnil myší, nebo Max knobu v Resolume ≠ `hue_max` | otoč knobem; srovnej obě meze ([Rozsah hue](#rozsah-hue-knob-a-barva-padu-musí-sedět)) |
+| Knob na konci dá zase červenou | knob mapovaný na plný rozsah 0–1 | Max v Resolume na 0,63871, nebo `hue_max` 1.0 a počítej s tím |
 
 Logy: `bridge\bridge.log` (běh) a `bridge\setup.log` (instalace).
 
@@ -167,6 +190,6 @@ Logy: `bridge\bridge.log` (běh) a `bridge\setup.log` (instalace).
 ---
 
 ### English summary
-A small MIDI bridge between an Akai APC40 mkII and Resolume Arena 7 on Windows. The top grid row shows the current hue of the track knob above it (press = colorize on/off), single-colour buttons stay lit and blink while active, and the bridge starts and stops itself with Arena. `bridge\START.bat` installs everything it needs (Python, mido/python-rtmidi, loopMIDI) and switches Resolume's MIDI input/output to two loopMIDI ports (`APC VIRT A` → Resolume, `APC VIRT B` ← Resolume). Your Resolume MIDI preset must be set to *any device*. Options live in `bridge\config.json`.
+A small MIDI bridge between an Akai APC40 mkII and Resolume Arena 7 on Windows. The top grid row shows the current hue of the track knob above it (press = colorize on/off), single-colour buttons stay lit and blink while active, and the bridge starts and stops itself with Arena. `bridge\START.bat` installs everything it needs (Python, mido/python-rtmidi, loopMIDI) and switches Resolume's MIDI input/output to two loopMIDI ports (`APC VIRT A` → Resolume, `APC VIRT B` ← Resolume). Your Resolume MIDI preset must be set to *any device*. Options live in `bridge\config.json`. The hue knobs' range Max in Resolume must equal `hue_max` (default 0.63871 = red → blue without wrapping back to red; use 1.0 for the full hue circle).
 
 License: MIT
