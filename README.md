@@ -107,10 +107,16 @@ Hue v Colorize jde dokola: 0 je červená a 1 je **zase červená**. Když knob 
 Bridge Resolume nevidí, jen počítá barvu padu z polohy knobu. Proto **musí horní mez v Resolume odpovídat `hue_max` v `config.json`**, jinak pad ukazuje jinou barvu, než jakou má vrstva.
 
 **Kde se mez nastavuje v Resolume:**
+
+![Range hue knobu v Resolume](docs/img/resolume-hue-range.png)
+
 1. *Shortcuts → Edit MIDI*.
-2. Klikni na parametr **Hue** v efektu Colorize dané vrstvy (ten, na kterém je knob namapovaný).
-3. V panelu **Shortcuts** u tohoto mappingu nastav rozsah: **Min 0**, **Max 0,63871**.
-4. Totéž pro každý hue knob (všech 8), pak ulož kompozici.
+2. Klikni na parametr **Hue** v efektu Colorize dané vrstvy (ten, na kterém je knob namapovaný, ukazuje `1/CC48` apod.).
+3. V panelu **Shortcuts** se vybere řádek `… Video Effects Colorize Effect Color Hue`. Pod ním zkontroluj **Input: Any device**.
+4. Dole u **Range** táhni pravý jezdec na **0,64** (Resolume zobrazuje zaokrouhleně; v ukázkovém presetu je přesně 0,63871). Levý zůstává na 0.
+5. Totéž pro každý hue knob (všech 8), pak ulož kompozici.
+
+Rozdíl mezi 0,64 a 0,63871 je pod půl stupně odstínu, na barvě padu se neprojeví.
 
 | Chceš | Max v Resolume | `hue_max` v `config.json` |
 |---|---|---|
