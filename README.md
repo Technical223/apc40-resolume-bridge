@@ -62,11 +62,11 @@ Zavření správce **nezastaví** bridge. Běží samostatně na pozadí. Restar
 ## Bridge v akci
 
 <p align="center">
-  <a href="docs/media/controller-screen-sync.mp4"><img src="docs/media/controller-screen-sync.gif" width="1000" alt="Synchronizovaný záběr: fyzický APC40 mkII vlevo, Resolume Arena vpravo; změny Hue a přepínání Colorize"></a>
+  <a href="docs/media/controller-screen-sync.mp4"><img src="docs/media/controller-screen-sync.gif" width="1200" alt="Tři synchronizované pohledy vedle sebe: APC40 mkII, detail panelu Colorize a Composition Monitor"></a>
 </p>
-<p align="center"><sub>Stejný okamžik ze dvou pohledů · APC40 mkII + Resolume Arena · <a href="docs/media/controller-screen-sync.mp4">Přehrát 36s video v plné kvalitě (MP4)</a></sub></p>
+<p align="center"><sub>Stejný okamžik ze tří pohledů · APC40 mkII + Colorize + Composition Monitor · <a href="docs/media/controller-screen-sync.mp4">Přehrát 36s video v plné kvalitě (MP4)</a></sub></p>
 
-Záběry jsou časově srovnané podle změn Hue. Vlevo je skutečný kontroler, vpravo odpovídající záznam obrazovky. Video ukazuje změny odstínu a přepínání Colorize, bez zvuku.
+Záběry jsou časově srovnané podle změn Hue. Vlevo je skutečný kontroler, uprostřed detail panelu Colorize s hodnotou Hue a vpravo výřez Composition Monitoru. Video ukazuje změny odstínu a přepínání Colorize, bez zvuku.
 
 <details>
 <summary>Původní krátká ukázka kontroleru</summary>
