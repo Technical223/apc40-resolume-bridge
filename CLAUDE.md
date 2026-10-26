@@ -3,16 +3,26 @@
 Aktualizováno 26. 10. 2026. Repo: Technical223/apc40-resolume-bridge.
 Výchozí prověřený commit: 3855d08223d5c55350fa9edb5b9d6da87de64f6e.
 
-## Výslovné rozhodnutí uživatele
+## Aktuální rozhodnutí uživatele: jednoduchá MIDI synchronizace
 
-NESYNCHRONIZOVAT horní barevnou řadu podle stavu Resolume. Uživatel při živém testu potvrdil, že vypnutí Colorize myší nezmění barevný pad na bílý, a výslovně požaduje toto chování ponechat. Jde o známé, přijatelné omezení. Horní řada odráží místní stav knobů/padů; příchozí noty 32–39 na MIDI kanálu 0 se dál zahazují. Změny myší a přepnutí kompozice mohou indikaci rozcházet. Platí i původní hue_max = 0.63871 a vazba na stejný rozsah v presetu.
+Uživatel původně schválil ignorování zpětné vazby horní řady. Následně výslovně požádal doplnit reakci na změny Hue/Colorize myší a jinými zdroji, ale hlavně nic nekomplikovat a zachovat stabilitu. Toto novější přání nahrazuje předchozí zákaz synchronizace.
+
+Použita je pouze stávající MIDI zpětná vazba; Webserver nebyl zapnut, nejsou přidané závislosti ani REST/OSC. `sync_resolume_feedback` je v configu true, bezpečný výchozí stav bez klíče je false. Jednou volbou lze obnovit původní chování. Mapování CC 48–55 / noty 32–39, kanál 0, hue_max 0.63871 zůstává.
+
+Živým testem stávající Areny bylo ověřeno: odeslání CC54=50 přes jiný MIDI výstup vyvolá zpětnou vazbu CC54=49 (MIDI zaokrouhlení), návrat na 0 vrátí 0. Přepnutí Colorize na notě 38 vrátí velocity 3 pro bypass a 5 pro zapnutý efekt. Stejné hodnoty jsou v NamedValues aktuálního JKB APC40 PRO presetu. Nelze používat prosté velocity>0. Testovaná vrstva byla po testu vrácena na Hue 0 a aktivní Colorize.
+
+Nový handler uloží příchozí Hue a překreslí LED. Colorize feedback nastavuje stav idempotentně (nepřepíná ho znovu) a vykreslí bílou nebo aktuální odstín. CC průchod do APC zůstává, zprávy se neposílají zpět do Areny. Neznámé velocity a Note Off se ignorují. Bez feedbacku zůstává původní ovládání APC funkční.
+
+Omezení: 7bitové MIDI, rozsah a směrování shortcutu; nejde o přesné čtení plného Hue přes API, aktivní dotazování ani sledování saturace/jasu. Mimo rozsah shortcutu není věrný odstín zaručen. Automatické resynchronizování kompozice závisí na tom, zda Arena pošle stejné mapování. Změny přímo myší nebyly v závěrečném testu ověřené; ověřen byl externí MIDI zdroj a skutečná zpětná vazba Areny.
+
+Testy: `py -3 -m unittest discover -s tests -v` (19 testů; 9 původních + 10 nových). Nové testy pokrývají všech 8 knobů/padů, bypass, opětovné zapnutí se správným odstínem, vypnutí nové volby, chybné velocity/kanály a nevytváření zpětné smyčky. Integrační test s běžící Arenou potvrdil změny uloženého stavu Hue a Colorize z reálného feedbacku. Testy STOP zůstávají stejné.
 
 ## Provedené opravy
 
 1. Konstruktor Bridge eviduje každý otevřený port. Při selhání dalšího otevření nebo inicializace zavře dosud otevřené porty a znovu vyvolá původní chybu.
 2. Výjimka v on_apc, on_resolume nebo blikání nastaví threading.Event failed. alive() tak vrátí False i tehdy, když se názvy portů nezměnily. Hlavní smyčka zavře starý bridge a opakuje vytvoření.
 3. STOP.bat a setup.ps1 používají společný stop_bridge.ps1. Číslo v bridge.pid se ověřuje proti procesu Python/Pythonw, přesné absolutní cestě skriptu jako prvnímu argumentu, režimu --watch/--run a času vzniku procesu. Ukončení používá držený handle konkrétního procesu, nikoli znovu vyhledaný PID. Cizí proces zůstane běžet; neověřitelná identita zastaví restart bezpečně.
-4. README a návod výslovně uvádějí záměrné omezení Colorize i Hue.
+4. README a návod popisují novou volitelnou MIDI synchronizaci i původní režim bez ní.
 
 ## Ověření
 
@@ -31,3 +41,21 @@ Spuštění testů z kořene repa:
 Při kopírování opravy je nutné zahrnout nový stop_bridge.ps1 spolu s apc_bridge.py, setup.ps1 a STOP.bat.
 Běžící Python drží starý kód až do restartu. Restart může znovu odeslat fyzické polohy faderů/knobů do kompozice, jak již uvádí návod.
 GitHubové změny jsou předávány přes pull request; tento soubor nezaručuje jeho sloučení.
+
+Nová synchronizace navíc vyžaduje nové klíče config.json (sync_resolume_feedback a dvě velocity). Při ruční aktualizaci sluč config s vlastním nastavením; nepřepisuj uživatelské porty ani mapování.
+
+## Nativní správce Windows (nové rozhraní)
+
+Uživatel požádal nahradit nepříliš reprezentativní dávkové soubory přehlednou instalací, spouštěním a správou. Výsledkem je APC40 Bridge.exe (WinForms, .NET Framework), jeho zdroj v bridge/ui/BridgeManager.cs a ikona. Zdrojový ZIP má vstup APC40 Bridge.vbs, distribuční ZIP již obsahuje EXE. START.bat otevírá správce. Backend je manage.ps1 + runtime.ps1, popsaný v docs/windows-app.md.
+
+Běžné spuštění už neprovádí celou instalaci: idempotentně spustí existující watcher nebo ho ponechá běžet. Příprava má režim -NoPopup -PrepareOnly a samostatné chybové pokyny. Nativní nastavení zachovává ostatní klíče a atomicky ukládá zálohu. Správce ukazuje pouze přítomnost zařízení/procesů; neprohlašuje ji za test komunikace. Zavření okna watcher nezastaví.
+
+Nový autostart cílí na EXE --autostart (bez dashboardu, bez opakované instalace). Existující aktivní autostart lze při místním nasazení přesměrovat na nový vstup se zachováním původního zástupce v záloze. Desktop ikona ukazuje na stejné EXE. Config a state při aktualizaci nepřepisovat.
+
+Ověření: 27 testů, včetně 3 nových read-only status testů, 2 kontrol MIDI konfigurace bez zápisu a 3 Windows integračních testů na dočasném falešném watcheru (status bez spuštění, idempotentní start/stop, neplatný config). Původní testy bezpečného zastavení prošly. Nativní aplikace byla sestavena systémovým csc a vizuálně otevřena; ověřeny hlavní stav, nastavení a logy. Živá příprava -PrepareOnly prošla s nezměněným PID existujícího watcheru. Instalace na zcela čistém Windows nebyla ověřená. CI workflow windows.yml sestavuje distribuční ZIP; výsledek CI je nutné číst odděleně od místních testů.
+
+Připravenost v GUI zahrnuje i přítomnost virtuálních portů a read-only kontrolu skutečného midi.xml (dry=True), nikoli jen import Python knihoven. Chybějící preferences při první instalaci mají konkrétní pokyn k prvnímu spuštění a zavření Areny.
+
+## Showcase hlavní stránky
+
+README používá docs/media/app-showcase.gif (9,24 s, 1000×820, tři skutečné scény správce) a tři PNG v docs/img/app-dashboard.png, app-settings.png, app-logs.png. Snímky vznikly z aktuální aplikace bez změny její konfigurace nebo běhu MIDI watcheru; z logů je publikovaný pouze běžný MIDI provoz bez uživatelských cest. GIF je animovaná prohlídka snímků, nikoli záznam instalace. Původní hardwarová ukázka demo.gif/demo.mp4 zůstává v sekci Bridge v akci.

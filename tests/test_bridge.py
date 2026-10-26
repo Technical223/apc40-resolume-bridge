@@ -130,4 +130,30 @@ class BridgeTests(unittest.TestCase):
         first.close.assert_called_once()
         self.assertEqual(create.call_count, 2)
 
+class PortStatusTests(unittest.TestCase):
+    def test_ready_status_only_enumerates_ports(self):
+        with patch.object(b, "_names", side_effect=lambda kind: ["APC40 mkII", "APC VIRT A", "APC VIRT B"]):
+            status=b.port_status(b.DEFAULT_CFG)
+        self.assertTrue(status["apc_ready"])
+        self.assertTrue(status["virtual_ready"])
+    def test_virtual_ports_do_not_count_as_physical_apc(self):
+        with patch.object(b, "_names", return_value=["APC VIRT A", "APC VIRT B"]):
+            status=b.port_status(b.DEFAULT_CFG)
+        self.assertFalse(status["apc_ready"])
+        self.assertTrue(status["virtual_ready"])
+    def test_dependency_error_is_reported_without_raising(self):
+        with patch.object(b, "_names", side_effect=ImportError("missing mido")):
+            status=b.port_status(b.DEFAULT_CFG)
+        self.assertFalse(status["dependencies_ready"])
+        self.assertIn("missing mido",status["error"])
+
+class PreferenceStatusTests(unittest.TestCase):
+    def test_missing_preferences_need_preparation(self):
+        with patch.object(b, "resolume_pref_dirs", return_value=[]):
+            self.assertFalse(b.preference_status(b.DEFAULT_CFG)["preferences_ready"])
+    def test_check_is_always_dry(self):
+        with patch.object(b, "resolume_pref_dirs", return_value=["fixture"]), patch.object(b, "patch_midi_xml", return_value=False) as check:
+            self.assertTrue(b.preference_status(b.DEFAULT_CFG)["preferences_ready"])
+        self.assertTrue(check.call_args.kwargs["dry"])
+
 if __name__ == "__main__": unittest.main()

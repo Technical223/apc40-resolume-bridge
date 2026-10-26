@@ -4,55 +4,86 @@
 ![Resolume](https://img.shields.io/badge/Resolume%20Arena-7.x-8A2BE2)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-<a href="docs/media/demo.mp4"><img src="docs/media/demo.gif" align="right" width="270" alt="Ukázka: otáčení hue knobem mění barvu padu i výstupu v Resolume"></a>
+Barevné pady pod Hue knoby, tlačítka viditelná ve tmě a **jedno okno pro instalaci, spuštění a správu**.
 
-Barevné pady pod hue knoby a tlačítka, která svítí i ve tmě. Pro **Akai APC40 mkII** a **Resolume Arena 7**.
+- Pad ukazuje odstín knobu; stisk přepíná Colorize.
+- Volitelná MIDI zpětná vazba přijímá změny z Areny i jiných ovladačů.
+- Bridge se aktivuje s Arenou a uvolní kontroler po jejím zavření.
+- Aplikace ukazuje stav kontroleru, Areny, portů a instalace. Bez terminálového okna.
 
-- 🎨 **Pad ukazuje barvu**, kterou právě dává hue knob nad ním (stisk = colorize on/off).
-- 💡 **Tlačítka svítí pořád**, aktivní funkce bliká.
-- 🔄 **Sám se zapne s Arenou** a vypne, když ji zavřeš.
+<p align="center">
+  <a href="docs/media/app-showcase.gif"><img src="docs/media/app-showcase.gif" width="1000" alt="Animovaná prohlídka APC40 Bridge: přehled připojení, nastavení a provozní logy"></a>
+</p>
+<p align="center"><sub>Skutečné snímky Windows aplikace · přehled, nastavení a logy v jednom okně</sub></p>
 
-Otočíš knobem → změní se barva vrstvy v Resolume i padu pod knobem. Bez koukání do počítače víš, jakou barvu která vrstva má.
+## Ukázky aplikace
 
-<sub>▶ [video ve vyšší kvalitě](docs/media/demo.mp4)</sub>
+<table>
+  <tr>
+    <td width="33%" align="center"><a href="docs/img/app-dashboard.png"><img src="docs/img/app-dashboard.png" alt="Hlavní okno APC40 Bridge se stavem kontroleru, Areny, portů a instalace"></a></td>
+    <td width="33%" align="center"><a href="docs/img/app-settings.png"><img src="docs/img/app-settings.png" alt="Nastavení MIDI portů, Hue, zpětné vazby a osvětlení"></a></td>
+    <td width="33%" align="center"><a href="docs/img/app-logs.png"><img src="docs/img/app-logs.png" alt="Prohlížeč provozních logů APC40 Bridge"></a></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Přehled připojení</b></td>
+    <td align="center"><b>Nastavení</b></td>
+    <td align="center"><b>Provozní logy</b></td>
+  </tr>
+</table>
 
-<br clear="right">
+Kliknutím otevřeš snímek v plné velikosti.
 
-## Záměrné omezení LED
+## Začni tady — Windows
 
-Horní barevná řada sleduje polohy knobů a stisky padů na APC40. Změna Hue nebo zapnutí/vypnutí Colorize **myší v Resolume ani načtení jiné kompozice nemusí aktualizovat tyto LED**. Zpětná vazba Resolume pro noty 32–39 se záměrně zahazuje, aby nepřepsala vlastní barvy bridge. Bílá znamená místní stav „Colorize vypnutý“, nikoli potvrzení stavu v Resolume. Toto chování je zamýšlené a zůstává zachováno. Podrobnosti jsou v [návodu](docs/navod.md#záměrné-omezení-synchronizace-horní-řady).
+1. Rozbal balíček **APC40-Bridge-Windows.zip** do složky, kde má zůstat. Při prvním nastavení zavři Arenu.
+2. Otevři **APC40 Bridge.exe**.
+3. Klikni **Připravit a spustit**. Příprava najde nebo nainstaluje potřebné součásti.
+4. Pokud chybí virtuální porty, klikni **Otevřít loopMIDI**, vytvoř **APC VIRT A** a **APC VIRT B** a přípravu zopakuj.
+5. V Areně vyber MIDI preset na **Any device** a nastav Hue **Range Max 0,63871** (zobrazuje se zaokrouhleně 0,64).
 
-## Instalace
+Pro další použití stačí aplikace a tlačítko **Spustit bridge**. Volba **Spouštět automaticky po přihlášení do Windows** spustí bridge bez otevírání správce.
 
-![Instalace ve 3 krocích](docs/img/steps.svg)
+**Stažený zdrojový ZIP z GitHubu:** ve složce `bridge` otevři **APC40 Bridge.vbs**. Ten připraví aplikaci z přiložených zdrojů a otevře stejné okno. Není k tomu potřeba Python ani další vývojové nástroje; sestavení používá .NET Framework ve Windows.
 
-1. **Code → Download ZIP**, rozbal.
-2. Zavři Arenu a spusť **`bridge\START.bat`**. Až se otevře loopMIDI, přidej porty `APC VIRT A` a `APC VIRT B`.
-3. V Resolume dej MIDI preset na **Any device** a hue knobům **Range 0 – 0,64**.
+## Vše na jednom místě
 
-Hotovo. Pro autostart s Windows spusť `AUTOSTART_ZAPNOUT.bat`.
-
-👉 **[Podrobný návod s obrázky, nastavení a řešení problémů](docs/navod.md)**
-
-## Soubory ve složce `bridge`
-
-| Soubor | Co dělá |
+| Ovládání | Co dělá |
 |---|---|
-| `START.bat` | instalace a spuštění |
-| `STOP.bat` | zastavení |
-| `AUTOSTART_ZAPNOUT.bat` / `_VYPNOUT.bat` | spouštění s Windows |
-| `LADENI.bat` | běh s výpisem, když něco nejede |
-| `VRATIT_RESOLUME.bat` | vrátí původní MIDI nastavení Resolume |
-| `config.json` | porty, barvy, rozsah hue ([popis](docs/navod.md#5-nastavení-bridge-configjson)) |
+| Spustit bridge | Spustí hlídání Areny; při opakovaném spuštění nevytváří další proces |
+| Zastavit / Restartovat | Bezpečně uvolní kontroler nebo načte nové nastavení |
+| Instalace / oprava | Připraví závislosti a MIDI nastavení; běžící bridge zbytečně nerestartuje |
+| Nastavení | Porty, Hue, zpětná vazba a osvětlení; zachová ostatní hodnoty a uloží zálohu |
+| Zobrazit logy | Provoz, příprava i správa přímo v aplikaci |
+| Zástupce na plochu | Přidá běžnou ikonu aplikace na plochu |
+| Obnovit MIDI Areny | Při zavřené Areně vrátí zálohu MIDI nastavení, zastaví bridge a vypne autostart |
 
----
+Zavření správce **nezastaví** bridge. Běží samostatně na pozadí. Restart může do Areny znovu přenést fyzické polohy faderů/knobů.
+
+## Bridge v akci
+
+<p align="center">
+  <a href="docs/media/demo.mp4"><img src="docs/media/demo.gif" width="340" alt="Ukázka fyzického APC40: Hue knob mění barvu padu i výstupu v Resolume"></a>
+</p>
+<p align="center"><sub><a href="docs/media/demo.mp4">Přehrát původní ukázku APC40 v plné kvalitě</a></sub></p>
+
+## Zpětná vazba LED
+
+`sync_resolume_feedback: true` v `config.json` zapíná stávající MIDI zpětnou vazbu. Hue CC 48–55 aktualizují odstín, noty 32–39 stav Colorize. Arena je musí odesílat do `APC VIRT B`; pro aktuální preset platí velocity **5 = aktivní efekt, 3 = bypass**.
+
+Jde o 7bitovou MIDI hodnotu v rozsahu nastaveného presetu, nikoli plně přesné čtení přes API. Mimo rozsah `0–hue_max` není správný odstín zaručen. Režim lze vypnout v **Nastavení → Zpětná vazba**. Webserver ani další knihovna nejsou potřeba.
+
+👉 **[Podrobný návod, nastavení a řešení problémů](docs/navod.md)**
+
+Pro další vývoj: [kontext a ověření změn](CLAUDE.md), [technický popis aplikace](docs/windows-app.md).
+
+Původní dávkové soubory zůstávají pro kompatibilitu; `START.bat` nyní otevře správce.
 
 <details>
-<summary><b>English</b></summary>
+<summary>English</summary>
 
-A small MIDI bridge between an Akai APC40 mkII and Resolume Arena 7 on Windows. The top grid row shows the current hue of the track knob above it (press = colorize on/off), single-colour buttons stay lit and blink while active, and the bridge starts and stops itself with Arena.
+A Windows control panel and MIDI bridge for Akai APC40 mkII and Resolume Arena 7. Extract the Windows package and open **APC40 Bridge.exe**. Installation, start/stop, autostart, settings, logs and recovery are available in one window. A source ZIP can bootstrap the same app using **bridge/APC40 Bridge.vbs**.
 
-Run `bridge\START.bat` (installs Python, mido/python-rtmidi and loopMIDI; create ports `APC VIRT A` and `APC VIRT B`), set your Resolume MIDI preset to *Any device* and limit the hue knobs' Range Max to 0.63871 (= `hue_max` in `config.json`; use 1 / 1.0 for the full hue circle).
+Create loopMIDI ports APC VIRT A/B, set the Resolume MIDI preset to Any device, and keep the Hue range aligned with hue_max (0.63871 by default). MIDI feedback is optional and limited to the shortcut's 7-bit range. Closing the control panel leaves the background bridge running.
 </details>
 
 MIT · [Technical223](https://github.com/Technical223)

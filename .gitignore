@@ -4,3 +4,12 @@ bridge.log
 setup.log
 bridge.pid
 __pycache__/
+
+# Local runtime, application builds and backups
+runtime.json
+management.log
+bridge/*.exe
+*.before-settings-*.bak
+*.settings.tmp
+backups/
+dist/

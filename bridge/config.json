@@ -150,5 +150,8 @@
       80,
       0
     ]
-  ]
+  ],
+  "sync_resolume_feedback": true,
+  "color_on_feedback_velocity": 5,
+  "color_off_feedback_velocity": 3
 }
