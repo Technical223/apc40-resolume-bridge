@@ -55,3 +55,7 @@ Nový autostart cílí na EXE --autostart (bez dashboardu, bez opakované instal
 Ověření: 27 testů, včetně 3 nových read-only status testů, 2 kontrol MIDI konfigurace bez zápisu a 3 Windows integračních testů na dočasném falešném watcheru (status bez spuštění, idempotentní start/stop, neplatný config). Původní testy bezpečného zastavení prošly. Nativní aplikace byla sestavena systémovým csc a vizuálně otevřena; ověřeny hlavní stav, nastavení a logy. Živá příprava -PrepareOnly prošla s nezměněným PID existujícího watcheru. Instalace na zcela čistém Windows nebyla ověřená. CI workflow windows.yml sestavuje distribuční ZIP; výsledek CI je nutné číst odděleně od místních testů.
 
 Připravenost v GUI zahrnuje i přítomnost virtuálních portů a read-only kontrolu skutečného midi.xml (dry=True), nikoli jen import Python knihoven. Chybějící preferences při první instalaci mají konkrétní pokyn k prvnímu spuštění a zavření Areny.
+
+## Showcase hlavní stránky
+
+README používá docs/media/app-showcase.gif (9,24 s, 1000×820, tři skutečné scény správce) a tři PNG v docs/img/app-dashboard.png, app-settings.png, app-logs.png. Snímky vznikly z aktuální aplikace bez změny její konfigurace nebo běhu MIDI watcheru; z logů je publikovaný pouze běžný MIDI provoz bez uživatelských cest. GIF je animovaná prohlídka snímků, nikoli záznam instalace. Původní hardwarová ukázka demo.gif/demo.mp4 zůstává v sekci Bridge v akci.

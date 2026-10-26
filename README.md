@@ -4,8 +4,6 @@
 ![Resolume](https://img.shields.io/badge/Resolume%20Arena-7.x-8A2BE2)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-<a href="docs/media/demo.mp4"><img src="docs/media/demo.gif" align="right" width="270" alt="Hue knob mění barvu padu i výstupu v Resolume"></a>
-
 Barevné pady pod Hue knoby, tlačítka viditelná ve tmě a **jedno okno pro instalaci, spuštění a správu**.
 
 - Pad ukazuje odstín knobu; stisk přepíná Colorize.
@@ -13,7 +11,27 @@ Barevné pady pod Hue knoby, tlačítka viditelná ve tmě a **jedno okno pro in
 - Bridge se aktivuje s Arenou a uvolní kontroler po jejím zavření.
 - Aplikace ukazuje stav kontroleru, Areny, portů a instalace. Bez terminálového okna.
 
-<br clear="right">
+<p align="center">
+  <a href="docs/media/app-showcase.gif"><img src="docs/media/app-showcase.gif" width="1000" alt="Animovaná prohlídka APC40 Bridge: přehled připojení, nastavení a provozní logy"></a>
+</p>
+<p align="center"><sub>Skutečné snímky Windows aplikace · přehled, nastavení a logy v jednom okně</sub></p>
+
+## Ukázky aplikace
+
+<table>
+  <tr>
+    <td width="33%" align="center"><a href="docs/img/app-dashboard.png"><img src="docs/img/app-dashboard.png" alt="Hlavní okno APC40 Bridge se stavem kontroleru, Areny, portů a instalace"></a></td>
+    <td width="33%" align="center"><a href="docs/img/app-settings.png"><img src="docs/img/app-settings.png" alt="Nastavení MIDI portů, Hue, zpětné vazby a osvětlení"></a></td>
+    <td width="33%" align="center"><a href="docs/img/app-logs.png"><img src="docs/img/app-logs.png" alt="Prohlížeč provozních logů APC40 Bridge"></a></td>
+  </tr>
+  <tr>
+    <td align="center"><b>Přehled připojení</b></td>
+    <td align="center"><b>Nastavení</b></td>
+    <td align="center"><b>Provozní logy</b></td>
+  </tr>
+</table>
+
+Kliknutím otevřeš snímek v plné velikosti.
 
 ## Začni tady — Windows
 
@@ -40,6 +58,13 @@ Pro další použití stačí aplikace a tlačítko **Spustit bridge**. Volba **
 | Obnovit MIDI Areny | Při zavřené Areně vrátí zálohu MIDI nastavení, zastaví bridge a vypne autostart |
 
 Zavření správce **nezastaví** bridge. Běží samostatně na pozadí. Restart může do Areny znovu přenést fyzické polohy faderů/knobů.
+
+## Bridge v akci
+
+<p align="center">
+  <a href="docs/media/demo.mp4"><img src="docs/media/demo.gif" width="340" alt="Ukázka fyzického APC40: Hue knob mění barvu padu i výstupu v Resolume"></a>
+</p>
+<p align="center"><sub><a href="docs/media/demo.mp4">Přehrát původní ukázku APC40 v plné kvalitě</a></sub></p>
 
 ## Zpětná vazba LED
 
