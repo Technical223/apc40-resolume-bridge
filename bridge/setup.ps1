@@ -120,12 +120,9 @@ if ((Test-Path $PresetSrc) -and (Test-Path $PresetDst)) {
 }
 
 # ---------- 6) spustit hlídání Areny (na pozadí, bez okna)
-$PidFile = Join-Path $Here 'bridge.pid'
-if (Test-Path $PidFile) {
-    $old = Get-Content $PidFile -ErrorAction SilentlyContinue
-    if ($old) { Stop-Process -Id ([int]$old) -Force -ErrorAction SilentlyContinue }
-    Remove-Item $PidFile -ErrorAction SilentlyContinue
-}
+. (Join-Path $Here 'stop_bridge.ps1')
+try { Stop-BridgeProcess -Directory $Here }
+catch { Fail ('Bridge se nepodarilo bezpecne zastavit: ' + $_.Exception.Message) }
 Start-Process -FilePath $PyW -ArgumentList "`"$Here\apc_bridge.py`" --watch" -WorkingDirectory $Here -WindowStyle Hidden
 Say 'Bridge běží na pozadí a zapne se, jakmile poběží Resolume Arena.'
 if (-not $Silent) { Popup "Hotovo. Bridge běží na pozadí a zapne se s Resolume Arena.`n`nV Areně vyber MIDI preset 'APC40 BRIDGE EXAMPLE' (nebo svůj, nastavený na libovolné zařízení).`nLog: bridge.log v této složce." }
