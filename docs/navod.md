@@ -136,11 +136,15 @@ Po změně `config.json` spusť znovu `START.bat`. Pad v režimu B ukazuje i fia
 | Mute tlačítka (`lit_invert`) | normální stav | ztlumeno |
 | Grid (klipy) | podle tvého presetu v Resolume | – |
 
-### Záměrné omezení synchronizace horní řady
+### Zpětná vazba horní řady
 
-Bridge počítá odstín z fyzických knobů a stav Colorize přepíná při stisku padu. Zpětnou vazbu Resolume pro noty 32–39 zahazuje, aby Resolume nepřepisovalo vlastní barvy horní řady. **Změna Hue nebo Colorize myší ani načtení jiné kompozice se proto nemusí promítnout do těchto padů.** To je záměrné omezení, které uživatel výslovně schválil; není to požadavek na další opravu.
+`sync_resolume_feedback: true` zapíná jednoduchou synchronizaci přes již existující MIDI zpětnou vazbu. Arena musí odesílat Hue i Colorize do `APC VIRT B`. Bridge přijme CC 48–55 na kanálu 0 (v Areně kanál 1), uloží hodnotu Hue a přepočítá barvu padu. Změny myší a dalšími ovladači tak mohou aktualizovat stejnou indikaci. Stále se používá `hue_max` podle rozsahu v MIDI presetu.
 
-Bílý pad znamená, že Colorize je vypnutý podle místní paměti bridge. Nejde o potvrzení skutečného stavu v Areně. Pro běžné použití ovládej Hue a Colorize z APC. Po ruční změně Hue otoč příslušným knobem; stav Colorize můžeš v Areně ručně srovnat podle padu (bílý = vypnuto, barevný = zapnuto). Samotné otočení knobu nesrovná stav zapnutí Colorize.
+Stav Colorize se nesmí vyhodnocovat jako `velocity > 0`: tento preset posílá **5 pro aktivní efekt** a **3 pro bypass**. Nastavují to `color_on_feedback_velocity` a `color_off_feedback_velocity`. Bílé LED znamená bypass. Zpětná vazba při opětovném zapnutí vykreslí zapamatovaný odstín, nikoli prostou červenou z presetu. Neočekávané hodnoty a Note Off se ignorují. Bridge nevrací tyto zprávy do Areny, takže nevytváří MIDI smyčku.
+
+Omezení: MIDI má 128 kroků, může hodnotu zaokrouhlit a je omezené rozsahem a směrováním shortcutu. Není to přímé čtení plné hodnoty efektu přes REST/OSC a nic se aktivně nedotazuje; aktualizuje se podle zpráv, které Arena skutečně pošle. Barvy mimo rozsah MIDI shortcutu nemusí odpovídat. Přepnutí kompozice se projeví jen tehdy, pokud nová kompozice používá stejné mapování a pošle zpětnou vazbu. Saturace, jas a opacity se nesledují; pad dál ukazuje plně sytý odstín.
+
+Pokud používáš jiný preset, musí odpovídat CC/noty, kanál, rozsah a hodnoty Colorize. K návratu k původní indikaci pouze z APC nastav `sync_resolume_feedback: false` a restartuj bridge. Při vypnuté synchronizaci bridge horní řadu záměrně odvozuje pouze z fyzických knobů/padů; změny myší ji neaktualizují.
 
 ### Obnova při chybě MIDI
 
@@ -160,6 +164,8 @@ Pokud otevření portu selže, bridge zavře již otevřené porty a opakuje př
 | `hue_max` | 0.63871 | horní mez hue, **musí se rovnat Max knobu v Resolume**; `1.0` = celý kruh ([Rozsah hue](#rozsah-hue-knob-a-barva-padu-musí-sedět)) |
 | `palette` | 14 barev | úhel odstínu → číslo barvy APC (červená → modrá → fialová → růžová) |
 | `white_velocity` | 3 | barva padu při vypnutém colorize |
+| `sync_resolume_feedback` | `true` v přiloženém configu, jinak `false` | synchronizace Hue/Colorize ze zpětné vazby Areny |
+| `color_on_feedback_velocity` / `color_off_feedback_velocity` | 5 / 3 | hodnoty feedbacku pro aktivní Colorize / bypass v tomto presetu |
 | `always_lit` | `true` | jednobarevná tlačítka svítí trvale |
 | `lit_track_notes` / `lit_global_notes` | viz soubor | která tlačítka svítí |
 | `lit_invert` | mute tlačítka | „svítí“ = normální stav, bliká při ztlumení |
@@ -179,7 +185,7 @@ Po změně `config.json` spusť znovu `START.bat`.
 | Resolume nevidí `APC VIRT A` | loopMIDI neběží | spusť loopMIDI, zapni jeho autostart |
 | Hlášení „Resolume Arena běží“ | instalátor nemůže měnit nastavení za běhu | zavři Arenu a spusť `START.bat` znovu |
 | Jiný kontroler (APC20…) spouští totéž | preset „libovolné zařízení“ slyší všechny vstupy | v *Preferences → MIDI* ten kontroler vypni |
-| Pad má jinou barvu než vrstva | hue jsi měnil myší, nebo Max knobu v Resolume ≠ `hue_max` | otoč knobem; srovnej obě meze ([Rozsah hue](#rozsah-hue-knob-a-barva-padu-musí-sedět)) |
+| Pad má jinou barvu než vrstva | chybí MIDI feedback, je vypnutá synchronizace nebo se liší rozsah | ověř `sync_resolume_feedback`, výstup shortcutu do APC VIRT B a stejnou mez `hue_max` ([Rozsah hue](#rozsah-hue-knob-a-barva-padu-musí-sedět)) |
 | Knob na konci dá zase červenou | knob mapovaný na plný rozsah 0–1 | Max v Resolume na 0,63871, nebo `hue_max` 1.0 a počítej s tím |
 
 Logy: `bridge\bridge.log` (běh) a `bridge\setup.log` (instalace).

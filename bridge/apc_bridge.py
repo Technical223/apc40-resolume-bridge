@@ -6,7 +6,7 @@ APC40 (USB)  <->  this script  <->  loopMIDI "APC VIRT A" (to Resolume)
 * Passes every message through in both directions.
 * Track knobs 1-8 (CC 48-55): the top grid row (notes 32-39) shows the hue
   the knob currently gives (palette colour), white when colorize is off.
-* Resolume's own LED feedback for the top grid row is dropped.
+* Optional MIDI feedback updates hue and Colorize state; bridge still owns pad colours.
 * Single-colour buttons stay lit all the time and blink while active
   (easier to find in the dark).
 * --watch: runs the bridge only while Resolume Arena is running.
@@ -41,6 +41,10 @@ DEFAULT_CFG = {
     "knob_ccs": [48, 49, 50, 51, 52, 53, 54, 55],
     "color_notes": [32, 33, 34, 35, 36, 37, 38, 39],
     "white_velocity": 3,
+    # Match NamedValues in the Resolume preset: bypass Off=5, On=3.
+    "sync_resolume_feedback": False,
+    "color_on_feedback_velocity": 5,
+    "color_off_feedback_velocity": 3,
     "palette": [[0, 5], [20, 9], [55, 13], [90, 17], [120, 21], [145, 25],
                 [165, 29], [180, 33], [200, 37], [220, 41], [240, 45],
                 [260, 49], [300, 53], [335, 57]],
@@ -233,9 +237,27 @@ class Bridge:
     def on_resolume(self, msg):
         self.count["res>apc"] += 1
         try:
+            if (self.cfg.get("sync_resolume_feedback", False)
+                    and msg.type == "control_change" and msg.channel == 0
+                    and msg.control in self.knobs):
+                i = self.knobs.index(msg.control)
+                self.state.hue[i] = msg.value
+                self.state.dirty = True
+                self._to_apc(msg)  # Preserve existing MIDI-through (including knob feedback).
+                self.draw(i)
+                return
             if msg.type in ("note_on", "note_off") and msg.channel == 0 and msg.note in self.notes:
                 self.count["dropped"] += 1
-                return  # top row LEDs belong to the bridge
+                if self.cfg.get("sync_resolume_feedback", False) and msg.type == "note_on":
+                    # Both preset values are positive: generic velocity>0 would be wrong.
+                    on = self.cfg["color_on_feedback_velocity"]
+                    off = self.cfg["color_off_feedback_velocity"]
+                    if on != off and msg.velocity in (on, off):
+                        i = self.notes.index(msg.note)
+                        self.state.color_on[i] = msg.velocity == on
+                        self.state.dirty = True
+                        self.draw(i)
+                return  # Never forward Resolume palette colours over our own pad colours.
             if msg.type in ("note_on", "note_off") and (msg.note, msg.channel) in self.lit:
                 key = (msg.note, msg.channel)
                 lit = msg.type == "note_on" and msg.velocity > 0

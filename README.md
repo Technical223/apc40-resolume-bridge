@@ -18,9 +18,11 @@ Otočíš knobem → změní se barva vrstvy v Resolume i padu pod knobem. Bez k
 
 <br clear="right">
 
-## Záměrné omezení LED
+## Zpětná vazba LED
 
-Horní barevná řada sleduje polohy knobů a stisky padů na APC40. Změna Hue nebo zapnutí/vypnutí Colorize **myší v Resolume ani načtení jiné kompozice nemusí aktualizovat tyto LED**. Zpětná vazba Resolume pro noty 32–39 se záměrně zahazuje, aby nepřepsala vlastní barvy bridge. Bílá znamená místní stav „Colorize vypnutý“, nikoli potvrzení stavu v Resolume. Toto chování je zamýšlené a zůstává zachováno. Podrobnosti jsou v [návodu](docs/navod.md#záměrné-omezení-synchronizace-horní-řady).
+Volba `sync_resolume_feedback: true` v `bridge/config.json` zapíná čtení stávající MIDI zpětné vazby z Areny. Hue zprávy CC 48–55 překreslí odstín padu; zprávy pro Colorize zapnou barvu nebo bílou. To umožňuje reagovat i na změny myší a jinými ovladači, pokud je Arena posílá do `APC VIRT B`. Není potřeba Webserver ani další knihovna.
+
+Jde o 7bitovou MIDI hodnotu v rozsahu nastaveného presetu, nikoli plně přesné čtení Hue přes API. U rozsahu mimo `0–hue_max` není správný odstín zaručen. Návrat k původnímu chování: `sync_resolume_feedback: false` a restart bridge. Podrobnosti jsou v [návodu](docs/navod.md#zpětná-vazba-horní-řady).
 
 ## Instalace
 
