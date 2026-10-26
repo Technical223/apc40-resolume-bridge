@@ -155,22 +155,28 @@ class Bridge:
         self.invert = {tuple(k) for k in cfg.get("lit_invert", [])}
         self.blink_on = True
         self.running = True
-        self.apc_in = mido.open_input(find_port("in", cfg["apc_port_match"], "VIRT"))
-        self.apc_out = mido.open_output(find_port("out", cfg["apc_port_match"], "VIRT"))
-        self.res_out = mido.open_output(find_port("out", cfg["to_resolume_port"]))
-        self.res_in = mido.open_input(find_port("in", cfg["from_resolume_port"]))
-        logging.info("Ports: APC in=%s out=%s | Resolume in=%s out=%s",
-                     self.apc_in.name, self.apc_out.name, self.res_out.name, self.res_in.name)
-        self._to_apc(mido.Message("sysex", data=[0x47, 0x7F, 0x29, 0x60, 0x00, 0x04,
-                                                 cfg["apc_mode"], 0x01, 0x00, 0x00]))
-        for i in range(len(self.notes)):
-            self.draw(i)
-        for k in self.lit:
-            self.draw_lit(k)
-        self.apc_in.callback = self.on_apc
-        self.res_in.callback = self.on_resolume
-        if self.lit:
-            threading.Thread(target=self._blinker, daemon=True).start()
+        self.failed = threading.Event()
+        try:
+            self.apc_in = mido.open_input(find_port("in", cfg["apc_port_match"], "VIRT"))
+            self.apc_out = mido.open_output(find_port("out", cfg["apc_port_match"], "VIRT"))
+            self.res_out = mido.open_output(find_port("out", cfg["to_resolume_port"]))
+            self.res_in = mido.open_input(find_port("in", cfg["from_resolume_port"]))
+            logging.info("Ports: APC in=%s out=%s | Resolume in=%s out=%s",
+                         self.apc_in.name, self.apc_out.name, self.res_out.name, self.res_in.name)
+            self._to_apc(mido.Message("sysex", data=[0x47, 0x7F, 0x29, 0x60, 0x00, 0x04,
+                                                     cfg["apc_mode"], 0x01, 0x00, 0x00]))
+            for i in range(len(self.notes)):
+                self.draw(i)
+            for k in self.lit:
+                self.draw_lit(k)
+            self.apc_in.callback = self.on_apc
+            self.res_in.callback = self.on_resolume
+            if self.lit:
+                threading.Thread(target=self._blinker, daemon=True).start()
+        except Exception:
+            self.running = False
+            self._close_ports()
+            raise
 
     def draw_lit(self, key):
         on = (not self.lit[key]) or self.blink_on
@@ -188,6 +194,8 @@ class Bridge:
                         self.draw_lit(k)
             except Exception:
                 logging.exception("blink")
+                self.failed.set()
+                return
 
     def _to_apc(self, msg):
         with self.lock:
@@ -220,6 +228,7 @@ class Bridge:
             self.res_out.send(msg)
         except Exception:  # never let a callback die silently
             logging.exception("APC -> Resolume")
+            self.failed.set()
 
     def on_resolume(self, msg):
         self.count["res>apc"] += 1
@@ -236,17 +245,27 @@ class Bridge:
             self._to_apc(msg)
         except Exception:
             logging.exception("Resolume -> APC")
+            self.failed.set()
 
     def alive(self):
-        return ports_ready(self.cfg)
+        return not self.failed.is_set() and ports_ready(self.cfg)
 
-    def close(self):
-        self.running = False
-        for p in (self.apc_in, self.res_in, self.apc_out, self.res_out):
+    def _close_ports(self):
+        # Stop incoming callbacks before closing their output ports.
+        for name in ("apc_in", "res_in", "apc_out", "res_out"):
+            p = getattr(self, name, None)
+            if p is None:
+                continue
             try:
                 p.close()
             except Exception:
-                pass
+                logging.exception("Closing MIDI port")
+            finally:
+                setattr(self, name, None)
+
+    def close(self):
+        self.running = False
+        self._close_ports()
         self.state.save()
 
 
@@ -278,7 +297,7 @@ def run_loop(cfg, watch):
                                     cfg["to_resolume_port"], cfg["from_resolume_port"])
                     waiting_logged = True
             elif bridge is not None and (not want or not bridge.alive()):
-                logging.info("Bridge stopped (%s)", "Arena closed" if not want else "port lost")
+                logging.info("Bridge stopped (%s)", "Arena closed" if not want else "port lost or MIDI error")
                 bridge.close()
                 bridge = None
             if bridge is not None:

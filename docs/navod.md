@@ -136,6 +136,18 @@ Po změně `config.json` spusť znovu `START.bat`. Pad v režimu B ukazuje i fia
 | Mute tlačítka (`lit_invert`) | normální stav | ztlumeno |
 | Grid (klipy) | podle tvého presetu v Resolume | – |
 
+### Záměrné omezení synchronizace horní řady
+
+Bridge počítá odstín z fyzických knobů a stav Colorize přepíná při stisku padu. Zpětnou vazbu Resolume pro noty 32–39 zahazuje, aby Resolume nepřepisovalo vlastní barvy horní řady. **Změna Hue nebo Colorize myší ani načtení jiné kompozice se proto nemusí promítnout do těchto padů.** To je záměrné omezení, které uživatel výslovně schválil; není to požadavek na další opravu.
+
+Bílý pad znamená, že Colorize je vypnutý podle místní paměti bridge. Nejde o potvrzení skutečného stavu v Areně. Pro běžné použití ovládej Hue a Colorize z APC. Po ruční změně Hue otoč příslušným knobem; stav Colorize můžeš v Areně ručně srovnat podle padu (bílý = vypnuto, barevný = zapnuto). Samotné otočení knobu nesrovná stav zapnutí Colorize.
+
+### Obnova při chybě MIDI
+
+Pokud otevření portu selže, bridge zavře již otevřené porty a opakuje připojení. Chyba odesílání v kterémkoli směru nebo ve vlákně blikání označí spojení jako nefunkční; hlavní smyčka je uzavře a zkusí otevřít znovu, i když porty dál figurují v seznamu zařízení. Odpojení USB je stále vhodné ověřit na konkrétním ovladači a zařízení.
+
+`STOP.bat` a restart přes `START.bat` sdílejí `stop_bridge.ps1`. Ten před ukončením ověřuje Python, přesnou cestu tohoto skriptu, režim běhu a čas vzniku procesu. Staré číslo v `bridge.pid` proto samo o sobě nestačí k ukončení jiného programu.
+
 ## 5. Nastavení bridge (`config.json`)
 
 | Klíč | Výchozí | Význam |

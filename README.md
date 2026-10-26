@@ -18,6 +18,10 @@ Otočíš knobem → změní se barva vrstvy v Resolume i padu pod knobem. Bez k
 
 <br clear="right">
 
+## Záměrné omezení LED
+
+Horní barevná řada sleduje polohy knobů a stisky padů na APC40. Změna Hue nebo zapnutí/vypnutí Colorize **myší v Resolume ani načtení jiné kompozice nemusí aktualizovat tyto LED**. Zpětná vazba Resolume pro noty 32–39 se záměrně zahazuje, aby nepřepsala vlastní barvy bridge. Bílá znamená místní stav „Colorize vypnutý“, nikoli potvrzení stavu v Resolume. Toto chování je zamýšlené a zůstává zachováno. Podrobnosti jsou v [návodu](docs/navod.md#záměrné-omezení-synchronizace-horní-řady).
+
 ## Instalace
 
 ![Instalace ve 3 krocích](docs/img/steps.svg)
