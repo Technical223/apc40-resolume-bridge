@@ -138,6 +138,32 @@ def ports_ready(cfg):
     ])
 
 
+def port_status(cfg):
+    """Read-only availability check. Never open/claim MIDI ports."""
+    try:
+        ins, outs = _names("in"), _names("out")
+        def contains(names, match, exclude=None):
+            return any(match.lower() in n.lower() and
+                       not (exclude and exclude.lower() in n.lower()) for n in names)
+        return {"dependencies_ready": True,
+                "apc_ready": contains(ins, cfg["apc_port_match"], "VIRT") and contains(outs, cfg["apc_port_match"], "VIRT"),
+                "virtual_ready": contains(outs, cfg["to_resolume_port"]) and contains(ins, cfg["from_resolume_port"]),
+                "error": ""}
+    except Exception as exc:
+        return {"dependencies_ready": False, "apc_ready": False,
+                "virtual_ready": False, "error": str(exc)}
+
+
+def preference_status(cfg):
+    """Verify MIDI preferences without editing them, even while Arena runs."""
+    try:
+        dirs = resolume_pref_dirs()
+        ready = bool(dirs) and all(not patch_midi_xml(os.path.join(d, "midi.xml"), cfg, dry=True) for d in dirs)
+        return {"preferences_ready": ready, "preferences_error": ""}
+    except Exception as exc:
+        return {"preferences_ready": False, "preferences_error": str(exc)}
+
+
 # ---------------------------------------------------------------- bridge
 class Bridge:
     def __init__(self, cfg):
@@ -423,11 +449,17 @@ def main():
     g.add_argument("--watch", action="store_true", help="run while Resolume Arena runs")
     g.add_argument("--run", action="store_true", help="run now (debug, with console log)")
     g.add_argument("--list-ports", action="store_true")
+    g.add_argument("--status-json", action="store_true")
     g.add_argument("--check-ports", action="store_true")
     g.add_argument("--patch-resolume", action="store_true")
     g.add_argument("--restore-resolume", action="store_true")
     a = ap.parse_args()
     cfg = load_cfg()
+    if a.status_json:
+        status = port_status(cfg)
+        status.update(preference_status(cfg))
+        print(json.dumps(status))
+        return 0
     if a.list_ports:
         print("IN :", _names("in"))
         print("OUT:", _names("out"))

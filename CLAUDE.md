@@ -43,3 +43,15 @@ Běžící Python drží starý kód až do restartu. Restart může znovu odesl
 GitHubové změny jsou předávány přes pull request; tento soubor nezaručuje jeho sloučení.
 
 Nová synchronizace navíc vyžaduje nové klíče config.json (sync_resolume_feedback a dvě velocity). Při ruční aktualizaci sluč config s vlastním nastavením; nepřepisuj uživatelské porty ani mapování.
+
+## Nativní správce Windows (nové rozhraní)
+
+Uživatel požádal nahradit nepříliš reprezentativní dávkové soubory přehlednou instalací, spouštěním a správou. Výsledkem je APC40 Bridge.exe (WinForms, .NET Framework), jeho zdroj v bridge/ui/BridgeManager.cs a ikona. Zdrojový ZIP má vstup APC40 Bridge.vbs, distribuční ZIP již obsahuje EXE. START.bat otevírá správce. Backend je manage.ps1 + runtime.ps1, popsaný v docs/windows-app.md.
+
+Běžné spuštění už neprovádí celou instalaci: idempotentně spustí existující watcher nebo ho ponechá běžet. Příprava má režim -NoPopup -PrepareOnly a samostatné chybové pokyny. Nativní nastavení zachovává ostatní klíče a atomicky ukládá zálohu. Správce ukazuje pouze přítomnost zařízení/procesů; neprohlašuje ji za test komunikace. Zavření okna watcher nezastaví.
+
+Nový autostart cílí na EXE --autostart (bez dashboardu, bez opakované instalace). Existující aktivní autostart lze při místním nasazení přesměrovat na nový vstup se zachováním původního zástupce v záloze. Desktop ikona ukazuje na stejné EXE. Config a state při aktualizaci nepřepisovat.
+
+Ověření: 27 testů, včetně 3 nových read-only status testů, 2 kontrol MIDI konfigurace bez zápisu a 3 Windows integračních testů na dočasném falešném watcheru (status bez spuštění, idempotentní start/stop, neplatný config). Původní testy bezpečného zastavení prošly. Nativní aplikace byla sestavena systémovým csc a vizuálně otevřena; ověřeny hlavní stav, nastavení a logy. Živá příprava -PrepareOnly prošla s nezměněným PID existujícího watcheru. Instalace na zcela čistém Windows nebyla ověřená. CI workflow windows.yml sestavuje distribuční ZIP; výsledek CI je nutné číst odděleně od místních testů.
+
+Připravenost v GUI zahrnuje i přítomnost virtuálních portů a read-only kontrolu skutečného midi.xml (dry=True), nikoli jen import Python knihoven. Chybějící preferences při první instalaci mají konkrétní pokyn k prvnímu spuštění a zavření Areny.
