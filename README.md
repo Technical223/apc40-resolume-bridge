@@ -4,13 +4,19 @@
 ![Resolume](https://img.shields.io/badge/Resolume%20Arena-7.x-8A2BE2)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-Barevné pady pod hue knoby a tlačítka, která svítí i ve tmě. Pro **Akai APC40 mkII** a **Resolume Arena 7**.
+<a href="docs/media/demo.mp4"><img src="docs/media/demo.gif" align="right" width="270" alt="Ukázka: otáčení hue knobem mění barvu padu i výstupu v Resolume"></a>
 
-![APC40 s bridgem](docs/img/apc-overview.svg)
+Barevné pady pod hue knoby a tlačítka, která svítí i ve tmě. Pro **Akai APC40 mkII** a **Resolume Arena 7**.
 
 - 🎨 **Pad ukazuje barvu**, kterou právě dává hue knob nad ním (stisk = colorize on/off).
 - 💡 **Tlačítka svítí pořád**, aktivní funkce bliká.
 - 🔄 **Sám se zapne s Arenou** a vypne, když ji zavřeš.
+
+Otočíš knobem → změní se barva vrstvy v Resolume i padu pod knobem. Bez koukání do počítače víš, jakou barvu která vrstva má.
+
+<sub>▶ [video ve vyšší kvalitě](docs/media/demo.mp4)</sub>
+
+<br clear="right">
 
 ## Instalace
 

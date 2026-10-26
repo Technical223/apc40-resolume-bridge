@@ -2,6 +2,10 @@
 
 [← zpět na hlavní stránku](../README.md)
 
+![Jak to funguje](img/architecture.svg)
+
+![Co bridge dělá na APC40](img/apc-overview.svg)
+
 ## Obsah
 1. [Co potřebuješ](#1-co-potřebuješ)
 2. [Instalace krok za krokem](#2-instalace-krok-za-krokem)
