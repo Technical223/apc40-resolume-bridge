@@ -62,9 +62,21 @@ Zavření správce **nezastaví** bridge. Běží samostatně na pozadí. Restar
 ## Bridge v akci
 
 <p align="center">
+  <a href="docs/media/controller-screen-sync.mp4"><img src="docs/media/controller-screen-sync.gif" width="1000" alt="Synchronizovaný záběr: fyzický APC40 mkII vlevo, Resolume Arena vpravo; změny Hue a přepínání Colorize"></a>
+</p>
+<p align="center"><sub>Stejný okamžik ze dvou pohledů · APC40 mkII + Resolume Arena · <a href="docs/media/controller-screen-sync.mp4">Přehrát 36s video v plné kvalitě (MP4)</a></sub></p>
+
+Záběry jsou časově srovnané podle změn Hue. Vlevo je skutečný kontroler, vpravo odpovídající záznam obrazovky. Video ukazuje změny odstínu a přepínání Colorize, bez zvuku.
+
+<details>
+<summary>Původní krátká ukázka kontroleru</summary>
+
+<p align="center">
   <a href="docs/media/demo.mp4"><img src="docs/media/demo.gif" width="340" alt="Ukázka fyzického APC40: Hue knob mění barvu padu i výstupu v Resolume"></a>
 </p>
 <p align="center"><sub><a href="docs/media/demo.mp4">Přehrát původní ukázku APC40 v plné kvalitě</a></sub></p>
+
+</details>
 
 ## Zpětná vazba LED
 

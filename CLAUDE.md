@@ -59,3 +59,10 @@ Připravenost v GUI zahrnuje i přítomnost virtuálních portů a read-only kon
 ## Showcase hlavní stránky
 
 README používá docs/media/app-showcase.gif (9,24 s, 1000×820, tři skutečné scény správce) a tři PNG v docs/img/app-dashboard.png, app-settings.png, app-logs.png. Snímky vznikly z aktuální aplikace bez změny její konfigurace nebo běhu MIDI watcheru; z logů je publikovaný pouze běžný MIDI provoz bez uživatelských cest. GIF je animovaná prohlídka snímků, nikoli záznam instalace. Původní hardwarová ukázka demo.gif/demo.mp4 zůstává v sekci Bridge v akci.
+
+
+## Synchronizované reálné video (2026-10-26)
+
+README sekce „Bridge v akci“ obsahuje `docs/media/controller-screen-sync.gif` a odkaz na `controller-screen-sync.mp4`. Skutečná uživatelova kamera `IMG_0533.MP4` (768×550, cca 29.997 fps) je vlevo, záznam obrazovky `Záznam 2026-10-26 232815.mp4` (2560×1380, 30 fps) vpravo. Kamera začíná na 0 s, obrazovka na 72.300 s; synchronizace vizuálně podle změn Hue kolem kamera 3.1 / obrazovka 75.4 s a dalších změn. Jde o přibližné vizuální zarovnání, nikoli měření latence MIDI.
+
+Výstup: 36 s, 1920×800, H.264/yuv420p, 30 fps, bez zvuku, faststart. Obrazovka oříznutá na 2560×1320 od y=32, kamera zachována celá. GIF: 1000 px, 10 fps, smyčka. Poslední statická část zdrojů vynechána. Původní velké zdroje nejsou v repu; stará ukázka demo.mp4/gif zůstává v rozbalovací sekci. Žádná změna funkčnosti bridge.
