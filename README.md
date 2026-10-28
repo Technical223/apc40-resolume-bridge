@@ -35,6 +35,10 @@ Color pads beneath the Hue knobs, buttons you can see in the dark, and **one win
 
 Click a screenshot to view it at full size.
 
+## macOS preview — testers wanted
+
+A separate [experimental macOS build](https://github.com/Technical223/apc40-resolume-bridge/tree/main/macos) uses native CoreMIDI/IAC buses, a small dialog-based control panel, a three-minute test and a local diagnostic ZIP. It is unsigned and requires Python plus manual MIDI setup. Real APC/Arena testing on a Mac is still needed; this is not a production release. The Windows app remains separate.
+
 ## Get started — Windows
 
 1. Extract **APC40-Bridge-Windows.zip** into the folder where you want to keep it. Close Arena before the initial setup.

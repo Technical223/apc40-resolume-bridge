@@ -37,6 +37,10 @@ Kliknutím otevřeš snímek v plné velikosti.
 
 Rozhraní aplikace je anglicky; názvy tlačítek v tomto návodu odpovídají aplikaci.
 
+## Experimentální macOS verze
+
+Samostatná [testovací verze pro Mac](https://github.com/Technical223/apc40-resolume-bridge/tree/main/macos) používá nativní IAC/CoreMIDI, jednoduché menu, tříminutový test a diagnostický ZIP. Je nepodepsaná, vyžaduje Python a ruční MIDI nastavení. Fyzický APC s Arenou na Macu ještě musí ověřit tester. [České pokyny](https://github.com/Technical223/apc40-resolume-bridge/blob/main/macos/TESTER-CS.md). Windows aplikace zůstává oddělená.
+
 ## Začni tady — Windows
 
 1. Rozbal balíček **APC40-Bridge-Windows.zip** do složky, kde má zůstat. Při prvním nastavení zavři Arenu.
