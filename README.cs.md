@@ -35,15 +35,17 @@ Barevné pady pod Hue knoby, tlačítka viditelná ve tmě a **jedno okno pro in
 
 Kliknutím otevřeš snímek v plné velikosti.
 
+Rozhraní aplikace je anglicky; názvy tlačítek v tomto návodu odpovídají aplikaci.
+
 ## Začni tady — Windows
 
 1. Rozbal balíček **APC40-Bridge-Windows.zip** do složky, kde má zůstat. Při prvním nastavení zavři Arenu.
 2. Otevři **APC40 Bridge.exe**.
-3. Klikni **Připravit a spustit**. Příprava najde nebo nainstaluje potřebné součásti.
-4. Pokud chybí virtuální porty, klikni **Otevřít loopMIDI**, vytvoř **APC VIRT A** a **APC VIRT B** a přípravu zopakuj.
+3. Klikni **Prepare and start**. Příprava najde nebo nainstaluje potřebné součásti.
+4. Pokud chybí virtuální porty, klikni **Open loopMIDI**, vytvoř **APC VIRT A** a **APC VIRT B** a přípravu zopakuj.
 5. V Areně vyber MIDI preset na **Any device** a nastav Hue **Range Max 0,63871** (zobrazuje se zaokrouhleně 0,64).
 
-Pro další použití stačí aplikace a tlačítko **Spustit bridge**. Volba **Spouštět automaticky po přihlášení do Windows** spustí bridge bez otevírání správce.
+Pro další použití stačí aplikace a tlačítko **Start bridge**. Volba **Start automatically when signing in to Windows** spustí bridge bez otevírání správce.
 
 **Stažený zdrojový ZIP z GitHubu:** ve složce `bridge` otevři **APC40 Bridge.vbs**. Ten připraví aplikaci z přiložených zdrojů a otevře stejné okno. Není k tomu potřeba Python ani další vývojové nástroje; sestavení používá .NET Framework ve Windows.
 
@@ -51,13 +53,13 @@ Pro další použití stačí aplikace a tlačítko **Spustit bridge**. Volba **
 
 | Ovládání | Co dělá |
 |---|---|
-| Spustit bridge | Spustí hlídání Areny; při opakovaném spuštění nevytváří další proces |
+| Start bridge | Spustí hlídání Areny; při opakovaném spuštění nevytváří další proces |
 | Zastavit / Restartovat | Bezpečně uvolní kontroler nebo načte nové nastavení |
-| Instalace / oprava | Připraví závislosti a MIDI nastavení; běžící bridge zbytečně nerestartuje |
-| Nastavení | Porty, Hue, zpětná vazba a osvětlení; zachová ostatní hodnoty a uloží zálohu |
-| Zobrazit logy | Provoz, příprava i správa přímo v aplikaci |
-| Zástupce na plochu | Přidá běžnou ikonu aplikace na plochu |
-| Obnovit MIDI Areny | Při zavřené Areně vrátí zálohu MIDI nastavení, zastaví bridge a vypne autostart |
+| Install / repair | Připraví závislosti a MIDI nastavení; běžící bridge zbytečně nerestartuje |
+| Settings | Porty, Hue, zpětná vazba a osvětlení; zachová ostatní hodnoty a uloží zálohu |
+| View logs | Provoz, příprava i správa přímo v aplikaci |
+| Desktop shortcut | Přidá běžnou ikonu aplikace na plochu |
+| Restore Arena MIDI | Při zavřené Areně vrátí zálohu MIDI nastavení, zastaví bridge a vypne autostart |
 
 Zavření správce **nezastaví** bridge. Běží samostatně na pozadí. Restart může do Areny znovu přenést fyzické polohy faderů/knobů.
 
@@ -86,9 +88,9 @@ Záběry jsou časově srovnané podle změn Hue. Vlevo je skutečný kontroler,
 
 Jde o 7bitovou MIDI hodnotu v rozsahu nastaveného presetu, nikoli plně přesné čtení přes API. Mimo rozsah `0–hue_max` není správný odstín zaručen. Režim lze vypnout v **Nastavení → Zpětná vazba**. Webserver ani další knihovna nejsou potřeba.
 
-👉 **[Podrobný návod, nastavení a řešení problémů](docs/navod.md)**
+👉 **[Podrobný návod, nastavení a řešení problémů](docs/navod.cs.md)**
 
-Pro další vývoj: [kontext a ověření změn](CLAUDE.md), [technický popis aplikace](docs/windows-app.md).
+Pro další vývoj: [kontext a ověření změn](CLAUDE.md), [technický popis aplikace](docs/windows-app.cs.md).
 
 Původní dávkové soubory zůstávají pro kompatibilitu; `START.bat` nyní otevře správce.
 

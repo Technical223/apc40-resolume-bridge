@@ -1,177 +1,177 @@
-# Podrobný návod
+# Setup and troubleshooting guide
 
-[← zpět na hlavní stránku](../README.md)
+[English](navod.md) | [Česky](navod.cs.md) · [Home](../README.md)
 
-![Jak to funguje](img/architecture.svg)
+![How it works](img/architecture.svg)
 
-![Co bridge dělá na APC40](img/apc-overview.svg)
+![What the bridge does on the APC40](img/apc-overview.svg)
 
-## Obsah
-1. [Co potřebuješ](#1-co-potřebuješ)
-2. [Instalace krok za krokem](#2-instalace-krok-za-krokem)
-3. [Nastavení v Resolume](#3-nastavení-v-resolume)
-4. [Každodenní použití](#4-každodenní-použití)
-5. [Nastavení bridge (config.json)](#5-nastavení-bridge-configjson)
-6. [Řešení problémů](#6-řešení-problémů)
-7. [Nouzový režim a odinstalace](#7-nouzový-režim-a-odinstalace)
+## Contents
 
----
+1. [Requirements](#1-requirements)
+2. [Installation and launch](#2-installation-and-launch)
+3. [Resolume setup](#3-resolume-setup)
+4. [Everyday use](#4-everyday-use)
+5. [Bridge configuration](#5-bridge-configuration-configjson)
+6. [Troubleshooting](#6-troubleshooting)
+7. [Fallback mode and removal](#7-fallback-mode-and-removal)
 
-## 1. Co potřebuješ
+## 1. Requirements
 
-| | Verze | Poznámka |
+| Component | Version | Notes |
 |---|---|---|
-| Windows | 10 / 11 | 64 bit |
-| Resolume Arena | 7.x | testováno 7.25 |
-| Akai APC40 mkII | – | připojený přes USB |
-| Python | 3.9+ | **nainstaluje se sám**, když chybí (3.12) |
-| [loopMIDI](https://www.tobias-erichsen.de/software/loopmidi.html) | – | **nainstaluje se sám** přes winget; zdarma pro nekomerční použití |
-| Internet | – | jen při první instalaci |
+| Windows | 10 / 11 | 64-bit |
+| Resolume Arena | 7.x | Tested with 7.25 |
+| Akai APC40 mkII | — | Connected via USB |
+| Python | 3.9+ | Setup installs 3.12 if missing |
+| [loopMIDI](https://www.tobias-erichsen.de/software/loopmidi.html) | — | Setup attempts installation via winget; see the publisher’s license for your use case |
+| Internet | — | Needed during initial setup |
 
-## 2. Instalace a spuštění
+## 2. Installation and launch
 
-1. Rozbal Windows balíček do stálé složky. Při prvním nastavení zavři Arenu.
-2. Otevři **APC40 Bridge.exe**. Při stažení zdrojového ZIPu z GitHubu otevři **bridge/APC40 Bridge.vbs**; připraví stejné okno.
-3. Klikni **Připravit a spustit**. Příprava najde nebo nainstaluje Python, MIDI knihovny a loopMIDI.
-4. Chybí-li virtuální porty, klikni **Otevřít loopMIDI**, přidej **APC VIRT A** a **APC VIRT B** a přípravu zopakuj. V loopMIDI ponech zapnutý jeho vlastní autostart.
-5. Příprava upraví MIDI vstupy/výstupy Areny, uloží jejich zálohu a nakopíruje ukázkový preset, pokud ještě není přítomný.
-6. V Areně zvol preset na **Any device** a srovnej rozsah Hue (kapitola 3).
+1. Extract the Windows package into a permanent folder. Close Arena before initial setup.
+2. Open **APC40 Bridge.exe**. If using the source ZIP, open **bridge/APC40 Bridge.vbs** to build and open the same dashboard.
+3. Click **Prepare and start**. Setup finds or installs Python, MIDI libraries, and loopMIDI.
+4. If virtual ports are missing, click **Open loopMIDI**, add **APC VIRT A** and **APC VIRT B**, then repeat setup. Keep loopMIDI autostart enabled.
+5. Setup updates Arena MIDI inputs/outputs, saves a backup, and copies the example preset if not already installed.
+6. In Arena, use **Any device** for the preset and match the Hue range below.
 
-![loopMIDI](img/loopmidi.svg)
+![loopMIDI ports](img/loopmidi.svg)
 
-| Port | K čemu |
+| Port | Direction |
 |---|---|
-| APC VIRT A | bridge → Resolume |
+| APC VIRT A | Bridge → Resolume |
 | APC VIRT B | Resolume → bridge |
 
-Pro běžné použití stačí **Spustit bridge**. Opakované spuštění nevytváří druhý proces. Volba **Spouštět automaticky po přihlášení do Windows** zapne watcher bez otevírání správce a bez opakované instalace. Po přesunutí složky volbu vypni/zapni, aby se aktualizoval zástupce.
+For normal use, click **Start bridge**. Repeated launches do not create another process. **Start automatically when signing in to Windows** launches the watcher without opening the dashboard or running setup again. After moving the installation folder, turn this option off and on to update its shortcut.
 
-Tlačítko **Instalace / oprava** lze použít znovu; samotná příprava běžící bridge nerestartuje. Pokud je potřeba změnit MIDI nastavení a Arena běží, příprava to oznámí a požádá o její zavření. Restart může do kompozice přenést polohy fyzických faderů a knobů.
+**Install / repair** can be used again; preparation alone does not restart a running bridge. If Arena is running and its MIDI settings need changing, setup asks you to close Arena. Restarting the bridge may send the physical fader and knob positions to the composition.
 
-Příprava zálohuje původní MIDI nastavení jako midi.xml.pred-bridge.bak. Tlačítko **Obnovit MIDI Areny** při zavřené Areně vrátí tuto zálohu, zastaví bridge a vypne jeho autostart. Provozní a instalační záznamy jsou dostupné přes **Zobrazit logy**.
+Setup backs up the original MIDI settings as `midi.xml.pred-bridge.bak`. With Arena closed, **Restore Arena MIDI** restores that backup, stops the bridge, and disables its autostart. Open **View logs** for runtime and installation logs.
 
-## 3. Nastavení v Resolume
+## 3. Resolume setup
+
+![Resolume MIDI settings](img/resolume-midi.svg)
 
 ![Resolume MIDI preset](img/resolume-preset.svg)
 
-- **MIDI preset musí být nastavený na libovolné zařízení.** Preset vázaný na „APC40 mkII“ přes virtuální port nereaguje, protože Resolume teď vidí jen `APC VIRT A`.
-- **Ukázkový preset `APC40 BRIDGE EXAMPLE`** příprava nakopíruje do `Dokumenty\Resolume Arena\Shortcuts\MIDI`. Rozložení kompozice, se kterým počítá, je v [`docs/layout.md`](layout.md).
-- **Vlastní mapping:** v *Shortcuts → Edit MIDI* shortcuty přeuč. Učí se z `APC VIRT A`, to je v pořádku.
-- **Horní řada gridu (noty 32–39)** má v presetu přepínač colorize vrstvy. Barvu padu kreslí bridge, Resolume do ní nemluví.
-- **Track knoby (CC 48–55)** mají v presetu hue colorize s rozsahem 0–0,63871 (červená → zelená → modrá), viz níže.
-- **Ulož kompozici.** Vybraný MIDI preset se pamatuje v ní.
+- **The MIDI preset must use Any device.** A preset bound to APC40 mkII does not respond through the virtual port, because Resolume now receives input from `APC VIRT A`.
+- Setup copies **APC40 BRIDGE EXAMPLE** into `Documents\Resolume Arena\Shortcuts\MIDI`. See the expected [composition layout](layout.md).
+- **Custom mapping:** relearn shortcuts in *Shortcuts → Edit MIDI*. Input from `APC VIRT A` is expected.
+- **Top grid row, notes 32–39:** toggles layer Colorize. The bridge owns the pad colors and can update them from optional MIDI feedback.
+- **Track knobs, CCs 48–55:** control Colorize Hue over 0–0.63871 (red → green → blue).
+- **Save the composition.** It remembers the selected MIDI preset.
 
-### Rozsah hue: knob a barva padu musí sedět
+### Hue range: match the knob and pad
 
-![Rozsah hue](img/hue-range.svg)
+![Hue range](img/hue-range.svg)
 
-Hue v Colorize jde dokola: 0 je červená a 1 je **zase červená**. Když knob mapuješ na celý rozsah, obě krajní polohy dají stejnou barvu a modrá je někde uprostřed. Proto má ukázkový preset knoby omezené na **0–0,63871** (končí na modré).
+Colorize Hue wraps around: 0 is red and 1 is **red again**. Mapping a knob to the full range gives the same color at both ends, with blue somewhere in the middle. The example preset therefore limits the knobs to **0–0.63871**, ending at blue.
 
-Bridge Resolume nevidí, jen počítá barvu padu z polohy knobu. Proto **musí horní mez v Resolume odpovídat `hue_max` v `config.json`**, jinak pad ukazuje jinou barvu, než jakou má vrstva.
+The bridge derives pad colors from MIDI values rather than reading the full effect value through an API. **The upper limit in Resolume must match `hue_max` in `config.json`**, otherwise the pad and layer colors can differ.
 
-**Kde se mez nastavuje v Resolume:**
+![Hue knob range in Resolume](img/resolume-hue-range.png)
 
-![Range hue knobu v Resolume](img/resolume-hue-range.png)
+1. Open *Shortcuts → Edit MIDI*.
+2. Click the mapped layer Colorize **Hue** parameter (for example, `1/CC48`).
+3. Select the `… Video Effects Colorize Effect Color Hue` entry in **Shortcuts**. Check **Input: Any device**.
+4. Under **Range**, set the right handle to **0.64** (rounded display; the example preset stores exactly 0.63871). Leave the left handle at 0.
+5. Repeat for all eight Hue knobs, then save the composition.
 
-1. *Shortcuts → Edit MIDI*.
-2. Klikni na parametr **Hue** v efektu Colorize dané vrstvy (ten, na kterém je knob namapovaný, ukazuje `1/CC48` apod.).
-3. V panelu **Shortcuts** se vybere řádek `… Video Effects Colorize Effect Color Hue`. Pod ním zkontroluj **Input: Any device**.
-4. Dole u **Range** táhni pravý jezdec na **0,64** (Resolume zobrazuje zaokrouhleně; v ukázkovém presetu je přesně 0,63871). Levý zůstává na 0.
-5. Totéž pro každý hue knob (všech 8), pak ulož kompozici.
+The difference between 0.64 and 0.63871 is less than half a degree of hue and does not change the pad palette color.
 
-Rozdíl mezi 0,64 a 0,63871 je pod půl stupně odstínu, na barvě padu se neprojeví.
-
-| Chceš | Max v Resolume | `hue_max` v `config.json` |
+| Desired range | Resolume maximum | `hue_max` |
 |---|---|---|
-| **A (výchozí)**: červená → modrá, krajní polohy se nepletou | `0.63871` | `0.63871` |
-| **B**: celý kruh včetně fialové a růžové | `1` (nech plný rozsah) | `1.0` |
-| Vlastní mez | tvoje číslo | stejné číslo |
+| **A (default):** red → blue, distinct endpoints | `0.63871` | `0.63871` |
+| **B:** full circle, including purple and pink | `1` | `1.0` |
+| Custom limit | Your value | The same value |
 
-Po změně nastavení klikni v aplikaci na **Restartovat**. Pad v režimu B ukazuje i fialovou a růžovou, v obou režimech jde o nejbližší barvu z palety APC (`palette`).
+Click **Restart** after changing bridge settings. Mode B also shows purple and pink. Both modes select the closest color in the APC `palette`.
 
-## 4. Každodenní použití
+## 4. Everyday use
 
-| Situace | Co dělat |
+| Situation | Action |
 |---|---|
-| Autostart zapnutý | jen zapni Arenu, APC se během pár sekund rozsvítí |
-| Bez autostartu | aplikace → Spustit bridge, pak Arena |
-| Chci APC použít v jiném programu | zavři Arenu (bridge APC pustí) nebo `STOP.bat` |
-| Něco nejede | Zobrazit logy; případně Instalace / oprava |
+| Autostart enabled | Open Arena; the APC lights up within a few seconds |
+| Autostart disabled | Open the dashboard → Start bridge, then Arena |
+| Use the APC in another program | Close Arena to release the APC, or click Stop |
+| Something is wrong | View logs; if needed, Install / repair |
 
-**Po startu bridge** APC pošle polohy všech faderů a knobů a Resolume je hned převezme. Fader, který je fyzicky dole, stáhne vrstvu na nulu.
+**When the bridge starts**, the APC sends all fader and knob positions, and Resolume applies them immediately. A fader physically at the bottom sets its layer opacity to zero.
 
-### Co znamenají LED
-| Tlačítko | Svítí | Bliká |
+### LED meanings
+
+| Button | Steady | Blinking |
 |---|---|---|
-| Horní řada gridu | odstín knobu nad ní | – (bílá = colorize vypnutý) |
-| Jednobarevná tlačítka | funkce připravená | funkce je aktivní (flash drží, efekt zapnutý, klip hraje…) |
-| Mute tlačítka (`lit_invert`) | normální stav | ztlumeno |
-| Grid (klipy) | podle tvého presetu v Resolume | – |
+| Top grid row | Hue of the knob above it; white means Colorize is off | — |
+| Single-color utility buttons | Function available | Function active: flash held, effect enabled, clip playing, etc. |
+| Mute buttons (`lit_invert`) | Normal state | Muted |
+| Clip grid | Determined by your Resolume preset | — |
 
-### Zpětná vazba horní řady
+### Top-row feedback
 
-`sync_resolume_feedback: true` zapíná jednoduchou synchronizaci přes již existující MIDI zpětnou vazbu. Arena musí odesílat Hue i Colorize do `APC VIRT B`. Bridge přijme CC 48–55 na kanálu 0 (v Areně kanál 1), uloží hodnotu Hue a přepočítá barvu padu. Změny myší a dalšími ovladači tak mohou aktualizovat stejnou indikaci. Stále se používá `hue_max` podle rozsahu v MIDI presetu.
+`sync_resolume_feedback: true` enables simple synchronization using existing MIDI feedback. Arena must send Hue and Colorize feedback to `APC VIRT B`. The bridge receives CCs 48–55 on channel 0 (channel 1 in Arena), stores Hue, and updates the pad color. Mouse edits and other controllers can update the same indicator when Arena sends the corresponding messages. `hue_max` must still match the preset range.
 
-Stav Colorize se nesmí vyhodnocovat jako `velocity > 0`: tento preset posílá **5 pro aktivní efekt** a **3 pro bypass**. Nastavují to `color_on_feedback_velocity` a `color_off_feedback_velocity`. Bílé LED znamená bypass. Zpětná vazba při opětovném zapnutí vykreslí zapamatovaný odstín, nikoli prostou červenou z presetu. Neočekávané hodnoty a Note Off se ignorují. Bridge nevrací tyto zprávy do Areny, takže nevytváří MIDI smyčku.
+Do not interpret Colorize as `velocity > 0`: this preset sends **5 for an active effect** and **3 for bypass**. These values are configured by `color_on_feedback_velocity` and `color_off_feedback_velocity`. White indicates bypass. Re-enabling Colorize restores the remembered hue instead of the plain red from the preset. Unexpected velocities and Note Off are ignored. These feedback messages are not returned to Arena, preventing a MIDI loop.
 
-Omezení: MIDI má 128 kroků, může hodnotu zaokrouhlit a je omezené rozsahem a směrováním shortcutu. Není to přímé čtení plné hodnoty efektu přes REST/OSC a nic se aktivně nedotazuje; aktualizuje se podle zpráv, které Arena skutečně pošle. Barvy mimo rozsah MIDI shortcutu nemusí odpovídat. Přepnutí kompozice se projeví jen tehdy, pokud nová kompozice používá stejné mapování a pošle zpětnou vazbu. Saturace, jas a opacity se nesledují; pad dál ukazuje plně sytý odstín.
+Limitations: MIDI has 128 steps, may round values, and is limited by shortcut range and routing. This is not a direct REST/OSC read of the full effect value; there is no active polling. Only messages actually sent by Arena update the bridge. Colors outside the mapped range may differ. Composition changes synchronize only if the new composition uses matching mappings and sends feedback. Saturation, brightness, and opacity are not tracked; the pad still displays a fully saturated hue.
 
-Pokud používáš jiný preset, musí odpovídat CC/noty, kanál, rozsah a hodnoty Colorize. K návratu k původní indikaci pouze z APC nastav `sync_resolume_feedback: false` a restartuj bridge. Při vypnuté synchronizaci bridge horní řadu záměrně odvozuje pouze z fyzických knobů/padů; změny myší ji neaktualizují.
+For another preset, match the CCs/notes, channel, range, and Colorize feedback values. Set `sync_resolume_feedback: false` and restart to return to APC-only indication. In this mode, physical knobs/pads alone determine the top row; mouse edits do not update it.
 
-### Obnova při chybě MIDI
+### MIDI error recovery
 
-Pokud otevření portu selže, bridge zavře již otevřené porty a opakuje připojení. Chyba odesílání v kterémkoli směru nebo ve vlákně blikání označí spojení jako nefunkční; hlavní smyčka je uzavře a zkusí otevřít znovu, i když porty dál figurují v seznamu zařízení. Odpojení USB je stále vhodné ověřit na konkrétním ovladači a zařízení.
+If a port fails to open, the bridge closes previously opened ports and retries. Send errors in either direction or in the blink thread mark the connection as failed; the main loop closes it and reconnects, even if the port names remain listed. Actual USB disconnect behavior should still be checked with the specific device and driver.
 
-`STOP.bat` a restart přes `START.bat` sdílejí `stop_bridge.ps1`. Ten před ukončením ověřuje Python, přesnou cestu tohoto skriptu, režim běhu a čas vzniku procesu. Staré číslo v `bridge.pid` proto samo o sobě nestačí k ukončení jiného programu.
+Stop and restart share `stop_bridge.ps1`. Before terminating a process, it checks Python, the exact script path, run mode, and process creation time. A stale `bridge.pid` alone cannot terminate an unrelated program.
 
-## 5. Nastavení bridge (`config.json`)
+## 5. Bridge configuration (`config.json`)
 
-| Klíč | Výchozí | Význam |
+| Key | Default | Meaning |
 |---|---|---|
-| `to_resolume_port` / `from_resolume_port` | `APC VIRT A` / `APC VIRT B` | názvy loopMIDI portů |
-| `apc_port_match` | `APC40` | část názvu fyzického APC ve Windows |
-| `arena_process` | `Arena.exe` | proces, který bridge hlídá |
-| `knob_ccs` | 48–55 | track knoby, ze kterých se bere odstín |
-| `color_notes` | 32–39 | pady, které odstín ukazují |
-| `hue_max` | 0.63871 | horní mez hue, **musí se rovnat Max knobu v Resolume**; `1.0` = celý kruh ([Rozsah hue](#rozsah-hue-knob-a-barva-padu-musí-sedět)) |
-| `palette` | 14 barev | úhel odstínu → číslo barvy APC (červená → modrá → fialová → růžová) |
-| `white_velocity` | 3 | barva padu při vypnutém colorize |
-| `sync_resolume_feedback` | `true` v přiloženém configu, jinak `false` | synchronizace Hue/Colorize ze zpětné vazby Areny |
-| `color_on_feedback_velocity` / `color_off_feedback_velocity` | 5 / 3 | hodnoty feedbacku pro aktivní Colorize / bypass v tomto presetu |
-| `always_lit` | `true` | jednobarevná tlačítka svítí trvale |
-| `lit_track_notes` / `lit_global_notes` | viz soubor | která tlačítka svítí |
-| `lit_invert` | mute tlačítka | „svítí“ = normální stav, bliká při ztlumení |
-| `blink_hz` | 3 | rychlost blikání |
-| `apc_mode` | 66 | režim APC (0x42 Alternate Ableton); zkus 65, kdyby něco nereagovalo |
+| `to_resolume_port` / `from_resolume_port` | `APC VIRT A` / `APC VIRT B` | loopMIDI port names |
+| `apc_port_match` | `APC40` | Substring of the physical APC port name in Windows |
+| `arena_process` | `Arena.exe` | Process watched by the bridge |
+| `knob_ccs` | 48–55 | Track knobs supplying Hue |
+| `color_notes` | 32–39 | Pads displaying Hue |
+| `hue_max` | 0.63871 | Upper Hue limit; **must match the Resolume knob maximum**; `1.0` = full circle ([Hue range](#hue-range-match-the-knob-and-pad)) |
+| `palette` | 14 colors | Hue angle → APC palette number (red → blue → purple → pink) |
+| `white_velocity` | 3 | Pad color with Colorize off |
+| `sync_resolume_feedback` | `true` in the supplied config, otherwise `false` | Follow Arena Hue/Colorize feedback |
+| `color_on_feedback_velocity` / `color_off_feedback_velocity` | 5 / 3 | Feedback values for active Colorize / bypass in this preset |
+| `always_lit` | `true` | Keep single-color utility buttons lit |
+| `lit_track_notes` / `lit_global_notes` | See file | Buttons to illuminate |
+| `lit_invert` | Mute buttons | Steady = normal; blinking = muted |
+| `blink_hz` | 3 | Blink rate |
+| `apc_mode` | 66 | APC mode (0x42 Alternate Ableton); try 65 if controls do not respond |
 
-Po změně nastavení klikni v aplikaci na **Restartovat**.
+Click **Restart** after changing settings.
 
-## 6. Řešení problémů
+## 6. Troubleshooting
 
-| Příznak | Příčina | Řešení |
+| Symptom | Cause | Solution |
 |---|---|---|
-| Instalátor čeká na porty | v loopMIDI chybí porty nebo mají jiný název | vytvoř `APC VIRT A` a `APC VIRT B` přesně takto |
-| APC nesvítí vůbec | bridge neběží nebo Arena neběží | `bridge.log`; `START.bat`; zapni Arenu |
-| `bridge.log`: „Waiting for ports“ | APC není připojený nebo ho drží jiný program | zapoj USB; v Resolume vypni APC40 mkII; zavři Ableton a podobně |
-| Knoby/pady v Resolume nic nedělají | MIDI preset je vázaný na „APC40 mkII“ | preset na libovolné zařízení (kap. 3) |
-| Resolume nevidí `APC VIRT A` | loopMIDI neběží | spusť loopMIDI, zapni jeho autostart |
-| Hlášení „Resolume Arena běží“ | instalátor nemůže měnit nastavení za běhu | zavři Arenu a spusť `START.bat` znovu |
-| Jiný kontroler (APC20…) spouští totéž | preset „libovolné zařízení“ slyší všechny vstupy | v *Preferences → MIDI* ten kontroler vypni |
-| Pad má jinou barvu než vrstva | chybí MIDI feedback, je vypnutá synchronizace nebo se liší rozsah | ověř `sync_resolume_feedback`, výstup shortcutu do APC VIRT B a stejnou mez `hue_max` ([Rozsah hue](#rozsah-hue-knob-a-barva-padu-musí-sedět)) |
-| Knob na konci dá zase červenou | knob mapovaný na plný rozsah 0–1 | Max v Resolume na 0,63871, nebo `hue_max` 1.0 a počítej s tím |
+| Setup reports missing ports | Missing or differently named loopMIDI ports | Create exactly `APC VIRT A` and `APC VIRT B` |
+| APC stays dark | Bridge or Arena is not running | Check `bridge.log`, click Start bridge, open Arena |
+| Log says “Waiting for ports” | APC disconnected or held by another program | Connect USB; disable physical APC40 mkII in Resolume; close Ableton or other MIDI apps |
+| Knobs/pads do nothing in Resolume | Preset bound to APC40 mkII | Use Any device (section 3) |
+| Resolume cannot see APC VIRT A | loopMIDI is not running | Start loopMIDI and enable its autostart |
+| Setup says Arena is running | MIDI preferences cannot be changed while Arena is open | Close Arena, then use Install / repair again |
+| Another controller triggers the same actions | Any device preset hears all enabled inputs | Disable that controller in *Preferences → MIDI* if unwanted |
+| Pad and layer colors differ | Missing feedback, disabled sync, or mismatched range | Check `sync_resolume_feedback`, shortcut output to APC VIRT B, and matching `hue_max` ([Hue range](#hue-range-match-the-knob-and-pad)) |
+| Knob turns red again at its far end | Knob mapped to the full 0–1 range | Set Resolume maximum to 0.63871, or use `hue_max: 1.0` for the full circle |
 
-Logy jsou přímo v aplikaci: **Zobrazit logy → Provoz bridge / Příprava instalace / Správa aplikace**.
+Logs are available inside the app: **View logs → Bridge runtime / Setup / App management**.
 
-## 7. Nouzový režim a odinstalace
+## 7. Fallback mode and removal
 
-**Nouzový režim (bridge nejede na akci):**
-1. `STOP.bat`
-2. Arena → *Preferences → MIDI*: zapni **APC40 mkII** (Input i Output)
-3. preset na libovolné zařízení funguje dál, jen bez barevné horní řady a svítících tlačítek
+**Fallback mode during a show:**
 
-**Odinstalace:**
-1. V aplikaci vypni automatické spouštění a klikni **Zastavit**.
-2. **Obnovit MIDI Areny** při zavřené Areně vrátí původní MIDI nastavení.
-3. smaž složku; Python a loopMIDI odinstaluj ve Windows, pokud je nepotřebuješ
+1. Click **Stop** or run `STOP.bat`.
+2. In Arena → *Preferences → MIDI*, enable physical **APC40 mkII** input and output.
+3. An Any device preset keeps working directly, without the bridge color pads and utility-button lighting.
 
----
+**Removal:**
+
+1. Disable autostart in the app and click **Stop**.
+2. With Arena closed, use **Restore Arena MIDI** to restore the original MIDI settings.
+3. Delete the installation folder and any desktop/Start Menu shortcuts you created. Uninstall Python and loopMIDI through Windows if no longer needed.

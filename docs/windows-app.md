@@ -1,31 +1,36 @@
-# Windows aplikace
+# Windows application
 
-## Soubory
+[English](windows-app.md) | [Česky](windows-app.cs.md) · [Home](../README.md)
 
-- `bridge/ui/BridgeManager.cs`: nativní WinForms správce (.NET Framework); nepotřebuje Python pro své vlastní spuštění.
-- `bridge/build-ui.ps1`: sestavení pomocí systémového C# kompilátoru. EXE je výstup sestavení a není uložené v Gitu.
-- `bridge/APC40 Bridge.vbs`: vstup pro zdrojový ZIP; skrytě sestaví chybějící EXE a otevře správce.
-- `bridge/manage.ps1`: sdílené akce status/start/stop/autostart/shortcut/restore.
-- `bridge/runtime.ps1`: hledání Pythonu a lokální cache cesty `runtime.json`.
-- `bridge/setup.ps1 -NoPopup -PrepareOnly`: příprava součástí a konfigurace bez spouštění/restartu watcheru.
-- `bridge/package-release.ps1`: přenosný ZIP s aplikací, výchozím configem, presetem a návodem.
-- `.github/workflows/windows.yml`: Windows testy, sestavení a ZIP jako GitHub Actions artefakt.
+## Files
 
-## Chování
+- `bridge/ui/BridgeManager.cs`: native WinForms dashboard (.NET Framework); the dashboard itself does not need Python.
+- `bridge/build-ui.ps1`: builds with the system C# compiler. The generated EXE is not tracked in Git.
+- `bridge/APC40 Bridge.vbs`: source ZIP entry point; silently builds a missing EXE, then opens the dashboard.
+- `bridge/manage.ps1`: shared status/start/stop/autostart/shortcut/restore actions.
+- `bridge/runtime.ps1`: Python discovery and the local `runtime.json` path cache.
+- `bridge/setup.ps1 -NoPopup -PrepareOnly`: prepares dependencies and configuration without starting or restarting the watcher.
+- `bridge/package-release.ps1`: portable ZIP with the app, default configuration, preset, and documentation.
+- `.github/workflows/windows.yml`: Windows tests, build, and a ZIP artifact in GitHub Actions.
 
-Správce spouští PowerShell bez konzolového okna. Stav se kontroluje asynchronně každých 5 s. `--status-json` v Pythonu pouze vypisuje dostupné porty; nikdy je neotevírá ani nebere běžícímu bridge. Připravenost zahrnuje i read-only kontrolu MIDI nastavení Areny a dostupnost virtuálních portů. Stav „Bridge spuštěný“ znamená ověřený proces watcheru, nikoli potvrzení každé MIDI zprávy.
+## Behavior
 
-Start je idempotentní: pokud watcher této složky běží, ponechá ho beze změny. Start/stop a další mutace se serializují pojmenovaným mutexem podle cesty instalace. Platí ověření identity procesu ze stop_bridge.ps1. Samotný dashboard má také jednu instanci na instalaci.
+The dashboard runs PowerShell without a console window and checks status asynchronously every five seconds. Python’s `--status-json` only lists available MIDI ports; it never opens them or takes them away from a running bridge. Readiness includes a read-only check of Arena’s MIDI settings and virtual port availability. “Bridge running” confirms the watcher process, not delivery of every MIDI message.
 
-Zavření okna nemění běh bridge. Přepínač autostartu vytváří zástupce v uživatelské složce Po spuštění s cílem `APC40 Bridge.exe --autostart`. Tento režim spustí pouze watcher a skončí; nespouští instalaci ani nezobrazuje dashboard.
+Start is idempotent: an existing watcher for this folder is left running. Start/stop and other mutations use a named mutex based on the installation path. Process identity is checked by `stop_bridge.ps1`. The dashboard also allows only one instance per installation.
 
-Nastavení zachovává neznámé klíče configu, kontroluje porty a číselné rozsahy a ukládá atomicky přes File.Replace se zálohou. Hodnoty načte až restart watcheru. Logy jsou čteny sdíleně, pouze z posledních 64 KB. Obnova MIDI je výslovná akce s potvrzením; odmítne běžící Arenu a bez nalezené zálohy nic nezastaví.
+Closing the window leaves the bridge running. Autostart creates a shortcut in the current user’s Startup folder targeting `APC40 Bridge.exe --autostart`. This mode starts only the watcher and exits; it does not run setup or display the dashboard.
 
-Příprava používá původní instalační postup Python/mido/python-rtmidi/loopMIDI. Vytvoření virtuálních portů zůstává ruční krok v loopMIDI. Při jejich absenci se vrátí konkrétní pokyn, místo neviditelného pětiminutového čekání. Kompletní instalace na čistém Windows nebyla při této změně testována.
+Settings preserve unknown configuration keys, validate ports and numeric ranges, and save atomically using `File.Replace` with a backup. Restart the watcher to apply changes. Logs are read with shared access, limited to the last 64 KB. MIDI restore requires explicit confirmation, refuses to run while Arena is open, and does not stop anything if no backup exists.
 
-## Sestavení
+Setup uses Python/mido/python-rtmidi/loopMIDI. Creating the virtual ports remains a manual loopMIDI step. Missing ports produce a specific instruction instead of a hidden five-minute wait. A complete installation on a pristine Windows machine has not been tested.
 
-Z kořene repa:
+The app, setup messages, and primary documentation use English. Legacy Czech launcher filenames remain for compatibility; new launchers are `AUTOSTART_ON.bat`, `AUTOSTART_OFF.bat`, `DEBUG.bat`, and `RESTORE_RESOLUME.bat`.
+
+## Build
+
+From the repository root:
+
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File bridge/build-ui.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File bridge/package-release.ps1
@@ -33,4 +38,4 @@ py -3 -m unittest discover -s tests -v
 py -3 tests/test_stop_process.py
 ```
 
-Výchozí výstup balíčku je `dist/APC40-Bridge-Windows.zip`. Pro další sestavení použij jiný výstupní adresář nebo původní ZIP nejprve přesuň. Balíček obsahuje čistý výchozí config z repozitáře, nikoli lokální stav, PID, logy nebo cache. Při aktualizaci existující instalace zachovej vlastní config.json a state.json.
+The default package output is `dist/APC40-Bridge-Windows.zip`. For another build, select a different output directory or move the previous ZIP first. Packages include the repository’s clean default configuration, not local state, PIDs, logs, or runtime caches. Preserve your own `config.json` and `state.json` when updating an existing installation.

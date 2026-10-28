@@ -27,7 +27,7 @@ function Stop-BridgeProcess {
                     $process.Kill()
                     if (-not $process.WaitForExit(5000)) { throw 'Bridge did not stop within 5 seconds.' }
                 } else {
-                    Write-Warning 'Stary PID nepatri tomuto bridge; proces ponechan bez zmeny.'
+                    Write-Warning 'The stale PID does not belong to this bridge; the process was left unchanged.'
                 }
             } catch {
                 # Do not start a second bridge when identity/access cannot be verified.
@@ -45,6 +45,6 @@ function Stop-BridgeProcess {
 }
 
 if ($MyInvocation.InvocationName -ne '.') {
-    try { Stop-BridgeProcess -Directory $PSScriptRoot; Write-Host 'Zastaveno.' }
+    try { Stop-BridgeProcess -Directory $PSScriptRoot; Write-Host 'Stopped.' }
     catch { Write-Error $_; exit 1 }
 }

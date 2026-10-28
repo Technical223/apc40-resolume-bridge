@@ -1,39 +1,44 @@
-# Ukázkové rozložení (preset `APC40 BRIDGE EXAMPLE`)
+# Example layout (`APC40 BRIDGE EXAMPLE` preset)
 
-Preset počítá s kompozicí se **4 grupami po 3 vrstvách** (+ volitelně 2 globální vrstvy nahoře):
+[English](layout.md) | [Česky](layout.cs.md) · [Home](../README.md)
 
-| Vrstva | Obsah |
+The preset expects a composition with **four groups of three layers**, optionally with two global layers above them:
+
+| Layer | Content |
 |---|---|
-| 1, 4, 7, 10 | základní generátor grupy (blend Alpha) |
-| 2, 5, 8, 11 | „opačný“ generátor (blend Lighten) |
-| 3, 6, 9, 12 | FLASH: klip 1 WHITE, 2 STROBE, 3 NŮŽKY, 4 BLACK (trigger style Piano, Ignore Column Trigger) |
-| 13 | GLOBAL (přes všechny LED) |
-| 14 | GLOBAL FLASH: WHITE, STROBE, NŮŽKY, BLACK |
+| 1, 4, 7, 10 | Base group generator (Alpha blend) |
+| 2, 5, 8, 11 | Complementary generator (Lighten blend) |
+| 3, 6, 9, 12 | FLASH: clip 1 WHITE, 2 STROBE, 3 SCISSORS, 4 BLACK (Piano trigger style, Ignore Column Trigger) |
+| 13 | GLOBAL (all LEDs) |
+| 14 | GLOBAL FLASH: WHITE, STROBE, SCISSORS, BLACK |
 
-Grupy mají efekty Strobe, Trails, Mirror, Invert (vypnuté). Každá grupa je přes Transform posazená do své oblasti plátna, kde leží slicy jejích LED v Advanced Outputu. Slicy berou vstup z kompozice, takže globální vrstvy svítí na všech LED.
+Groups have Strobe, Trails, Mirror, and Invert effects, initially disabled. Transform places each group into its own canvas area, matching its LED slices in Advanced Output. Slices take their input from the composition, so global layers reach every LED.
 
 ## APC40 mkII
-| Ovladač | Funkce |
+
+| Control | Function |
 |---|---|
-| Grid, řady 1–4 (zdola) | klipy 1–4, sloupec = vrstva nad faderem (1, 2, 4, 5, 7, 8, 10, 11) |
-| Grid, horní řada | **BARVA**: odstín z knobu nad ní, stisk = colorize zap/vyp (bridge) |
-| Track knoby 1–8 | hue vrstvy (0–0,63871, viz README „Rozsah hue“) |
-| Fadery 1–8 | opacity vrstvy |
-| Activator 1–8 | klip 5 |
-| A\|B 1–8 | clear vrstvy |
-| Clip Stop (dvojice na grupu) | WHITE / STROBE flash grupy |
-| Track Select (dvojice) | NŮŽKY / mute grupy |
-| S / ● (čtveřice na grupu) | strobe FX, trails, mirror, invert grupy |
-| Scene launch 1–4 | ALL WHITE, STROBE, NŮŽKY, BLACK (GLOBAL FLASH) |
-| Scene launch 5 / Stop All | tap tempo / resync |
-| Device knoby 1–4 / 5–8 | hue flashe grupy / rychlost grupy |
-| Device tlačítka 1–4 / 5–8 | barva flashe zap/vyp / clear grupy |
-| Pan, Sends, User, Play | deck 1–4 |
-| Bank select ▲▼ / ◀▶ | deck / sloupec |
-| Master tlačítko, Nudge −/+, Session | GLOBAL zap/vyp, předchozí/další klip, clear |
-| Record | vypnout vše |
-| Master fader / crossfader | master / opacity GLOBAL |
-| Cue knob | rychlost strobe FX (relativně) |
+| Grid rows 1–4, from the bottom | Clips 1–4; each column controls the layer above its fader (1, 2, 4, 5, 7, 8, 10, 11) |
+| Top grid row | **COLOR**: the hue of the knob above it; press to toggle layer Colorize via the bridge |
+| Track knobs 1–8 | Layer Hue (0–0.63871; see the [Hue range guide](navod.md#hue-range-match-the-knob-and-pad)) |
+| Faders 1–8 | Layer opacity |
+| Activator 1–8 | Clip 5 |
+| A\|B 1–8 | Clear layer |
+| Clip Stop, pairs per group | Group WHITE / STROBE flash |
+| Track Select, pairs | Group SCISSORS / mute |
+| S / ●, four per group | Group Strobe FX, Trails, Mirror, Invert |
+| Scene launch 1–4 | ALL WHITE, STROBE, SCISSORS, BLACK (GLOBAL FLASH) |
+| Scene launch 5 / Stop All | Tap tempo / resync |
+| Device knobs 1–4 / 5–8 | Group flash hue / group speed |
+| Device buttons 1–4 / 5–8 | Flash color on/off / clear group |
+| Pan, Sends, User, Play | Decks 1–4 |
+| Bank select ▲▼ / ◀▶ | Deck / column |
+| Master button, Nudge −/+, Session | GLOBAL on/off, previous/next clip, clear |
+| Record | Turn everything off |
+| Master fader / crossfader | Master / GLOBAL opacity |
+| Cue knob | Strobe FX speed, relative |
 | Tempo knob | BPM |
 
-Preset je nastavený na **libovolné zařízení**, funguje přes bridge i s APC zapojeným napřímo.
+SCISSORS refers to the clip named “NŮŽKY” in the original composition; existing clip and preset names do not need to be changed.
+
+The preset uses **Any device**, so it works through the bridge as well as with the APC connected directly.

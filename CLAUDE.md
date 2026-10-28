@@ -1,73 +1,62 @@
-# Kontext projektu pro Clauda
+# Project context for Claude and future contributors
 
-Aktualizováno 26. 10. 2026. Repo: Technical223/apc40-resolume-bridge.
-Výchozí prověřený commit: 3855d08223d5c55350fa9edb5b9d6da87de64f6e.
+Updated 2026-10-28. Repository: Technical223/apc40-resolume-bridge.
+Original reviewed commit: `3855d08223d5c55350fa9edb5b9d6da87de64f6e`.
 
-## Aktuální rozhodnutí uživatele: jednoduchá MIDI synchronizace
+## User decisions
 
-Uživatel původně schválil ignorování zpětné vazby horní řady. Následně výslovně požádal doplnit reakci na změny Hue/Colorize myší a jinými zdroji, ale hlavně nic nekomplikovat a zachovat stabilitu. Toto novější přání nahrazuje předchozí zákaz synchronizace.
+Keep the bridge simple and stable. Use existing MIDI feedback for Hue/Colorize changes made outside the APC; do not require a webserver, REST/OSC, or new dependencies. This request superseded an earlier decision to ignore top-row feedback.
 
-Použita je pouze stávající MIDI zpětná vazba; Webserver nebyl zapnut, nejsou přidané závislosti ani REST/OSC. `sync_resolume_feedback` je v configu true, bezpečný výchozí stav bez klíče je false. Jednou volbou lze obnovit původní chování. Mapování CC 48–55 / noty 32–39, kanál 0, hue_max 0.63871 zůstává.
+English is the default for the app, messages, primary README, documentation, and diagrams. `README.cs.md` and `docs/*.cs.md` are optional Czech versions. Keep their instructions consistent with the actual English button labels. Maintain both README versions when changing the landing page. Preserve the original Czech batch filenames for compatibility alongside the new English entry points. Do not rename user clip names, MIDI ports, preset identifiers, configuration keys, or the existing `midi.xml.pred-bridge.bak` backup filename merely to translate them.
 
-Živým testem stávající Areny bylo ověřeno: odeslání CC54=50 přes jiný MIDI výstup vyvolá zpětnou vazbu CC54=49 (MIDI zaokrouhlení), návrat na 0 vrátí 0. Přepnutí Colorize na notě 38 vrátí velocity 3 pro bypass a 5 pro zapnutý efekt. Stejné hodnoty jsou v NamedValues aktuálního JKB APC40 PRO presetu. Nelze používat prosté velocity>0. Testovaná vrstva byla po testu vrácena na Hue 0 a aktivní Colorize.
+## MIDI feedback
 
-Nový handler uloží příchozí Hue a překreslí LED. Colorize feedback nastavuje stav idempotentně (nepřepíná ho znovu) a vykreslí bílou nebo aktuální odstín. CC průchod do APC zůstává, zprávy se neposílají zpět do Areny. Neznámé velocity a Note Off se ignorují. Bez feedbacku zůstává původní ovládání APC funkční.
+`sync_resolume_feedback` is true in the supplied configuration, but defaults to false if the key is absent. Hue uses CCs 48–55, Colorize notes 32–39, channel 0 (Arena channel 1), and `hue_max: 0.63871`.
 
-Omezení: 7bitové MIDI, rozsah a směrování shortcutu; nejde o přesné čtení plného Hue přes API, aktivní dotazování ani sledování saturace/jasu. Mimo rozsah shortcutu není věrný odstín zaručen. Automatické resynchronizování kompozice závisí na tom, zda Arena pošle stejné mapování. Změny přímo myší nebyly v závěrečném testu ověřené; ověřen byl externí MIDI zdroj a skutečná zpětná vazba Areny.
+The existing Arena installation was tested with an external MIDI source: CC54=50 produced feedback CC54=49 (7-bit rounding), and returning to zero produced zero. Note38 toggling produced velocity 3 for bypass and 5 for an active effect, matching NamedValues in the JKB APC40 PRO preset. Never treat all nonzero velocities as active. The tested layer was restored to Hue 0 and active Colorize.
 
-Testy: `py -3 -m unittest discover -s tests -v` (19 testů; 9 původních + 10 nových). Nové testy pokrývají všech 8 knobů/padů, bypass, opětovné zapnutí se správným odstínem, vypnutí nové volby, chybné velocity/kanály a nevytváření zpětné smyčky. Integrační test s běžící Arenou potvrdil změny uloženého stavu Hue a Colorize z reálného feedbacku. Testy STOP zůstávají stejné.
+The feedback handler stores Hue and redraws the pad. Colorize feedback sets state idempotently, then draws white or the remembered hue. CC passthrough to the APC remains; feedback is not sent back into Arena. Unknown velocities and Note Off are ignored. Physical APC controls still work without feedback.
 
-## Provedené opravy
+Limitations: 7-bit resolution, shortcut range and routing, no full-value API read, active polling, or saturation/brightness tracking. Colors outside the mapped range are not guaranteed. Composition synchronization depends on matching mappings and actual feedback from Arena. Direct mouse input was not conclusively tested in the original live validation; external MIDI and real Arena feedback were verified.
 
-1. Konstruktor Bridge eviduje každý otevřený port. Při selhání dalšího otevření nebo inicializace zavře dosud otevřené porty a znovu vyvolá původní chybu.
-2. Výjimka v on_apc, on_resolume nebo blikání nastaví threading.Event failed. alive() tak vrátí False i tehdy, když se názvy portů nezměnily. Hlavní smyčka zavře starý bridge a opakuje vytvoření.
-3. STOP.bat a setup.ps1 používají společný stop_bridge.ps1. Číslo v bridge.pid se ověřuje proti procesu Python/Pythonw, přesné absolutní cestě skriptu jako prvnímu argumentu, režimu --watch/--run a času vzniku procesu. Ukončení používá držený handle konkrétního procesu, nikoli znovu vyhledaný PID. Cizí proces zůstane běžet; neověřitelná identita zastaví restart bezpečně.
-4. README a návod popisují novou volitelnou MIDI synchronizaci i původní režim bez ní.
+## Reliability fixes
 
-## Ověření
+1. The Bridge constructor records each opened port and closes partially initialized ports if any later open or initialization fails, then raises the original error.
+2. Exceptions in `on_apc`, `on_resolume`, or blinking set the `failed` event. `alive()` returns false even if device names are still enumerated. The main loop closes the failed bridge and reconnects.
+3. Stop and restart share `stop_bridge.ps1`. It verifies Python/Pythonw, the exact absolute script path as the first argument, `--watch`/`--run`, and process creation time. Termination holds a handle to the exact process instance rather than looking up a recycled PID. Unrelated processes remain alive; unverifiable identity safely prevents restart.
+4. Documentation covers optional feedback and the original APC-only mode.
 
-- tests/test_bridge.py: 9 testů, včetně všech čtyř bodů selhání otevírání portů, chyby inicializačního odesílání, chyb obou směrů a blikání, opětovného vytvoření bridge, normálního průchodu MIDI a zachování ignorované zpětné vazby horní řady.
-- tests/test_stop_process.py: skutečné dočasné procesy, ověření že cizí Python a jiný režim téhož skriptu zůstávají běžet, neplatný/starý PID, zastavení správného procesu, cesta s mezerou a apostrofem a syntaktická kontrola Windows PowerShellu 5.1.
-- Testy nevyžadují připojené MIDI zařízení a nemění nastavení Resolume.
-- Skutečné odpojení a opětovné připojení USB nebylo testováno; simulované chyby nejsou důkazem chování konkrétního ovladače.
+## Windows control panel
 
-Spuštění testů z kořene repa:
-    py -3 tests/test_bridge.py -v
-    py -3 tests/test_stop_process.py
+`bridge/ui/BridgeManager.cs` implements the native WinForms dashboard using .NET Framework. `build-ui.ps1` uses the system compiler. `APC40 Bridge.vbs` bootstraps source ZIPs; distribution ZIPs include the EXE. `START.bat` opens the dashboard. Backend actions live in `manage.ps1` and `runtime.ps1`; see [technical notes](docs/windows-app.md).
 
-## Nasazení
+Normal start is idempotent and does not reinstall anything. `setup.ps1 -NoPopup -PrepareOnly` prepares dependencies and settings without restarting the watcher, with explicit instructions for missing virtual ports or Arena preferences. The status check only enumerates ports and reads MIDI preferences; it does not claim ports or prove MIDI message delivery.
 
-Živá místní instalace má soubory z bridge/ přímo v jedné složce (není to Git checkout).
-Při kopírování opravy je nutné zahrnout nový stop_bridge.ps1 spolu s apc_bridge.py, setup.ps1 a STOP.bat.
-Běžící Python drží starý kód až do restartu. Restart může znovu odeslat fyzické polohy faderů/knobů do kompozice, jak již uvádí návod.
-GitHubové změny jsou předávány přes pull request; tento soubor nezaručuje jeho sloučení.
+Settings preserve unknown configuration keys and save atomically with a backup. Closing the dashboard leaves the watcher running. Only one dashboard instance is allowed per installation. Mutating actions use a path-specific mutex.
 
-Nová synchronizace navíc vyžaduje nové klíče config.json (sync_resolume_feedback a dvě velocity). Při ruční aktualizaci sluč config s vlastním nastavením; nepřepisuj uživatelské porty ani mapování.
+Autostart targets `APC40 Bridge.exe --autostart`, which starts the watcher without a dashboard or setup. Preserve existing configuration, state, runtime path, and user shortcuts when updating. Restarting the watcher can resend physical fader/knob positions into the composition.
 
-## Nativní správce Windows (nové rozhraní)
+MIDI restore requires Arena closed and a real backup before stopping the watcher or disabling autostart. No backup means no destructive change.
 
-Uživatel požádal nahradit nepříliš reprezentativní dávkové soubory přehlednou instalací, spouštěním a správou. Výsledkem je APC40 Bridge.exe (WinForms, .NET Framework), jeho zdroj v bridge/ui/BridgeManager.cs a ikona. Zdrojový ZIP má vstup APC40 Bridge.vbs, distribuční ZIP již obsahuje EXE. START.bat otevírá správce. Backend je manage.ps1 + runtime.ps1, popsaný v docs/windows-app.md.
+## Validation
 
-Běžné spuštění už neprovádí celou instalaci: idempotentně spustí existující watcher nebo ho ponechá běžet. Příprava má režim -NoPopup -PrepareOnly a samostatné chybové pokyny. Nativní nastavení zachovává ostatní klíče a atomicky ukládá zálohu. Správce ukazuje pouze přítomnost zařízení/procesů; neprohlašuje ji za test komunikace. Zavření okna watcher nezastaví.
+- `py -3 -m unittest discover -s tests -v`: 27 tests covering port initialization failures, errors in both directions and blinking, reconnect behavior, normal passthrough, all eight Hue/pad mappings, feedback state, disabled synchronization, channels/velocities, no feedback loop, read-only port/preferences status, and Windows management with a fake watcher.
+- `py -3 tests/test_stop_process.py`: real disposable child processes, unrelated Python and other run modes preserved, malformed/stale PID handling, correct child termination, paths with spaces/apostrophes, Windows PowerShell syntax.
+- Tests do not require actual MIDI hardware or change Arena settings. The idempotent management test is skipped unless loopMIDI is already running; tests never launch it.
+- Original live preparation succeeded without changing the watcher PID. The dashboard, settings, and logs were visually inspected. Actual USB unplug/replug and pristine Windows installation remain unverified.
+- `.github/workflows/windows.yml` runs Windows tests and builds the package. Read CI results separately from local validation.
+- English UI update: system compiler build succeeded; 26 tests passed and one loopMIDI-dependent test was skipped. Safe-process-stop checks passed. The Python MIDI engine and default configuration were not changed.
 
-Nový autostart cílí na EXE --autostart (bez dashboardu, bez opakované instalace). Existující aktivní autostart lze při místním nasazení přesměrovat na nový vstup se zachováním původního zástupce v záloze. Desktop ikona ukazuje na stejné EXE. Config a state při aktualizaci nepřepisovat.
+## Deployment
 
-Ověření: 27 testů, včetně 3 nových read-only status testů, 2 kontrol MIDI konfigurace bez zápisu a 3 Windows integračních testů na dočasném falešném watcheru (status bez spuštění, idempotentní start/stop, neplatný config). Původní testy bezpečného zastavení prošly. Nativní aplikace byla sestavena systémovým csc a vizuálně otevřena; ověřeny hlavní stav, nastavení a logy. Živá příprava -PrepareOnly prošla s nezměněným PID existujícího watcheru. Instalace na zcela čistém Windows nebyla ověřená. CI workflow windows.yml sestavuje distribuční ZIP; výsledek CI je nutné číst odděleně od místních testů.
+The local installation is `C:\Users\jakub\AppData\Local\Programs\APC40 Bridge`, with backend files directly inside it rather than a Git checkout. The previous Documents installation was archived under its `backups` folder. English UI update backup: `backups/before-english-ui-20261028`. Preserve `config.json`, `state.json`, `bridge.pid`, `runtime.json`, and existing log history during translation updates; no watcher restart is needed for UI text changes.
 
-Připravenost v GUI zahrnuje i přítomnost virtuálních portů a read-only kontrolu skutečného midi.xml (dry=True), nikoli jen import Python knihoven. Chybějící preferences při první instalaci mají konkrétní pokyn k prvnímu spuštění a zavření Areny.
+Manual reliability updates must include `stop_bridge.ps1`, `apc_bridge.py`, `setup.ps1`, and the stop launcher. Feedback updates require merging the synchronization and velocity keys into existing configuration without overwriting custom ports or mappings. A running Python process keeps its old code until restarted. This file alone does not guarantee any branch has been merged.
 
-## Showcase hlavní stránky
+## README media
 
-README používá docs/media/app-showcase.gif (9,24 s, 1000×820, tři skutečné scény správce) a tři PNG v docs/img/app-dashboard.png, app-settings.png, app-logs.png. Snímky vznikly z aktuální aplikace bez změny její konfigurace nebo běhu MIDI watcheru; z logů je publikovaný pouze běžný MIDI provoz bez uživatelských cest. GIF je animovaná prohlídka snímků, nikoli záznam instalace. Původní hardwarová ukázka demo.gif/demo.mp4 zůstává v sekci Bridge v akci.
+`docs/media/app-showcase.gif` is an animated tour of real dashboard, settings, and log screenshots, not an installation recording. Matching stills are `docs/img/app-dashboard.png`, `app-settings.png`, and `app-logs.png`. Capture actual app windows without modifying user configuration or watcher state; publish no private paths from logs. Refresh these screenshots when changing the interface language.
 
+The synchronized real demo uses `docs/media/controller-screen-sync.gif` and `.mp4`. Camera source: IMG_0533.MP4 (768×550, about 29.997 fps). Screen source: Záznam 2026-10-26 232815.mp4 (2560×1380, 30 fps). Camera starts at 0 s, screen at 72.300 s, aligned visually using Hue changes near camera 3.1 / screen 75.4 s and later transitions. This is approximate visual synchronization, not a MIDI latency measurement.
 
-## Synchronizované reálné video (2026-10-26)
-
-README sekce „Bridge v akci“ obsahuje `docs/media/controller-screen-sync.gif` a odkaz na `controller-screen-sync.mp4`. Skutečná uživatelova kamera `IMG_0533.MP4` (768×550, cca 29.997 fps) je vlevo; ze záznamu obrazovky `Záznam 2026-10-26 232815.mp4` (2560×1380, 30 fps) jsou vedle ní dva samostatné výřezy. Kamera začíná na 0 s, obrazovka na 72.300 s; synchronizace vizuálně podle změn Hue kolem kamera 3.1 / obrazovka 75.4 s a dalších změn. Jde o přibližné vizuální zarovnání, nikoli měření latence MIDI.
-
-Výstup po úpravě na tři panely: 36 s, 1920×720, H.264/yuv420p, 30 fps, bez zvuku, faststart. Vlevo celá kamera, uprostřed Colorize (zdrojový crop x=1340, y=680, w=426, h=390), vpravo obraz Composition Monitoru bez okolního UI a svislých prázdných okrajů panelu (x=2138, y=906, w=422, h=238). Obsah samotné kompozice včetně jejího černého pozadí zachován. GIF: 1200 px, 10 fps, smyčka. Poslední statická část zdrojů vynechána. Původní velké zdroje nejsou v repu; stará ukázka demo.mp4/gif zůstává v rozbalovací sekci. Žádná změna funkčnosti bridge.
-
-
-## Jazyk hlavní stránky (2026-10-28)
-
-README.md je primárně anglicky, README.cs.md obsahuje plnou českou verzi. Obě mají nahoře vzájemný přepínač English / Česky. Při změnách hlavní stránky aktualizovat obě verze a zachovat funkční relativní odkazy. Rozhraní aplikace a ostatní dokumentace zůstávají česky; anglické README uvádí původní názvy tlačítek a označuje české návody. Nejde o automatické přepínání podle země ani překlad aplikace.
+Output: 36 s, 1920×720, H.264/yuv420p, 30 fps, silent, faststart. Three panels: full camera at left; Colorize crop x=1340, y=680, w=426, h=390 in the middle; Composition Monitor image crop x=2138, y=906, w=422, h=238 on the right. The composition black background is preserved. GIF: 1200 px, 10 fps, looped. Static endings and large source files are excluded. Original demo.gif/demo.mp4 remain in a collapsible section. No bridge behavior changes were made for media editing.

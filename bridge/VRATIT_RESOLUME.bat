@@ -1,5 +1,5 @@
 @echo off
-rem Vrati MIDI nastaveni Resolume do stavu pred bridge (Arena musi byt zavrena)
+rem Restore Arena MIDI settings from before bridge setup (Arena must be closed)
 cd /d "%~dp0"
 py -3 apc_bridge.py --restore-resolume
 pause

@@ -9,7 +9,7 @@ If Not fs.FileExists(app) Then
   ps = shell.ExpandEnvironmentStrings("%WINDIR%") & "\System32\WindowsPowerShell\v1.0\powershell.exe"
   code = shell.Run(Quote(ps) & " -NoProfile -NonInteractive -ExecutionPolicy Bypass -File " & Quote(build), 0, True)
   If code <> 0 Or Not fs.FileExists(app) Then
-    MsgBox "Aplikaci se nepodarilo pripravit. Podrobnosti najdes v navodu.", 48, "APC40 Bridge"
+    MsgBox "Could not prepare the app. See the setup guide for details.", 48, "APC40 Bridge"
     WScript.Quit 1
   End If
 End If

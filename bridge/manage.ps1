@@ -18,14 +18,14 @@ function Find-RunningBridge {
 }
 function New-BridgeShortcut([string]$Path, [string]$Arguments) {
     $exe = Join-Path $Here 'APC40 Bridge.exe'
-    if (-not (Test-Path -LiteralPath $exe)) { throw 'Aplikace chybi. Spust nejdrive build-ui.ps1.' }
+    if (-not (Test-Path -LiteralPath $exe)) { throw 'The app is missing. Run build-ui.ps1 first.' }
     $shell = New-Object -ComObject WScript.Shell
     $link = $shell.CreateShortcut($Path)
     $link.TargetPath = $exe
     $link.Arguments = $Arguments
     $link.WorkingDirectory = $Here
     $link.IconLocation = "$exe,0"
-    $link.Description = 'APC40 Bridge - ovladani a sprava'
+    $link.Description = 'APC40 Bridge - control panel'
     $link.Save()
 }
 $guard = $null
@@ -37,13 +37,13 @@ try {
         finally { $sha.Dispose() }
         $guard = New-Object Threading.Mutex($false, ("Local\APC40BridgeManager_" + $hash))
         try { $ownsGuard = $guard.WaitOne(10000) } catch [Threading.AbandonedMutexException] { $ownsGuard = $true }
-        if (-not $ownsGuard) { throw 'Prave probiha jina operace. Zkus to za chvili.' }
+        if (-not $ownsGuard) { throw 'Another operation is in progress. Please try again shortly.' }
     }
     switch ($Action) {
         'status' {
             $py = Find-BridgePython
             $cfg = Get-Content -Raw -LiteralPath (Join-Path $Here 'config.json') | ConvertFrom-Json
-            $ports = @{dependencies_ready=$false; apc_ready=$false; virtual_ready=$false; error='Python neni pripraveny.'}
+            $ports = @{dependencies_ready=$false; apc_ready=$false; virtual_ready=$false; error='Python is not ready.'}
             if ($py) {
                 try {
                     $raw = & $py (Join-Path $Here 'apc_bridge.py') --status-json 2>$null
@@ -63,15 +63,15 @@ try {
             } | ConvertTo-Json -Compress
         }
         'start' {
-            if (Find-RunningBridge) { @{ok=$true; message='Bridge uz bezi.'} | ConvertTo-Json -Compress; break }
+            if (Find-RunningBridge) { @{ok=$true; message='The bridge is already running.'} | ConvertTo-Json -Compress; break }
             $py = Find-BridgePython
-            if (-not $py) { throw 'Nejdrive klikni na Pripravit instalaci.' }
+            if (-not $py) { throw 'Click Install / repair first.' }
             & $py -c "import mido,rtmidi" 2>$null
-            if ($LASTEXITCODE -ne 0) { throw 'Chybi MIDI knihovny. Klikni na Pripravit instalaci.' }
+            if ($LASTEXITCODE -ne 0) { throw 'MIDI libraries are missing. Click Install / repair.' }
             Save-BridgePython $py
             $loop = @("${env:ProgramFiles(x86)}\Tobias Erichsen\loopMIDI\loopMIDI.exe", "$env:ProgramFiles\Tobias Erichsen\loopMIDI\loopMIDI.exe") | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
             if (-not (Get-Process loopMIDI -ErrorAction SilentlyContinue)) {
-                if (-not $loop) { throw 'Chybi loopMIDI. Klikni na Pripravit instalaci.' }
+                if (-not $loop) { throw 'loopMIDI is missing. Click Install / repair.' }
                 Start-Process -FilePath $loop -WindowStyle Hidden | Out-Null
             }
             Stop-BridgeProcess -Directory $Here
@@ -79,22 +79,22 @@ try {
             if (-not (Test-Path -LiteralPath $pyw)) { $pyw = $py }
             $child = Start-Process -FilePath $pyw -ArgumentList ("`"" + (Join-Path $Here 'apc_bridge.py') + "`" --watch") -WorkingDirectory $Here -WindowStyle Hidden -PassThru
             Start-Sleep -Milliseconds 1200
-            if ($child.HasExited -or -not (Find-RunningBridge)) { throw 'Bridge se nespustil. Podivej se do provozniho logu.' }
-            @{ok=$true; message='Bridge spusten. Aktivuje se s Arenou.'} | ConvertTo-Json -Compress
+            if ($child.HasExited -or -not (Find-RunningBridge)) { throw 'The bridge did not start. Check the runtime log.' }
+            @{ok=$true; message='Bridge started. It will activate with Arena.'} | ConvertTo-Json -Compress
         }
-        'stop' { Stop-BridgeProcess -Directory $Here; @{ok=$true; message='Bridge zastaven.'} | ConvertTo-Json -Compress }
-        'autostart-on' { New-BridgeShortcut $StartupLink '--autostart'; @{ok=$true; message='Automaticke spousteni zapnuto.'} | ConvertTo-Json -Compress }
-        'autostart-off' { if (Test-Path -LiteralPath $StartupLink) { Remove-Item -LiteralPath $StartupLink }; @{ok=$true; message='Automaticke spousteni vypnuto.'} | ConvertTo-Json -Compress }
-        'shortcut' { New-BridgeShortcut (Join-Path ([Environment]::GetFolderPath('Desktop')) 'APC40 Bridge.lnk') ''; @{ok=$true; message='Zastupce byl pridan na plochu.'} | ConvertTo-Json -Compress }
+        'stop' { Stop-BridgeProcess -Directory $Here; @{ok=$true; message='Bridge stopped.'} | ConvertTo-Json -Compress }
+        'autostart-on' { New-BridgeShortcut $StartupLink '--autostart'; @{ok=$true; message='Autostart enabled.'} | ConvertTo-Json -Compress }
+        'autostart-off' { if (Test-Path -LiteralPath $StartupLink) { Remove-Item -LiteralPath $StartupLink }; @{ok=$true; message='Autostart disabled.'} | ConvertTo-Json -Compress }
+        'shortcut' { New-BridgeShortcut (Join-Path ([Environment]::GetFolderPath('Desktop')) 'APC40 Bridge.lnk') ''; @{ok=$true; message='Desktop shortcut created.'} | ConvertTo-Json -Compress }
         'restore' {
             $py = Find-BridgePython
-            if (-not $py) { throw 'Python neni pripraveny.' }
+            if (-not $py) { throw 'Python is not ready.' }
             $result = & $py (Join-Path $Here 'apc_bridge.py') --restore-resolume 2>&1
-            if ($LASTEXITCODE -ne 0) { throw ('Obnoveni nastaveni neni mozne: ' + ($result -join ' ')) }
-            if (-not ($result -match 'RESTORED')) { throw 'Zaloha puvodniho nastaveni nebyla nalezena.' }
+            if ($LASTEXITCODE -ne 0) { throw ('Could not restore settings: ' + ($result -join ' ')) }
+            if (-not ($result -match 'RESTORED')) { throw 'No backup of the original settings was found.' }
             Stop-BridgeProcess -Directory $Here
             if (Test-Path -LiteralPath $StartupLink) { Remove-Item -LiteralPath $StartupLink }
-            @{ok=$true; message='Puvodni MIDI nastaveni obnoveno. Bridge a autostart jsou vypnute.'} | ConvertTo-Json -Compress
+            @{ok=$true; message='Original MIDI settings restored. The bridge and autostart are disabled.'} | ConvertTo-Json -Compress
         }
     }
 } catch {
