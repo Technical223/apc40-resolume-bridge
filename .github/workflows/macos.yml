@@ -8,6 +8,7 @@ permissions:
 jobs:
   preview:
     runs-on: macos-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -19,6 +20,7 @@ jobs:
       - name: Portable regression tests
         run: python -m unittest discover -s tests -v
       - name: Native CoreMIDI and diagnostics checks
+        timeout-minutes: 2
         run: python macos/smoke_macos.py
       - name: Package unsigned tester app
         run: python macos/package_macos.py

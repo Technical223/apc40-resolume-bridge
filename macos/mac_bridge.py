@@ -322,7 +322,8 @@ def gui(core, cfg):
                                                  stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                     elif choice == "Stop test":
                         stop_child(child)
-                        dialog("Test stopped. If it was running, its debug ZIP is on the Desktop, or under reports in the logs folder if the Desktop is unavailable.")
+                        exported = report(snapshot(core, cfg))
+                        dialog("Test stopped. Diagnostics saved to:\n" + str(exported))
                     elif choice == "Export diagnostics":
                         if active:
                             stop_child(child)
