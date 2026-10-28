@@ -2,7 +2,7 @@
 
 Experimental tester build, separate from Windows. It reuses the shared MIDI engine for Hue pads, Colorize feedback, utility lighting and reconnects. A native dialog menu provides preparation, a three-minute test, stop and diagnostic export. This is not yet a full macOS dashboard or production release.
 
-[České pokyny pro testera](TESTER-CS.md) · [Main project](https://github.com/Technical223/apc40-resolume-bridge)
+[Tester instructions](TESTER.md) · [Main project](https://github.com/Technical223/apc40-resolume-bridge)
 
 ## Requirements and launch
 

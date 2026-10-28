@@ -23,7 +23,7 @@ def build(destination):
         APP + "Resources/core/config.json": ROOT / "bridge/config.json",
         APP + "Resources/resolume/APC40 BRIDGE EXAMPLE.xml": ROOT / "resolume/APC40 BRIDGE EXAMPLE.xml",
         "README.md": ROOT / "macos/README.md",
-        "TESTER-CS.md": ROOT / "macos/TESTER-CS.md",
+        "TESTER.md": ROOT / "macos/TESTER.md",
         "LICENSE": ROOT / "LICENSE",
     }
     revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT,
