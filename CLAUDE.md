@@ -66,3 +66,8 @@ README používá docs/media/app-showcase.gif (9,24 s, 1000×820, tři skutečn�
 README sekce „Bridge v akci“ obsahuje `docs/media/controller-screen-sync.gif` a odkaz na `controller-screen-sync.mp4`. Skutečná uživatelova kamera `IMG_0533.MP4` (768×550, cca 29.997 fps) je vlevo; ze záznamu obrazovky `Záznam 2026-10-26 232815.mp4` (2560×1380, 30 fps) jsou vedle ní dva samostatné výřezy. Kamera začíná na 0 s, obrazovka na 72.300 s; synchronizace vizuálně podle změn Hue kolem kamera 3.1 / obrazovka 75.4 s a dalších změn. Jde o přibližné vizuální zarovnání, nikoli měření latence MIDI.
 
 Výstup po úpravě na tři panely: 36 s, 1920×720, H.264/yuv420p, 30 fps, bez zvuku, faststart. Vlevo celá kamera, uprostřed Colorize (zdrojový crop x=1340, y=680, w=426, h=390), vpravo obraz Composition Monitoru bez okolního UI a svislých prázdných okrajů panelu (x=2138, y=906, w=422, h=238). Obsah samotné kompozice včetně jejího černého pozadí zachován. GIF: 1200 px, 10 fps, smyčka. Poslední statická část zdrojů vynechána. Původní velké zdroje nejsou v repu; stará ukázka demo.mp4/gif zůstává v rozbalovací sekci. Žádná změna funkčnosti bridge.
+
+
+## Jazyk hlavní stránky (2026-10-28)
+
+README.md je primárně anglicky, README.cs.md obsahuje plnou českou verzi. Obě mají nahoře vzájemný přepínač English / Česky. Při změnách hlavní stránky aktualizovat obě verze a zachovat funkční relativní odkazy. Rozhraní aplikace a ostatní dokumentace zůstávají česky; anglické README uvádí původní názvy tlačítek a označuje české návody. Nejde o automatické přepínání podle země ani překlad aplikace.

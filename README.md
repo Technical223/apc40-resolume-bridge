@@ -1,101 +1,97 @@
 # APC40 mkII ⇄ Resolume Arena bridge
 
+**English** | [Česky](README.cs.md)
+
 ![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6)
 ![Resolume](https://img.shields.io/badge/Resolume%20Arena-7.x-8A2BE2)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-Barevné pady pod Hue knoby, tlačítka viditelná ve tmě a **jedno okno pro instalaci, spuštění a správu**.
+Color pads beneath the Hue knobs, buttons you can see in the dark, and **one window for setup, launch, and management**.
 
-- Pad ukazuje odstín knobu; stisk přepíná Colorize.
-- Volitelná MIDI zpětná vazba přijímá změny z Areny i jiných ovladačů.
-- Bridge se aktivuje s Arenou a uvolní kontroler po jejím zavření.
-- Aplikace ukazuje stav kontroleru, Areny, portů a instalace. Bez terminálového okna.
+- Each pad shows its knob’s hue; press it to toggle Colorize.
+- Optional MIDI feedback follows changes from Arena and other controllers.
+- The bridge activates with Arena and releases the controller when Arena closes.
+- The app shows controller, Arena, MIDI port, and setup status. No terminal window needed.
 
 <p align="center">
-  <a href="docs/media/app-showcase.gif"><img src="docs/media/app-showcase.gif" width="1000" alt="Animovaná prohlídka APC40 Bridge: přehled připojení, nastavení a provozní logy"></a>
+  <a href="docs/media/app-showcase.gif"><img src="docs/media/app-showcase.gif" width="1000" alt="APC40 Bridge animated tour: connection status, settings, and live logs"></a>
 </p>
-<p align="center"><sub>Skutečné snímky Windows aplikace · přehled, nastavení a logy v jednom okně</sub></p>
+<p align="center"><sub>Actual Windows app screenshots · status, settings, and logs in one window</sub></p>
 
-## Ukázky aplikace
+## App screenshots
 
 <table>
   <tr>
-    <td width="33%" align="center"><a href="docs/img/app-dashboard.png"><img src="docs/img/app-dashboard.png" alt="Hlavní okno APC40 Bridge se stavem kontroleru, Areny, portů a instalace"></a></td>
-    <td width="33%" align="center"><a href="docs/img/app-settings.png"><img src="docs/img/app-settings.png" alt="Nastavení MIDI portů, Hue, zpětné vazby a osvětlení"></a></td>
-    <td width="33%" align="center"><a href="docs/img/app-logs.png"><img src="docs/img/app-logs.png" alt="Prohlížeč provozních logů APC40 Bridge"></a></td>
+    <td width="33%" align="center"><a href="docs/img/app-dashboard.png"><img src="docs/img/app-dashboard.png" alt="APC40 Bridge dashboard with controller, Arena, port, and setup status"></a></td>
+    <td width="33%" align="center"><a href="docs/img/app-settings.png"><img src="docs/img/app-settings.png" alt="MIDI port, Hue, feedback, and lighting settings"></a></td>
+    <td width="33%" align="center"><a href="docs/img/app-logs.png"><img src="docs/img/app-logs.png" alt="APC40 Bridge log viewer"></a></td>
   </tr>
   <tr>
-    <td align="center"><b>Přehled připojení</b></td>
-    <td align="center"><b>Nastavení</b></td>
-    <td align="center"><b>Provozní logy</b></td>
+    <td align="center"><b>Connection status</b></td>
+    <td align="center"><b>Settings</b></td>
+    <td align="center"><b>Live logs</b></td>
   </tr>
 </table>
 
-Kliknutím otevřeš snímek v plné velikosti.
+Click a screenshot to view it at full size.
 
-## Začni tady — Windows
+## Get started — Windows
 
-1. Rozbal balíček **APC40-Bridge-Windows.zip** do složky, kde má zůstat. Při prvním nastavení zavři Arenu.
-2. Otevři **APC40 Bridge.exe**.
-3. Klikni **Připravit a spustit**. Příprava najde nebo nainstaluje potřebné součásti.
-4. Pokud chybí virtuální porty, klikni **Otevřít loopMIDI**, vytvoř **APC VIRT A** a **APC VIRT B** a přípravu zopakuj.
-5. V Areně vyber MIDI preset na **Any device** a nastav Hue **Range Max 0,63871** (zobrazuje se zaokrouhleně 0,64).
+1. Extract **APC40-Bridge-Windows.zip** into the folder where you want to keep it. Close Arena before the initial setup.
+2. Open **APC40 Bridge.exe**.
+3. Click **Prepare and start** (`Připravit a spustit`). Setup finds or installs the required components.
+4. If virtual MIDI ports are missing, click **Open loopMIDI** (`Otevřít loopMIDI`), create **APC VIRT A** and **APC VIRT B**, then run setup again.
+5. In Arena, set the MIDI preset to **Any device** and Hue **Range Max to 0.63871** (displayed rounded to 0.64).
 
-Pro další použití stačí aplikace a tlačítko **Spustit bridge**. Volba **Spouštět automaticky po přihlášení do Windows** spustí bridge bez otevírání správce.
+For everyday use, open the app and click **Start bridge** (`Spustit bridge`). **Start automatically when signing in to Windows** (`Spouštět automaticky po přihlášení do Windows`) runs the bridge without opening the dashboard.
 
-**Stažený zdrojový ZIP z GitHubu:** ve složce `bridge` otevři **APC40 Bridge.vbs**. Ten připraví aplikaci z přiložených zdrojů a otevře stejné okno. Není k tomu potřeba Python ani další vývojové nástroje; sestavení používá .NET Framework ve Windows.
+The current app interface is in Czech; the original button labels are included here to help you find them.
 
-## Vše na jednom místě
+**Using GitHub’s source ZIP:** open **APC40 Bridge.vbs** in the `bridge` folder. It builds the app from the included sources and opens the same dashboard. Building the dashboard uses Windows’ .NET Framework and requires no Python or additional developer tools; bridge dependencies are handled during setup.
 
-| Ovládání | Co dělá |
+## Everything in one place
+
+| Control (current app label) | What it does |
 |---|---|
-| Spustit bridge | Spustí hlídání Areny; při opakovaném spuštění nevytváří další proces |
-| Zastavit / Restartovat | Bezpečně uvolní kontroler nebo načte nové nastavení |
-| Instalace / oprava | Připraví závislosti a MIDI nastavení; běžící bridge zbytečně nerestartuje |
-| Nastavení | Porty, Hue, zpětná vazba a osvětlení; zachová ostatní hodnoty a uloží zálohu |
-| Zobrazit logy | Provoz, příprava i správa přímo v aplikaci |
-| Zástupce na plochu | Přidá běžnou ikonu aplikace na plochu |
-| Obnovit MIDI Areny | Při zavřené Areně vrátí zálohu MIDI nastavení, zastaví bridge a vypne autostart |
+| Start bridge (`Spustit bridge`) | Starts watching for Arena; repeated launches do not create duplicate processes |
+| Stop / Restart (`Zastavit` / `Restartovat`) | Safely releases the controller or reloads settings |
+| Install / repair (`Instalace / oprava`) | Prepares dependencies and MIDI settings without unnecessarily restarting a running bridge |
+| Settings (`Nastavení`) | Ports, Hue, feedback, and lighting; preserves other values and saves a backup |
+| View logs (`Zobrazit logy`) | Runtime, setup, and management logs inside the app |
+| Desktop shortcut (`Zástupce na plochu`) | Adds an app shortcut to your desktop |
+| Restore Arena MIDI (`Obnovit MIDI Areny`) | With Arena closed, restores its MIDI settings backup, stops the bridge, and disables autostart |
 
-Zavření správce **nezastaví** bridge. Běží samostatně na pozadí. Restart může do Areny znovu přenést fyzické polohy faderů/knobů.
+Closing the dashboard **does not stop** the bridge: it runs independently in the background. Restarting may resend the physical fader and knob positions to Arena.
 
-## Bridge v akci
+## Bridge in action
 
 <p align="center">
-  <a href="docs/media/controller-screen-sync.mp4"><img src="docs/media/controller-screen-sync.gif" width="1200" alt="Tři synchronizované pohledy vedle sebe: APC40 mkII, detail panelu Colorize a Composition Monitor"></a>
+  <a href="docs/media/controller-screen-sync.mp4"><img src="docs/media/controller-screen-sync.gif" width="1200" alt="Three synchronized views side by side: APC40 mkII, Colorize controls, and Composition Monitor"></a>
 </p>
-<p align="center"><sub>Stejný okamžik ze tří pohledů · APC40 mkII + Colorize + Composition Monitor · <a href="docs/media/controller-screen-sync.mp4">Přehrát 36s video v plné kvalitě (MP4)</a></sub></p>
+<p align="center"><sub>The same moment from three perspectives · APC40 mkII + Colorize + Composition Monitor · <a href="docs/media/controller-screen-sync.mp4">Watch the full-quality 36-second video (MP4)</a></sub></p>
 
-Záběry jsou časově srovnané podle změn Hue. Vlevo je skutečný kontroler, uprostřed detail panelu Colorize s hodnotou Hue a vpravo výřez Composition Monitoru. Video ukazuje změny odstínu a přepínání Colorize, bez zvuku.
+The recordings are aligned using Hue changes. The physical controller is on the left, the Colorize panel and Hue value in the middle, and the Composition Monitor on the right. The silent video demonstrates hue changes and Colorize toggling.
 
 <details>
-<summary>Původní krátká ukázka kontroleru</summary>
+<summary>Original short controller demo</summary>
 
 <p align="center">
-  <a href="docs/media/demo.mp4"><img src="docs/media/demo.gif" width="340" alt="Ukázka fyzického APC40: Hue knob mění barvu padu i výstupu v Resolume"></a>
+  <a href="docs/media/demo.mp4"><img src="docs/media/demo.gif" width="340" alt="Physical APC40 demo: the Hue knob changes the pad color and Resolume output"></a>
 </p>
-<p align="center"><sub><a href="docs/media/demo.mp4">Přehrát původní ukázku APC40 v plné kvalitě</a></sub></p>
+<p align="center"><sub><a href="docs/media/demo.mp4">Watch the original APC40 demo at full quality</a></sub></p>
 
 </details>
 
-## Zpětná vazba LED
+## LED feedback
 
-`sync_resolume_feedback: true` v `config.json` zapíná stávající MIDI zpětnou vazbu. Hue CC 48–55 aktualizují odstín, noty 32–39 stav Colorize. Arena je musí odesílat do `APC VIRT B`; pro aktuální preset platí velocity **5 = aktivní efekt, 3 = bypass**.
+Set `sync_resolume_feedback: true` in `config.json` to enable MIDI feedback. Hue CCs 48–55 update the hue; notes 32–39 update the Colorize state. Arena must send these messages to `APC VIRT B`. The current preset uses velocity **5 = effect active, 3 = bypass**.
 
-Jde o 7bitovou MIDI hodnotu v rozsahu nastaveného presetu, nikoli plně přesné čtení přes API. Mimo rozsah `0–hue_max` není správný odstín zaručen. Režim lze vypnout v **Nastavení → Zpětná vazba**. Webserver ani další knihovna nejsou potřeba.
+Feedback uses 7-bit MIDI values within the preset’s mapped range, rather than full-precision API readings. Correct hues outside `0–hue_max` are not guaranteed. Disable it under **Settings → Feedback** (`Nastavení → Zpětná vazba`). No webserver or extra library is required.
 
-👉 **[Podrobný návod, nastavení a řešení problémů](docs/navod.md)**
+👉 **[Detailed setup and troubleshooting guide (Czech)](docs/navod.md)**
 
-Pro další vývoj: [kontext a ověření změn](CLAUDE.md), [technický popis aplikace](docs/windows-app.md).
+For development: [project context and validation (Czech)](CLAUDE.md), [app technical notes (Czech)](docs/windows-app.md).
 
-Původní dávkové soubory zůstávají pro kompatibilitu; `START.bat` nyní otevře správce.
-
-<details>
-<summary>English</summary>
-
-A Windows control panel and MIDI bridge for Akai APC40 mkII and Resolume Arena 7. Extract the Windows package and open **APC40 Bridge.exe**. Installation, start/stop, autostart, settings, logs and recovery are available in one window. A source ZIP can bootstrap the same app using **bridge/APC40 Bridge.vbs**.
-
-Create loopMIDI ports APC VIRT A/B, set the Resolume MIDI preset to Any device, and keep the Hue range aligned with hue_max (0.63871 by default). MIDI feedback is optional and limited to the shortcut's 7-bit range. Closing the control panel leaves the background bridge running.
-</details>
+Legacy batch files remain available for compatibility; `START.bat` now opens the dashboard.
 
 MIT · [Technical223](https://github.com/Technical223)
