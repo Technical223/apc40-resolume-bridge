@@ -154,7 +154,7 @@
   "sync_resolume_feedback": true,
   "color_on_feedback_velocity": 5,
   "color_off_feedback_velocity": 3,
-  "speed_ring_animation": true,
+  "speed_ring_animation": false,
   "speed_ring_ccs": [
     20,
     21,

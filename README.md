@@ -88,7 +88,7 @@ The recordings are aligned using Hue changes. The physical controller is on the 
 
 ## Animated speed rings
 
-Device knobs 5–8 can display a single dot bouncing from the first LED to the last and back, at a rate following group speed. Mouse edits are supported when Arena sends CC 20–23 feedback and MIDI sync is enabled. Enabled in the supplied config; missing key keeps the original behavior. [Configuration and validation limits](docs/navod.md#animated-group-speed-rings). Hardware testing is still pending.
+Device knobs 5–8 can display a single dot bouncing from the first LED to the last and back, at a rate following group speed. Mouse edits are supported when Arena sends CC 20–23 feedback and MIDI sync is enabled. Disabled by default after a hardware report of jumping encoder values; keep it off for normal use. [Configuration and validation limits](docs/navod.md#animated-group-speed-rings). Hardware testing is still pending.
 
 ## LED feedback
 
@@ -103,3 +103,5 @@ For development: [project context and validation](CLAUDE.md), [app technical not
 Legacy batch files remain available for compatibility; `START.bat` now opens the dashboard.
 
 MIT · [Technical223](https://github.com/Technical223)
+
+**Known hardware issue (2026-10-29):** Animated ring CC values appear to interfere with the absolute device-knob values on the user’s APC40 mkII, causing speed jumps during rotation. The precise firmware interaction has not been independently measured. Keep `speed_ring_animation: false` for normal control and standard Arena feedback. Do not treat unchanged-message unit tests as proof that host-driven ring animation is independent of encoder state.

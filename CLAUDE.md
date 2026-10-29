@@ -107,3 +107,7 @@ The shared engine also reaches macOS when its preview is rebuilt. Existing relea
 ## Speed-ring motion correction (2026-10-29)
 
 The user clarified the desired motion is bounce/ping-pong, not a wraparound loop. The 15-LED sequence is 0..14..1, repeated; reverse direction at each end. The configured period is a full out-and-back cycle. Keep speed feedback unchanged. The regression test verifies every LED and both endpoints; real LED appearance still requires user confirmation.
+
+## Hardware regression: animated rings vs encoder values
+
+User reports speed values jumping like relative input while rotating the animated device knobs. Akai documents device CCs as absolute. Suspected cause is shared encoder/ring value state, not yet independently captured. Immediately disabled animation in the installed configuration and restarted the live bridge. Repository default is now false. Keep animation experimental/disabled; do not claim the issue fixed or re-enable it without hardware validation. The original requirement for unchanged absolute passthrough may be incompatible with independent ring animation on this firmware. Normal passthrough and Arena feedback remain active with the feature off.

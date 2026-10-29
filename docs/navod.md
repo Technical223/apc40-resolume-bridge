@@ -178,13 +178,13 @@ Logs are available inside the app: **View logs → Bridge runtime / Setup / App 
 
 ## Animated group-speed rings
 
-With `speed_ring_animation: true`, device knobs 5–8 show a single dot bouncing across their 15 ring LEDs (first → last → first). Faster group speed means a faster loop. CCs 20–23 on MIDI channel 1 (zero-based 0) still pass unchanged to Arena. The supplied configuration enables this feature; a missing key or `false` preserves the previous behavior.
+With `speed_ring_animation: true`, device knobs 5–8 show a single dot bouncing across their 15 ring LEDs (first → last → first). Faster group speed means a faster loop. CCs 20–23 on MIDI channel 1 (zero-based 0) still pass unchanged to Arena. The supplied configuration disables this experimental feature; a missing key or `false` preserves the previous behavior.
 
 Arena must send the matching speed CC feedback to **APC VIRT B** (IAC bus B on macOS). With `sync_resolume_feedback: true`, mouse edits update the stored speed and animation. Incoming ring positions/styles are suppressed for animated knobs, preventing a fight with the animator. With sync disabled, Arena speed feedback is ignored for these rings; physical knob movement still changes their speed.
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `speed_ring_animation` | true in supplied config; false if absent | Enable animated rings |
+| `speed_ring_animation` | false | Experimental animated rings; known encoder interference |
 | `speed_ring_ccs` | [20, 21, 22, 23] | Device-knob CCs; configurable subset of 16–23 |
 | `speed_ring_channel` | 0 | Zero-based MIDI channel |
 | `speed_ring_slowest_seconds` | 2.0 | Full out-and-back period at CC value 0 |
@@ -200,3 +200,5 @@ Protocol: [Akai APC40 mkII Communications Protocol v1.2](https://cdn.inmusicbran
 Validation: hardware-free tests cover periods, protocol messages, passthrough, mouse-style feedback, sync disabled, old configuration/state, persistence, thread shutdown and animation send failures. Real LED appearance and direct mouse changes in Arena have **not yet been verified on hardware**. No API polling is added: mouse changes require actual matching Arena MIDI feedback and are subject to its mapping/range and 7-bit resolution.
 
 Restart the bridge after changing configuration. To revert, set `speed_ring_animation: false` and restart.
+
+**Known hardware issue (2026-10-29):** Animated ring CC values appear to interfere with the absolute device-knob values on the user’s APC40 mkII, causing speed jumps during rotation. The precise firmware interaction has not been independently measured. Keep `speed_ring_animation: false` for normal control and standard Arena feedback. Do not treat unchanged-message unit tests as proof that host-driven ring animation is independent of encoder state.
