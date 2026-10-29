@@ -47,7 +47,7 @@ A separate [experimental macOS build](https://github.com/Technical223/apc40-reso
 4. If virtual MIDI ports are missing, click **Open loopMIDI**, create **APC VIRT A** and **APC VIRT B**, then run setup again.
 5. In Arena, set the MIDI preset to **Any device** and Hue **Range Max to 0.63871** (displayed rounded to 0.64).
 
-**Arena MIDI routing:** enable only **MIDI Input** for APC VIRT A and only **MIDI Output** for APC VIRT B; keep physical APC40 input/output off while using the bridge. The bridge selects Alternate Ableton mode itself. [MIDI preferences table and screenshot](docs/navod.md#arena-midi-preferences).
+**Arena MIDI routing:** enable only **MIDI Input** for APC VIRT A and only **MIDI Output** for APC VIRT B; keep physical **APC40 mkII MIDI Input and MIDI Output on**, with **Alternate Ableton Live Mode** selected, as in the tested screenshot. [MIDI preferences table and screenshot](docs/navod.md#arena-midi-preferences).
 
 For everyday use, open the app and click **Start bridge**. **Start automatically when signing in to Windows** runs the bridge without opening the dashboard.
 
@@ -114,4 +114,4 @@ The supplied Arena shortcut range is 1–10 (normalized parameter bounds approxi
 
 ### Arena reset and MIDI routing
 
-If a speed-reset button updates the APC ring/pulse but the Arena speed number stays unchanged, check that Arena is receiving APC VIRT A. Reopen that MIDI Input (off/on) in Arena preferences if a virtual port was recreated after Arena started. Disable direct APC40 MIDI Input and Output so all traffic passes through the bridge. The speed shortcuts must use Any Device or APC VIRT A for input and All Devices or APC VIRT B for output. Keep MIDI learning off during bridge restarts, which can cause the controller to resend controls. A CC reset changes the actual parameter and its displayed number together when the virtual input is connected.
+If a speed-reset button updates the APC ring/pulse but the Arena speed number stays unchanged, check that Arena is receiving APC VIRT A. Reopen that MIDI Input (off/on) in Arena preferences if a virtual port was recreated after Arena started. Keep physical APC40 MIDI Input and MIDI Output enabled, with Alternate Ableton Live Mode selected, matching the user-tested feedback configuration. The speed shortcuts must use Any Device or APC VIRT A for input and All Devices or APC VIRT B for output. Keep MIDI learning off during bridge restarts, which can cause the controller to resend controls. A CC reset changes the actual parameter and its displayed number together when the virtual input is connected.

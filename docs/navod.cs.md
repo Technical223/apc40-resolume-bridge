@@ -62,9 +62,11 @@ Otevři **Arena → Preferences → MIDI**. Při používání bridge nastav:
 |---|---|---|---|
 | APC VIRT A | Zapnuto | Vypnuto | Vypnuto |
 | APC VIRT B | Vypnuto | Vypnuto | Zapnuto |
-| APC40 mkII (fyzický USB kontroler) | Vypnuto | Vypnuto | Vypnuto |
+| APC40 mkII (fyzický USB kontroler) | Zapnuto | Vypnuto | Zapnuto |
 
-Fyzické APC obsluhuje bridge, který sám nastavuje **Alternate Ableton Live Mode** (66 / 0x42). Přímý vstup a výstup APC v Areně nech vypnutý, aby ovládání, reset i zpětná vazba procházely přes bridge. Pro použití bez bridge obnov MIDI nastavení a fyzické APC znovu zapni.
+V uživatelem ověřeném zapojení na Windows ponech u fyzického **APC40 mkII zapnutý MIDI Input i MIDI Output** a zvol **Alternate Ableton Live Mode** (66 / 0x42). Uživatel potvrdil, že bez zapnutí fyzických portů nefunguje potřebná MIDI zpětná vazba. Virtuální porty A/B ponech zapnuté podle tabulky.
+
+Po **Install / repair** nastavení ručně zkontroluj: současná příprava při úpravě předvoleb Areny fyzické APC stále vypíná. Znovu je zapni podle tohoto návodu; automatická příprava pro toto zapojení ještě nebyla upravena a ověřena na hardwaru.
 
 **MIDI Middle C:** referenční screenshot používá **Legacy**. Tato volba mění pouze zobrazované názvy not, ne jejich MIDI čísla. Ostatní zařízení ponech podle svého zapojení; Microsoft GS Wavetable Synth bridge nepotřebuje.
 
@@ -73,9 +75,9 @@ Shortcuty mají přijímat z **Any device** nebo **APC VIRT A** a posílat zpět
 <details>
 <summary>Referenční screenshot: kde nastavení najít</summary>
 
-Na dodaném screenshotu je přímý vstup a výstup fyzického APC zapnutý. Při použití bridge obě tyto volby vypni podle tabulky výše. Volba režimu Alternate Ableton může po vypnutí fyzického výstupu zmizet; režim nastavuje samotný bridge.
+Screenshot ukazuje ověřené funkční zapojení: fyzické APC má **zapnutý vstup i výstup** a režim **Alternate Ableton Live Mode**. Současně použij virtuální porty A/B podle tabulky výše.
 
-<img src="img/resolume-midi-preferences-reference.png" width="620" alt="MIDI předvolby Areny: virtuální porty, fyzické APC a Legacy Middle C; pro bridge vypni přímý vstup a výstup APC">
+<img src="img/resolume-midi-preferences-reference.png" width="620" alt="MIDI předvolby Areny: virtuální porty, fyzické APC a Legacy Middle C; zapnutý vstup i výstup APC v režimu Alternate Ableton Live">
 
 </details>
 
@@ -180,7 +182,7 @@ Po změně nastavení klikni v aplikaci na **Restart**.
 |---|---|---|
 | Instalátor čeká na porty | v loopMIDI chybí porty nebo mají jiný název | vytvoř `APC VIRT A` a `APC VIRT B` přesně takto |
 | APC nesvítí vůbec | bridge neběží nebo Arena neběží | `bridge.log`; `START.bat`; zapni Arenu |
-| `bridge.log`: „Waiting for ports“ | APC není připojený nebo ho drží jiný program | zapoj USB; v Resolume vypni APC40 mkII; zavři Ableton a podobně |
+| `bridge.log`: „Waiting for ports“ | APC není připojený nebo ho drží jiný program | zapoj USB; zavři ostatní MIDI aplikace a ověř MIDI předvolby podle návodu výše |
 | Knoby/pady v Resolume nic nedělají | MIDI preset je vázaný na „APC40 mkII“ | preset na libovolné zařízení (kap. 3) |
 | Resolume nevidí `APC VIRT A` | loopMIDI neběží | spusť loopMIDI, zapni jeho autostart |
 | Hlášení „Resolume Arena běží“ | instalátor nemůže měnit nastavení za běhu | zavři Arenu a spusť `START.bat` znovu |

@@ -120,4 +120,4 @@ LED umí zapnout/vypnout, proto je to blikání, ne plynulé stmívání. Změny
 
 ### MIDI předvolby Areny
 
-U **APC VIRT A** zapni pouze **MIDI Input**, u **APC VIRT B** pouze **MIDI Output**. Přímý vstup a výstup fyzického APC40 při používání bridge vypni. Režim Alternate Ableton nastavuje bridge. [Tabulka nastavení a referenční screenshot](docs/navod.cs.md#midi-předvolby-areny).
+U **APC VIRT A** zapni pouze **MIDI Input**, u **APC VIRT B** pouze **MIDI Output**. U fyzického **APC40 mkII zapni MIDI Input i MIDI Output** a zvol **Alternate Ableton Live Mode**, stejně jako na ověřeném screenshotu. [Tabulka nastavení a referenční screenshot](docs/navod.cs.md#midi-předvolby-areny).
