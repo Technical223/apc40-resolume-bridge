@@ -248,12 +248,12 @@ namespace ApcBridge {
             hue=Number(Get("hue_max","0.63871"),0.001m,1m,5);blink=Number(Get("blink_hz","3"),0.5m,10m,1);
             feedback=new CheckBox{Text="Sync changes from Arena",Checked=GetBool("sync_resolume_feedback"),Dock=DockStyle.Fill,ForeColor=Theme.Text};
             lit=new CheckBox{Text="Keep utility buttons lit",Checked=GetBool("always_lit"),Dock=DockStyle.Fill,ForeColor=Theme.Text};
-            speedRings=new CheckBox{Text="Animate speed rings while idle (experimental)",Checked=GetBool("speed_ring_animation"),Dock=DockStyle.Fill,ForeColor=Theme.Text};
-            string[] labels={"Controller name","Port to Arena","Port from Arena","Hue upper limit","Blink rate / s","Feedback","Lighting","Speed rings"};
+            speedRings=new CheckBox{Text="Blink speed buttons; press to reset to 1x",Checked=GetBool("speed_button_pulse"),Dock=DockStyle.Fill,ForeColor=Theme.Text};
+            string[] labels={"Controller name","Port to Arena","Port from Arena","Hue upper limit","Blink rate / s","Feedback","Lighting","Speed buttons"};
             Control[] inputs={apc,to,from,hue,blink,feedback,lit,speedRings};
             for(int i=0;i<labels.Length;i++){root.Controls.Add(Theme.Label(labels[i],10,Theme.Muted),0,i);root.Controls.Add(inputs[i],1,i);}
             var note=Theme.Label("The Hue limit must match the MIDI preset in Arena.",9,Theme.Muted);root.Controls.Add(note,0,8);root.SetColumnSpan(note,2);
-            var speedNote=Theme.Label("First movement takes control; turn again to adjust speed. Restart to apply.",9,Theme.Muted);root.Controls.Add(speedNote,0,9);root.SetColumnSpan(speedNote,2);
+            var speedNote=Theme.Label("Knob rings keep normal feedback. Reset buttons replace their preset actions.",9,Theme.Muted);root.Controls.Add(speedNote,0,9);root.SetColumnSpan(speedNote,2);
             var save=Theme.Button("Save settings",true);root.Controls.Add(save,1,10);AcceptButton=save;
             save.Click+=(s,e)=>{
                 if(string.IsNullOrWhiteSpace(apc.Text)||string.IsNullOrWhiteSpace(to.Text)||string.IsNullOrWhiteSpace(from.Text)||to.Text.Trim().Equals(from.Text.Trim(),StringComparison.OrdinalIgnoreCase)){
@@ -261,7 +261,7 @@ namespace ApcBridge {
                 }
                 try{
                     cfg["apc_port_match"]=apc.Text.Trim();cfg["to_resolume_port"]=to.Text.Trim();cfg["from_resolume_port"]=from.Text.Trim();
-                    cfg["hue_max"]=hue.Value;cfg["blink_hz"]=blink.Value;cfg["sync_resolume_feedback"]=feedback.Checked;cfg["always_lit"]=lit.Checked;cfg["speed_ring_animation"]=speedRings.Checked;
+                    cfg["hue_max"]=hue.Value;cfg["blink_hz"]=blink.Value;cfg["sync_resolume_feedback"]=feedback.Checked;cfg["always_lit"]=lit.Checked;cfg["speed_button_pulse"]=speedRings.Checked;cfg["speed_ring_animation"]=false;
                     string backup=file+".before-settings-"+DateTime.Now.ToString("yyyyMMdd-HHmmss-fff")+".bak";
                     string temp=file+".settings.tmp";
                     File.WriteAllText(temp,Backend.Json.Serialize(cfg),new UTF8Encoding(false));

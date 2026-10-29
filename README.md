@@ -86,9 +86,9 @@ The recordings are aligned using Hue changes. The physical controller is on the 
 
 </details>
 
-## Animated speed rings
+## Speed indication and reset
 
-Device knobs 5–8 can display a single dot bouncing from the first LED to the last and back, at a rate following group speed. Mouse edits are supported when Arena sends CC 20–23 feedback and MIDI sync is enabled. Optional in Settings as idle-only animation with manual takeover; disabled by default pending hardware validation. [Configuration and validation limits](docs/navod.md#animated-group-speed-rings). Hardware testing is still pending.
+Optional blinking buttons beneath device knobs 5–8 indicate group speed. Press a button to reset its group to 1x (100% with the supplied mapping). Knobs retain normal absolute feedback, including mouse changes. This replaces the buttons’ original preset actions while enabled. [Configuration and validation](docs/navod.md#speed-buttons-blink-rate-and-1x-reset). Legacy ring animation remains experimental and is disabled by the new Settings option.
 
 ## LED feedback
 

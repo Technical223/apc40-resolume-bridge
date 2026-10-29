@@ -193,3 +193,11 @@ Animace ringů se pohybuje tam a zpět: první LED → poslední LED → první 
 **Známý problém hardwaru:** Animace ringů podle hlášení způsobuje skoky při otáčení speed knobů. Výchozí nastavení je nyní `speed_ring_animation: false`, aby se zachovalo normální absolutní ovládání a zpětná vazba Areny.
 
 Volbu najdeš v Settings → Speed rings: Animate speed rings while idle (experimental). Po uložení restartuj bridge. Animace běží jen v nečinnosti; první pohyb vrátí knobu skutečnou hodnotu a nepředá se do Areny. Další otáčení už mění rychlost. Po sekundě nečinnosti se animace obnoví. Zpětná vazba myší zůstává podporovaná. Jde o softwarové obejití sdílené hodnoty ringu a encoderu; na skutečném hardwaru se nové chování teprve ověřuje, proto je výchozí stav vypnutý.
+
+## Blikání speed tlačítek a reset na 1×
+
+V Settings → Speed buttons je volba **Blink speed buttons; press to reset to 1x**. Po uložení restartuj bridge. Čtyři tlačítka pod device knoby 5–8 blikají podle rychlosti grup; knoby a ringy mají opět běžné absolutní ovládání a feedback bez animace.
+
+Stisk tlačítka resetuje příslušnou rychlost na **1× (100 %)** a restartuje fázi bliknutí. Jde o CC 127 při současném rozsahu 25–100 %, nikoli reset pozice klipu. Tlačítka používají noty 58–61. Jejich původní akce presetu je při zapnutí volby potlačená, včetně uvolnění tlačítka. Vypnutí volby původní mapování vrátí.
+
+LED umí zapnout/vypnout, proto je to blikání, ne plynulé stmívání. Změny myší se přebírají přes MIDI feedback Areny. Výchozí konfigurace má volbu vypnutou kvůli kompatibilitě; v místní testovací instalaci ji při této změně zapínáme. Fyzické chování ještě vyžaduje potvrzení uživatelem.

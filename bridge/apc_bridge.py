@@ -49,6 +49,12 @@ DEFAULT_CFG = {
                 [165, 29], [180, 33], [200, 37], [220, 41], [240, 45],
                 [260, 49], [300, 53], [335, 57]],
     "poll_seconds": 2.0,
+    "speed_button_pulse": False,
+    "speed_button_notes": [58, 59, 60, 61],
+    "speed_button_base_seconds": 0.5,
+    "speed_button_min_multiplier": 0.25,
+    "speed_button_max_multiplier": 1.0,
+    "speed_button_reset_value": 127,
     "speed_ring_animation": False,  # Missing key preserves original ring behavior.
     "speed_ring_ccs": [20, 21, 22, 23],
     "speed_ring_channel": 0,  # MIDI channel 1 in Arena.
@@ -132,6 +138,26 @@ def validate_speed_rings(cfg):
     if any(type(v) not in (int, float) or not math.isfinite(v) for v in (idle, settle)) or not 0.2 <= idle <= 10 or not 0.02 <= settle <= min(idle, 0.5):
         raise ValueError("Speed-ring idle must be 0.2-10 s; settling must be 0.02-0.5 s and no longer than idle")
     return ccs, channel
+
+
+def speed_button_period(value, cfg):
+    low = cfg.get("speed_button_min_multiplier", 0.25)
+    high = cfg.get("speed_button_max_multiplier", 1.0)
+    multiplier = low + (high - low) * max(0, min(127, value)) / 127.0
+    return cfg.get("speed_button_base_seconds", 0.5) / multiplier
+
+
+def validate_speed_buttons(cfg, ccs):
+    import math
+    notes = cfg.get("speed_button_notes", [58, 59, 60, 61])
+    if not isinstance(notes, list) or len(notes) != len(ccs) or any(type(n) is not int or not 0 <= n <= 127 for n in notes) or len(set(notes)) != len(notes) or set(notes) & set(cfg["color_notes"]):
+        raise ValueError("Speed button notes must be unique MIDI notes, one per speed CC, without Colorize overlap")
+    low, high, base = (cfg.get("speed_button_min_multiplier", 0.25), cfg.get("speed_button_max_multiplier", 1.0), cfg.get("speed_button_base_seconds", 0.5))
+    if any(type(v) not in (float, int) or not math.isfinite(v) for v in (low, high, base)) or not 0 < low <= high <= 100 or not 0.05 <= base / high <= base / low <= 60:
+        raise ValueError("Speed-button period range must be 0.05-60 seconds with positive multipliers")
+    reset = cfg.get("speed_button_reset_value", 127)
+    if type(reset) is not int or not 0 <= reset <= 127:
+        raise ValueError("Speed-button reset value must be 0-127")
 
 
 class State:
@@ -224,7 +250,14 @@ class Bridge:
         self.notes = cfg["color_notes"]
         self.state = State(len(self.knobs))
         self.speed_enabled = bool(cfg.get("speed_ring_animation", False))
-        self.speed_ccs, self.speed_channel = validate_speed_rings(cfg) if self.speed_enabled else ([], 0)
+        self.speed_buttons_enabled = bool(cfg.get("speed_button_pulse", False))
+        if self.speed_enabled and self.speed_buttons_enabled:
+            raise ValueError("Choose speed-button pulsing or legacy ring animation, not both")
+        self.speed_ccs, self.speed_channel = validate_speed_rings(cfg) if self.speed_enabled or self.speed_buttons_enabled else ([], 0)
+        self.speed_button_notes = cfg.get("speed_button_notes", [58, 59, 60, 61]) if self.speed_buttons_enabled else []
+        if self.speed_buttons_enabled:
+            validate_speed_buttons(cfg, self.speed_ccs)
+        self.speed_reset_held = set()
         self.speed_stop = threading.Event()
         self.speed_thread = None
         self.speed_lock = getattr(self.state, "_persist_lock", threading.RLock())
@@ -241,6 +274,8 @@ class Bridge:
                     self.lit[(n, ch)] = False
             for n in cfg["lit_global_notes"]:
                 self.lit[(n, 0)] = False
+        for note in self.speed_button_notes:
+            self.lit.pop((note, self.speed_channel), None)  # A single owner for these LEDs.
         self.invert = {tuple(k) for k in cfg.get("lit_invert", [])}
         self.blink_on = True
         self.running = True
@@ -262,9 +297,11 @@ class Bridge:
                 for cc in self.speed_ccs:
                     self._to_apc(mido.Message("control_change", channel=self.speed_channel, control=cc + 8, value=1))
                 self._speed_tick(0)
+            if self.speed_buttons_enabled:
+                self._speed_tick(0)
             self.apc_in.callback = self.on_apc
             self.res_in.callback = self.on_resolume
-            if self.speed_enabled:
+            if self.speed_enabled or self.speed_buttons_enabled:
                 self.speed_thread = threading.Thread(target=self._speed_animator, name="APC-speed-rings", daemon=True)
                 self.speed_thread.start()
             if self.lit:
@@ -302,7 +339,32 @@ class Bridge:
             self._store_speed(msg)
             self.res_out.send(msg)
 
+    def _speed_button_tick(self, elapsed):
+        with self.speed_lock:
+            for i, (cc, note) in enumerate(zip(self.speed_ccs, self.speed_button_notes)):
+                value = self.state.speed.get(self._speed_key(cc), self.cfg.get("speed_button_reset_value", 127))
+                self.speed_phase[i] = (self.speed_phase[i] + elapsed / speed_button_period(value, self.cfg)) % 1.0
+                on = self.speed_phase[i] < 0.5
+                if on != self.speed_last[i]:
+                    self._to_apc(self.mido.Message("note_on", channel=self.speed_channel, note=note, velocity=1 if on else 0))
+                    self.speed_last[i] = on
+
+    def _reset_speed_button(self, note):
+        with self.speed_lock:
+            i = self.speed_button_notes.index(note)
+            msg = self.mido.Message("control_change", channel=self.speed_channel,
+                                    control=self.speed_ccs[i], value=self.cfg.get("speed_button_reset_value", 127))
+            self._store_speed(msg)
+            self.res_out.send(msg)
+            self._to_apc(msg)  # Restore actual encoder/ring value, not an animation frame.
+            self.speed_phase[i] = 0.0
+            self.speed_last[i] = None
+            self._speed_button_tick(0)
+
     def _speed_tick(self, elapsed):
+        if self.speed_buttons_enabled:
+            self._speed_button_tick(elapsed)
+            return
         with self.speed_lock:
             now = time.monotonic()
             for i, cc in enumerate(self.speed_ccs):
@@ -367,6 +429,19 @@ class Bridge:
     def on_apc(self, msg):
         self.count["apc>res"] += 1
         try:
+            if self.speed_buttons_enabled and msg.type in ("note_on", "note_off") and msg.channel == self.speed_channel and msg.note in self.speed_button_notes:
+                with self.speed_lock:
+                    if msg.type == "note_on" and msg.velocity > 0:
+                        if msg.note not in self.speed_reset_held:
+                            self.speed_reset_held.add(msg.note)
+                            self._reset_speed_button(msg.note)
+                    else:
+                        self.speed_reset_held.discard(msg.note)
+                return  # Consume press AND release; never trigger the preset's old action.
+            if self.speed_buttons_enabled and msg.type == "control_change" and msg.channel == self.speed_channel and msg.control in self.speed_ccs:
+                self._store_speed(msg)
+                self.res_out.send(msg)  # Unchanged absolute value; no takeover needed.
+                return
             if self.speed_enabled and msg.type == "control_change" and msg.channel == self.speed_channel and msg.control in self.speed_ccs:
                 self._speed_input(msg)
                 return
@@ -392,6 +467,14 @@ class Bridge:
     def on_resolume(self, msg):
         self.count["res>apc"] += 1
         try:
+            if self.speed_buttons_enabled:
+                if msg.type in ("note_on", "note_off") and msg.channel == self.speed_channel and msg.note in self.speed_button_notes:
+                    return  # Ignore old button feedback; only the pulse owns its LED.
+                if msg.type == "control_change" and msg.channel == self.speed_channel and msg.control in self.speed_ccs:
+                    if self.cfg.get("sync_resolume_feedback", False):
+                        self._store_speed(msg)
+                    self._to_apc(msg)  # Original absolute MIDI feedback to encoder/ring.
+                    return
             if self.speed_enabled and msg.type == "control_change" and msg.channel == self.speed_channel:
                 if msg.control in self.speed_ccs:
                     if self.cfg.get("sync_resolume_feedback", False):

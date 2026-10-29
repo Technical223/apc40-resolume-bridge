@@ -214,3 +214,19 @@ Mouse feedback updates stored speed. While manual control is active, normal abso
 Advanced configuration: speed_ring_idle_seconds (default 1.0, range 0.2–10) and speed_ring_settle_seconds (default 0.05, range 0.02–0.5, no longer than idle).
 
 Tradeoff: the first small turn after idle takes control rather than changing speed. The brief settling period may discard a little further movement. This avoids blindly forwarding an absolute value derived from the animated ring. It is a software workaround, not an independently addressable LED channel. Queuing and encoder firmware behavior still require real-hardware validation; do not claim the interference fixed solely from simulated tests. Leave the option off if jumps persist.
+
+## Speed buttons: blink rate and 1x reset
+
+The preferred speed indication is now **Settings → Speed buttons → Blink speed buttons; press to reset to 1x**. Save and restart to apply. The repository default is off for compatibility; enabling this option replaces the original actions of the four device buttons beneath knobs 5–8.
+
+This mode uses notes **58, 59, 60, 61** on MIDI channel 1 (zero-based 0), paired with speed CCs **20, 21, 22, 23**. The physical controller protocol identifies these as Device Left, Device Right, Bank Left and Bank Right (the upper of the two button rows). These buttons retain their original preset actions only when the speed-button option is off. Both press and release are consumed locally, so the old preset action does not reach Arena. Turning the option off restores the original mapping.
+
+Buttons blink on/off at a rate proportional to the mapped group-speed multiplier. These are single-color on/off LEDs; velocity does not provide smooth brightness fading. Default mapping is approximately 0.25x–1x: one cycle takes 2 seconds at minimum speed and 0.5 seconds at 1x. LED messages are sent only at on/off transitions and never to Arena.
+
+Knob rings use normal absolute feedback again. The first knob movement passes to Arena unchanged; there is no takeover gesture or animation write to an encoder. Mouse feedback updates stored speed and the pulse rate when sync_resolume_feedback is enabled, and passes through to the knob normally.
+
+Pressing a button sends its paired speed CC with value **127** to Arena and the APC. For the current 25–100% preset this resets speed to **1x (100%)**, restores the correct encoder/ring position and restarts that button pulse at the beginning. It does not reset clip playback. Custom preset ranges may require a different speed_button_reset_value.
+
+Configuration: speed_button_pulse (false if absent), speed_button_notes ([58,59,60,61]), speed_button_base_seconds (0.5), speed_button_min_multiplier (0.25), speed_button_max_multiplier (1.0), speed_button_reset_value (127). The existing speed_ring_ccs/channel define the paired knob mapping. Legacy ring animation and button pulsing cannot run together; saving Settings disables legacy ring animation.
+
+Validation: tests cover LED-only animation traffic, unchanged first knob movement, normal mouse-style feedback, reset on press only, consumption of releases and duplicate presses, ownership of button LEDs against old preset feedback/general blinking, compatibility when disabled, and configuration conflicts. Physical button timing and real mouse edits still require user confirmation. No Arena preset files are modified.

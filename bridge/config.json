@@ -166,5 +166,16 @@
   "speed_ring_fastest_seconds": 0.25,
   "speed_ring_update_hz": 120.0,
   "speed_ring_idle_seconds": 1.0,
-  "speed_ring_settle_seconds": 0.05
+  "speed_ring_settle_seconds": 0.05,
+  "speed_button_pulse": false,
+  "speed_button_notes": [
+    58,
+    59,
+    60,
+    61
+  ],
+  "speed_button_base_seconds": 0.5,
+  "speed_button_min_multiplier": 0.25,
+  "speed_button_max_multiplier": 1.0,
+  "speed_button_reset_value": 127
 }
