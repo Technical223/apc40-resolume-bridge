@@ -62,6 +62,31 @@ Setup backs up the original MIDI settings as `midi.xml.pred-bridge.bak`. With Ar
 - **Track knobs, CCs 48–55:** control Colorize Hue over 0–0.63871 (red → green → blue).
 - **Save the composition.** It remembers the selected MIDI preset.
 
+### Arena MIDI preferences
+
+Open **Arena → Preferences → MIDI** and check the following when using the bridge:
+
+| Device | MIDI Input | Clock Input | MIDI Output |
+|---|---|---|---|
+| APC VIRT A | On | Off | Off |
+| APC VIRT B | Off | Off | On |
+| APC40 mkII (physical USB controller) | Off | Off | Off |
+
+The bridge opens the physical APC itself and selects **Alternate Ableton Live Mode** (mode 66 / 0x42). Keep direct APC input/output off in Arena so that knob input, button resets, and LED feedback all use the same bridge connection. For direct use without the bridge, restore Arena MIDI settings and enable physical APC input/output again.
+
+**MIDI Middle C:** the supplied reference uses **Legacy**. This changes displayed note names only, not MIDI note numbers or bridge routing. Leave unrelated MIDI devices as required by your setup; Microsoft GS Wavetable Synth is not needed by the bridge.
+
+Shortcuts should receive from **Any device** or **APC VIRT A**, and send feedback to **All devices** or **APC VIRT B**. If resets reach the controller but Arena keeps an old value, toggle **APC VIRT A → MIDI Input** off and on after starting loopMIDI.
+
+<details>
+<summary>Reference screenshot: where to find these controls</summary>
+
+This supplied screenshot shows physical APC input/output **enabled**. For use with the bridge, switch those two boxes **off**, as in the table above. The Alternate Ableton mode selector may disappear when physical APC output is disabled; the bridge sets the mode itself.
+
+<img src="img/resolume-midi-preferences-reference.png" width="620" alt="Arena MIDI Preferences reference showing virtual ports, physical APC controls, and Legacy Middle C; physical APC input and output must be disabled for bridge use">
+
+</details>
+
 ### Hue range: match the knob and pad
 
 ![Hue range](img/hue-range.svg)

@@ -117,3 +117,7 @@ V Settings → Speed buttons je volba **Blink speed buttons; press to reset to 1
 Stisk tlačítka resetuje příslušnou rychlost na **1× (100 %)** a restartuje fázi bliknutí. Jde o CC 127 při současném rozsahu 25–100 %, nikoli reset pozice klipu. Tlačítka používají noty 58–61. Jejich původní akce presetu je při zapnutí volby potlačená, včetně uvolnění tlačítka. Vypnutí volby původní mapování vrátí.
 
 LED umí zapnout/vypnout, proto je to blikání, ne plynulé stmívání. Změny myší se přebírají přes MIDI feedback Areny. Výchozí konfigurace má volbu vypnutou kvůli kompatibilitě; v místní testovací instalaci ji při této změně zapínáme. Fyzické chování ještě vyžaduje potvrzení uživatelem.
+
+### MIDI předvolby Areny
+
+U **APC VIRT A** zapni pouze **MIDI Input**, u **APC VIRT B** pouze **MIDI Output**. Přímý vstup a výstup fyzického APC40 při používání bridge vypni. Režim Alternate Ableton nastavuje bridge. [Tabulka nastavení a referenční screenshot](docs/navod.cs.md#midi-předvolby-areny).

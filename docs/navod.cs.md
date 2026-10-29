@@ -54,6 +54,32 @@ Příprava zálohuje původní MIDI nastavení jako midi.xml.pred-bridge.bak. Tl
 
 ## 3. Nastavení v Resolume
 
+### MIDI předvolby Areny
+
+Otevři **Arena → Preferences → MIDI**. Při používání bridge nastav:
+
+| Zařízení | MIDI Input | Clock Input | MIDI Output |
+|---|---|---|---|
+| APC VIRT A | Zapnuto | Vypnuto | Vypnuto |
+| APC VIRT B | Vypnuto | Vypnuto | Zapnuto |
+| APC40 mkII (fyzický USB kontroler) | Vypnuto | Vypnuto | Vypnuto |
+
+Fyzické APC obsluhuje bridge, který sám nastavuje **Alternate Ableton Live Mode** (66 / 0x42). Přímý vstup a výstup APC v Areně nech vypnutý, aby ovládání, reset i zpětná vazba procházely přes bridge. Pro použití bez bridge obnov MIDI nastavení a fyzické APC znovu zapni.
+
+**MIDI Middle C:** referenční screenshot používá **Legacy**. Tato volba mění pouze zobrazované názvy not, ne jejich MIDI čísla. Ostatní zařízení ponech podle svého zapojení; Microsoft GS Wavetable Synth bridge nepotřebuje.
+
+Shortcuty mají přijímat z **Any device** nebo **APC VIRT A** a posílat zpětnou vazbu do **All devices** nebo **APC VIRT B**. Pokud reset vrátí kontroler, ale v Areně zůstane stará hodnota, po spuštění loopMIDI vypni a znovu zapni **APC VIRT A → MIDI Input**.
+
+<details>
+<summary>Referenční screenshot: kde nastavení najít</summary>
+
+Na dodaném screenshotu je přímý vstup a výstup fyzického APC zapnutý. Při použití bridge obě tyto volby vypni podle tabulky výše. Volba režimu Alternate Ableton může po vypnutí fyzického výstupu zmizet; režim nastavuje samotný bridge.
+
+<img src="img/resolume-midi-preferences-reference.png" width="620" alt="MIDI předvolby Areny: virtuální porty, fyzické APC a Legacy Middle C; pro bridge vypni přímý vstup a výstup APC">
+
+</details>
+
+
 ![Resolume MIDI preset](img/resolume-preset.svg)
 
 - **MIDI preset musí být nastavený na libovolné zařízení.** Preset vázaný na „APC40 mkII“ přes virtuální port nereaguje, protože Resolume teď vidí jen `APC VIRT A`.

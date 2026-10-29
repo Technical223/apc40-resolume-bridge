@@ -47,6 +47,8 @@ A separate [experimental macOS build](https://github.com/Technical223/apc40-reso
 4. If virtual MIDI ports are missing, click **Open loopMIDI**, create **APC VIRT A** and **APC VIRT B**, then run setup again.
 5. In Arena, set the MIDI preset to **Any device** and Hue **Range Max to 0.63871** (displayed rounded to 0.64).
 
+**Arena MIDI routing:** enable only **MIDI Input** for APC VIRT A and only **MIDI Output** for APC VIRT B; keep physical APC40 input/output off while using the bridge. The bridge selects Alternate Ableton mode itself. [MIDI preferences table and screenshot](docs/navod.md#arena-midi-preferences).
+
 For everyday use, open the app and click **Start bridge**. **Start automatically when signing in to Windows** runs the bridge without opening the dashboard.
 
 The app interface, setup messages, and primary documentation are in English.
