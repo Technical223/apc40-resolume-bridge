@@ -79,7 +79,7 @@ macOS validation: GitHub Actions run https://github.com/Technical223/apc40-resol
 
 ## Animated group-speed rings
 
-With `speed_ring_animation: true`, device knobs 5–8 show a single dot looping across their 15 ring LEDs. Faster group speed means a faster loop. CCs 20–23 on MIDI channel 1 (zero-based 0) still pass unchanged to Arena. The supplied configuration enables this feature; a missing key or `false` preserves the previous behavior.
+With `speed_ring_animation: true`, device knobs 5–8 show a single dot bouncing across their 15 ring LEDs (first → last → first). Faster group speed means a faster loop. CCs 20–23 on MIDI channel 1 (zero-based 0) still pass unchanged to Arena. The supplied configuration enables this feature; a missing key or `false` preserves the previous behavior.
 
 Arena must send the matching speed CC feedback to **APC VIRT B** (IAC bus B on macOS). With `sync_resolume_feedback: true`, mouse edits update the stored speed and animation. Incoming ring positions/styles are suppressed for animated knobs, preventing a fight with the animator. With sync disabled, Arena speed feedback is ignored for these rings; physical knob movement still changes their speed.
 
@@ -88,11 +88,11 @@ Arena must send the matching speed CC feedback to **APC VIRT B** (IAC bus B on m
 | `speed_ring_animation` | true in supplied config; false if absent | Enable animated rings |
 | `speed_ring_ccs` | [20, 21, 22, 23] | Device-knob CCs; configurable subset of 16–23 |
 | `speed_ring_channel` | 0 | Zero-based MIDI channel |
-| `speed_ring_slowest_seconds` | 2.0 | Loop period at CC value 0 |
-| `speed_ring_fastest_seconds` | 0.25 | Loop period at CC value 127 |
+| `speed_ring_slowest_seconds` | 2.0 | Full out-and-back period at CC value 0 |
+| `speed_ring_fastest_seconds` | 0.25 | Full out-and-back period at CC value 127 |
 | `speed_ring_update_hz` | 120 | Scheduler rate; MIDI is sent only when the LED index changes |
 
-Period interpolates linearly between the configured endpoints. The animation is a relative speed indicator, not a beat clock or exact display of a percentage. The JKB preset maps these knobs to group speeds of approximately 25–100%. At the fastest default setting, traffic is at most about 60 CCs/s per ring (240 CCs/s total). A low update rate can skip intermediate LEDs.
+Period interpolates linearly between the configured endpoints. The animation is a relative speed indicator, not a beat clock or exact display of a percentage. The JKB preset maps these knobs to group speeds of approximately 25–100%. At the fastest default setting, traffic is at most about 112 CCs/s per ring (448 CCs/s total). A low update rate can skip intermediate LEDs.
 
 Last speed values are stored in `state.json` under `speed`, keyed by channel and CC (e.g. `0:20`). Old state files remain compatible. Until movement or feedback arrives, a missing value starts at the slowest period. Changing speed preserves animation phase. The animation thread stops and joins before ports close; send failures mark the connection unhealthy and trigger normal reconnection.
 
@@ -103,3 +103,7 @@ Validation: hardware-free tests cover periods, protocol messages, passthrough, m
 Restart the bridge after changing configuration. To revert, set `speed_ring_animation: false` and restart.
 
 The shared engine also reaches macOS when its preview is rebuilt. Existing release v1.2.0 assets are not replaced. Do not claim physical LED or mouse validation without a real Arena/APC test. Preserve custom configuration on updates.
+
+## Speed-ring motion correction (2026-10-29)
+
+The user clarified the desired motion is bounce/ping-pong, not a wraparound loop. The 15-LED sequence is 0..14..1, repeated; reverse direction at each end. The configured period is a full out-and-back cycle. Keep speed feedback unchanged. The regression test verifies every LED and both endpoints; real LED appearance still requires user confirmation.

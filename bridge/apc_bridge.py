@@ -280,7 +280,10 @@ class Bridge:
             for i, cc in enumerate(self.speed_ccs):
                 value = self.state.speed.get(self._speed_key(cc), 0)
                 self.speed_phase[i] = (self.speed_phase[i] + elapsed / speed_ring_period(value, self.cfg)) % 1.0
-                dot = int(self.speed_phase[i] * len(SPEED_RING_DOTS))
+                # Ping-pong: 0..14..1, then back to 0. Each endpoint occurs once.
+                travel = 2 * (len(SPEED_RING_DOTS) - 1)
+                step = int(self.speed_phase[i] * travel)
+                dot = step if step < len(SPEED_RING_DOTS) else travel - step
                 if dot != self.speed_last[i]:
                     self._to_apc(self.mido.Message("control_change", channel=self.speed_channel, control=cc, value=SPEED_RING_DOTS[dot]))
                     self.speed_last[i] = dot

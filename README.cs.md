@@ -103,3 +103,5 @@ Pro další vývoj: [kontext a ověření změn](CLAUDE.md), [technický popis a
 Původní dávkové soubory zůstávají pro kompatibilitu; `START.bat` nyní otevře správce.
 
 MIT · [Technical223](https://github.com/Technical223)
+
+Animace ringů se pohybuje tam a zpět: první LED → poslední LED → první LED. Nastavená perioda znamená celou cestu tam i zpět; na konci se směr obrátí bez skoku na začátek.

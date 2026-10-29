@@ -187,3 +187,5 @@ Pro změny myší musí Arena posílat odpovídající speed CC feedback do **AP
 Nastavení: `speed_ring_ccs` [20,21,22,23], `speed_ring_channel` 0 (číslování od nuly), `speed_ring_slowest_seconds` 2.0, `speed_ring_fastest_seconds` 0.25 a `speed_ring_update_hz` 120. MIDI se odesílá jen při změně LED. Poslední hodnoty se ukládají do `state.json` pod `speed`. Chybějící volba nebo false zachová původní chování. Po změně konfigurace restartuj bridge.
 
 Jde o relativní ukazatel rychlosti, nikoli synchronizaci s beatem. Ringy mají 15 LED; CC pro typ jsou 28–31, hodnota 1 znamená Single. Ověřeno proti oficiálnímu protokolu Akai v1.2, nikoli zatím na skutečném kontroleru. Zpětná vazba ve formě změn myší je pokrytá simulovanými MIDI zprávami, přímý test s Arenou zatím neproběhl.
+
+Animace ringů se pohybuje tam a zpět: první LED → poslední LED → první LED. Nastavená perioda znamená celou cestu tam i zpět; na konci se směr obrátí bez skoku na začátek.

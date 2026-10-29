@@ -38,6 +38,15 @@ class SpeedTests(unittest.TestCase):
         self.assertEqual(x.apc_out.messages[-1].value,10)
         self.assertEqual(x.res_out.messages,[])
 
+    def test_bounce_visits_every_led_and_reverses_at_endpoints(self):
+        x = self.make()
+        observed = [0]
+        for unused in range(28):
+            x._speed_tick(2 / 28 + 1e-8)
+            observed.append(x.speed_last[0])
+        self.assertEqual(observed, list(range(15)) + list(range(13, -1, -1)))
+        self.assertEqual(x.res_out.messages, [])
+
     def test_apc_passthrough_feedback_storage_and_no_echo(self):
         x=self.make()
         msg=Backend.Message("control_change",channel=0,control=20,value=127)

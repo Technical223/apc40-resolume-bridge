@@ -88,7 +88,7 @@ The recordings are aligned using Hue changes. The physical controller is on the 
 
 ## Animated speed rings
 
-Device knobs 5–8 can display a looping single dot whose speed follows group speed. Mouse edits are supported when Arena sends CC 20–23 feedback and MIDI sync is enabled. Enabled in the supplied config; missing key keeps the original behavior. [Configuration and validation limits](docs/navod.md#animated-group-speed-rings). Hardware testing is still pending.
+Device knobs 5–8 can display a single dot bouncing from the first LED to the last and back, at a rate following group speed. Mouse edits are supported when Arena sends CC 20–23 feedback and MIDI sync is enabled. Enabled in the supplied config; missing key keeps the original behavior. [Configuration and validation limits](docs/navod.md#animated-group-speed-rings). Hardware testing is still pending.
 
 ## LED feedback
 
