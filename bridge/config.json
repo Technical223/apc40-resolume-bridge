@@ -153,5 +153,16 @@
   ],
   "sync_resolume_feedback": true,
   "color_on_feedback_velocity": 5,
-  "color_off_feedback_velocity": 3
+  "color_off_feedback_velocity": 3,
+  "speed_ring_animation": true,
+  "speed_ring_ccs": [
+    20,
+    21,
+    22,
+    23
+  ],
+  "speed_ring_channel": 0,
+  "speed_ring_slowest_seconds": 2.0,
+  "speed_ring_fastest_seconds": 0.25,
+  "speed_ring_update_hz": 120.0
 }

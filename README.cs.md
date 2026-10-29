@@ -86,6 +86,10 @@ Záběry jsou časově srovnané podle změn Hue. Vlevo je skutečný kontroler,
 
 </details>
 
+## Animované ringy rychlosti
+
+Device knoby 5–8 mohou ukazovat rychlost grup běžící tečkou. Změny myší se přebírají z MIDI feedbacku CC 20–23 při zapnuté synchronizaci. [Nastavení a omezení](docs/navod.cs.md#animované-ringy-rychlosti-grup). Skutečný hardware zatím není ověřený.
+
 ## Zpětná vazba LED
 
 `sync_resolume_feedback: true` v `config.json` zapíná stávající MIDI zpětnou vazbu. Hue CC 48–55 aktualizují odstín, noty 32–39 stav Colorize. Arena je musí odesílat do `APC VIRT B`; pro aktuální preset platí velocity **5 = aktivní efekt, 3 = bypass**.

@@ -18,6 +18,7 @@ class FakeState:
         self.hue = [0] * n
         self.color_on = [True] * n
         self.dirty = False
+        self.speed = {}
     def save(self): pass
 
 class Port:

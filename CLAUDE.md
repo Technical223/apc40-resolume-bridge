@@ -74,3 +74,32 @@ Reports use a file whitelist, redact home paths, retain the last test summary an
 New portable tests cover isolation, ambiguous/missing ports, config routing, missing dependencies, bounded events, diagnostic export and cleanup, plus ZIP permissions/contents. .github/workflows/macos.yml adds macOS-native shell/AppleScript syntax, CoreMIDI virtual-port loopback and no-hardware report generation. CI outcomes must be checked separately from local Windows tests and cannot establish physical APC/Arena compatibility.
 
 macOS validation: GitHub Actions run https://github.com/Technical223/apc40-resolume-bridge/actions/runs/40779973125 succeeded on source a05d943: pinned wheel installation, portable tests, AppleScript compilation, native CoreMIDI virtual-port roundtrip, no-hardware test diagnostic generation, packaging, executable ZIP permissions and plist validation. A subsequent small change guarantees a parent-side diagnostic export after Stop and adds CI timeouts; physical hardware and Finder launch remain untested. Local Windows run: 35 tests, 34 passed, one existing loopMIDI-dependent management test skipped.
+
+## Speed-ring animation (2026-10-29)
+
+## Animated group-speed rings
+
+With `speed_ring_animation: true`, device knobs 5–8 show a single dot looping across their 15 ring LEDs. Faster group speed means a faster loop. CCs 20–23 on MIDI channel 1 (zero-based 0) still pass unchanged to Arena. The supplied configuration enables this feature; a missing key or `false` preserves the previous behavior.
+
+Arena must send the matching speed CC feedback to **APC VIRT B** (IAC bus B on macOS). With `sync_resolume_feedback: true`, mouse edits update the stored speed and animation. Incoming ring positions/styles are suppressed for animated knobs, preventing a fight with the animator. With sync disabled, Arena speed feedback is ignored for these rings; physical knob movement still changes their speed.
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `speed_ring_animation` | true in supplied config; false if absent | Enable animated rings |
+| `speed_ring_ccs` | [20, 21, 22, 23] | Device-knob CCs; configurable subset of 16–23 |
+| `speed_ring_channel` | 0 | Zero-based MIDI channel |
+| `speed_ring_slowest_seconds` | 2.0 | Loop period at CC value 0 |
+| `speed_ring_fastest_seconds` | 0.25 | Loop period at CC value 127 |
+| `speed_ring_update_hz` | 120 | Scheduler rate; MIDI is sent only when the LED index changes |
+
+Period interpolates linearly between the configured endpoints. The animation is a relative speed indicator, not a beat clock or exact display of a percentage. The JKB preset maps these knobs to group speeds of approximately 25–100%. At the fastest default setting, traffic is at most about 60 CCs/s per ring (240 CCs/s total). A low update rate can skip intermediate LEDs.
+
+Last speed values are stored in `state.json` under `speed`, keyed by channel and CC (e.g. `0:20`). Old state files remain compatible. Until movement or feedback arrives, a missing value starts at the slowest period. Changing speed preserves animation phase. The animation thread stops and joins before ports close; send failures mark the connection unhealthy and trigger normal reconnection.
+
+Protocol: [Akai APC40 mkII Communications Protocol v1.2](https://cdn.inmusicbrands.com/akai/attachments/apc40II/APC40Mk2_Communications_Protocol_v1.2.pdf), pages 24–27. Device ring-style CC = knob CC + 8 (28–31 for knobs 5–8); value 1 selects Single. Fifteen values are selected from single-LED ranges, avoiding the intervening two-LED patterns. Mode 66 (Alternate Ableton) is required so the host owns the LEDs.
+
+Validation: hardware-free tests cover periods, protocol messages, passthrough, mouse-style feedback, sync disabled, old configuration/state, persistence, thread shutdown and animation send failures. Real LED appearance and direct mouse changes in Arena have **not yet been verified on hardware**. No API polling is added: mouse changes require actual matching Arena MIDI feedback and are subject to its mapping/range and 7-bit resolution.
+
+Restart the bridge after changing configuration. To revert, set `speed_ring_animation: false` and restart.
+
+The shared engine also reaches macOS when its preview is rebuilt. Existing release v1.2.0 assets are not replaced. Do not claim physical LED or mouse validation without a real Arena/APC test. Preserve custom configuration on updates.

@@ -177,3 +177,13 @@ Logy jsou přímo v aplikaci: **View logs → Bridge runtime / Setup / App manag
 3. smaž složku; Python a loopMIDI odinstaluj ve Windows, pokud je nepotřebuješ
 
 ---
+
+## Animované ringy rychlosti grup
+
+Volba `speed_ring_animation: true` zobrazí na device knobech 5–8 jednu běžící tečku. Rychlost smyčky sleduje hodnoty CC 20–23 na MIDI kanálu 1. Pohyb knobů se dál beze změny posílá do Areny.
+
+Pro změny myší musí Arena posílat odpovídající speed CC feedback do **APC VIRT B** a `sync_resolume_feedback` musí být true. Animace neposílá nic do Areny. Příchozí polohy a typy animovaných ringů se nepropouštějí do APC, aby animaci nepřepisovaly.
+
+Nastavení: `speed_ring_ccs` [20,21,22,23], `speed_ring_channel` 0 (číslování od nuly), `speed_ring_slowest_seconds` 2.0, `speed_ring_fastest_seconds` 0.25 a `speed_ring_update_hz` 120. MIDI se odesílá jen při změně LED. Poslední hodnoty se ukládají do `state.json` pod `speed`. Chybějící volba nebo false zachová původní chování. Po změně konfigurace restartuj bridge.
+
+Jde o relativní ukazatel rychlosti, nikoli synchronizaci s beatem. Ringy mají 15 LED; CC pro typ jsou 28–31, hodnota 1 znamená Single. Ověřeno proti oficiálnímu protokolu Akai v1.2, nikoli zatím na skutečném kontroleru. Zpětná vazba ve formě změn myší je pokrytá simulovanými MIDI zprávami, přímý test s Arenou zatím neproběhl.

@@ -49,6 +49,12 @@ DEFAULT_CFG = {
                 [165, 29], [180, 33], [200, 37], [220, 41], [240, 45],
                 [260, 49], [300, 53], [335, 57]],
     "poll_seconds": 2.0,
+    "speed_ring_animation": False,  # Missing key preserves original ring behavior.
+    "speed_ring_ccs": [20, 21, 22, 23],
+    "speed_ring_channel": 0,  # MIDI channel 1 in Arena.
+    "speed_ring_slowest_seconds": 2.0,
+    "speed_ring_fastest_seconds": 0.25,
+    "speed_ring_update_hz": 120.0,
     # single-colour buttons: lit all the time, blinking while active
     "always_lit": True,
     "lit_track_notes": [48, 49, 50, 51, 52, 66],          # rec arm, solo, activator, track select, clip stop, A|B (ch 1-8)
@@ -93,25 +99,63 @@ def hue_to_rgb_hex(cc_value, cfg):
     return "#%02X%02X%02X" % (int(r * 255), int(g * 255), int(b * 255))
 
 
+# Akai APC40 mkII protocol v1.2, pp.24-27: Single mode, 15 LEDs.
+# These values avoid intermediate two-LED patterns in the Single table.
+SPEED_RING_DOTS = (1, 10, 19, 28, 36, 45, 54, 63, 71, 80, 89, 98, 106, 115, 125)
+
+
+def speed_ring_period(value, cfg):
+    slow = cfg.get("speed_ring_slowest_seconds", 2.0)
+    fast = cfg.get("speed_ring_fastest_seconds", 0.25)
+    return slow + (fast - slow) * max(0, min(127, value)) / 127.0
+
+
+def validate_speed_rings(cfg):
+    ccs = cfg.get("speed_ring_ccs", [20, 21, 22, 23])
+    if not isinstance(ccs, list) or not ccs or any(type(c) is not int or c not in range(16, 24) for c in ccs) or len(set(ccs)) != len(ccs):
+        raise ValueError("speed_ring_ccs must be unique device-knob CCs 16-23")
+    channel = cfg.get("speed_ring_channel", 0)
+    if type(channel) is not int or channel not in range(16):
+        raise ValueError("speed_ring_channel must be 0-15")
+    slow = cfg.get("speed_ring_slowest_seconds", 2.0)
+    fast = cfg.get("speed_ring_fastest_seconds", 0.25)
+    hz = cfg.get("speed_ring_update_hz", 120.0)
+    import math
+    if any(type(v) not in (int, float) or not math.isfinite(v) for v in (slow, fast, hz)) or not 0.05 <= fast <= slow <= 60 or not 1 <= hz <= 240:
+        raise ValueError("Speed ring periods must satisfy 0.05 <= fastest <= slowest <= 60; update rate 1-240 Hz")
+    if cfg.get("apc_mode", 66) != 66:
+        raise ValueError("Speed ring animation requires APC Alternate Ableton mode 66")
+    return ccs, channel
+
+
 class State:
     def __init__(self, n):
         self.hue = [0] * n
         self.color_on = [True] * n
         self.dirty = False
+        self.speed = {}
+        self._persist_lock = threading.RLock()
         try:
             with open(STATE_PATH, encoding="utf-8") as f:
                 d = json.load(f)
+            raw_speed = d.get("speed", {})
+            if isinstance(raw_speed, dict):
+                self.speed = {k: v for k, v in raw_speed.items() if isinstance(k, str) and type(v) is int and 0 <= v <= 127}
             self.hue = (d.get("hue", self.hue) + [0] * n)[:n]
             self.color_on = (d.get("color_on", self.color_on) + [True] * n)[:n]
         except (FileNotFoundError, ValueError):
             pass
 
     def save(self):
+        with self._persist_lock:
+            self._save()
+
+    def _save(self):
         if not self.dirty:
             return
         tmp = STATE_PATH + ".tmp"
         with open(tmp, "w", encoding="utf-8") as f:
-            json.dump({"hue": self.hue, "color_on": self.color_on}, f)
+            json.dump({"hue": self.hue, "color_on": self.color_on, "speed": self.speed}, f)
         os.replace(tmp, STATE_PATH)
         self.dirty = False
 
@@ -173,6 +217,13 @@ class Bridge:
         self.knobs = cfg["knob_ccs"]
         self.notes = cfg["color_notes"]
         self.state = State(len(self.knobs))
+        self.speed_enabled = bool(cfg.get("speed_ring_animation", False))
+        self.speed_ccs, self.speed_channel = validate_speed_rings(cfg) if self.speed_enabled else ([], 0)
+        self.speed_stop = threading.Event()
+        self.speed_thread = None
+        self.speed_lock = getattr(self.state, "_persist_lock", threading.RLock())
+        self.speed_phase = [0.0] * len(self.speed_ccs)
+        self.speed_last = [None] * len(self.speed_ccs)
         self.lock = threading.Lock()
         self.count = {"apc>res": 0, "res>apc": 0, "dropped": 0}
         self.lit = {}
@@ -199,14 +250,56 @@ class Bridge:
                 self.draw(i)
             for k in self.lit:
                 self.draw_lit(k)
+            if self.speed_enabled:
+                for cc in self.speed_ccs:
+                    self._to_apc(mido.Message("control_change", channel=self.speed_channel, control=cc + 8, value=1))
+                self._speed_tick(0)
             self.apc_in.callback = self.on_apc
             self.res_in.callback = self.on_resolume
+            if self.speed_enabled:
+                self.speed_thread = threading.Thread(target=self._speed_animator, name="APC-speed-rings", daemon=True)
+                self.speed_thread.start()
             if self.lit:
                 threading.Thread(target=self._blinker, daemon=True).start()
         except Exception:
             self.running = False
+            self._stop_speed_animation()
             self._close_ports()
             raise
+
+    def _speed_key(self, cc):
+        return "%d:%d" % (self.speed_channel, cc)
+
+    def _store_speed(self, msg):
+        with self.speed_lock:
+            self.state.speed[self._speed_key(msg.control)] = msg.value
+            self.state.dirty = True
+
+    def _speed_tick(self, elapsed):
+        with self.speed_lock:
+            for i, cc in enumerate(self.speed_ccs):
+                value = self.state.speed.get(self._speed_key(cc), 0)
+                self.speed_phase[i] = (self.speed_phase[i] + elapsed / speed_ring_period(value, self.cfg)) % 1.0
+                dot = int(self.speed_phase[i] * len(SPEED_RING_DOTS))
+                if dot != self.speed_last[i]:
+                    self._to_apc(self.mido.Message("control_change", channel=self.speed_channel, control=cc, value=SPEED_RING_DOTS[dot]))
+                    self.speed_last[i] = dot
+
+    def _speed_animator(self):
+        last = time.monotonic()
+        try:
+            while not self.speed_stop.wait(1.0 / self.cfg.get("speed_ring_update_hz", 120.0)):
+                now = time.monotonic()
+                self._speed_tick(now - last)
+                last = now
+        except Exception:
+            logging.exception("Speed ring animation")
+            self.failed.set()
+
+    def _stop_speed_animation(self):
+        self.speed_stop.set()
+        if self.speed_thread is not None and self.speed_thread.ident is not None:
+            self.speed_thread.join()
 
     def draw_lit(self, key):
         on = (not self.lit[key]) or self.blink_on
@@ -241,6 +334,10 @@ class Bridge:
     def on_apc(self, msg):
         self.count["apc>res"] += 1
         try:
+            if self.speed_enabled and msg.type == "control_change" and msg.channel == self.speed_channel and msg.control in self.speed_ccs:
+                self._store_speed(msg)
+                self.res_out.send(msg)
+                return
             if msg.type == "control_change" and msg.channel == 0 and msg.control in self.knobs:
                 i = self.knobs.index(msg.control)
                 self.state.hue[i] = msg.value
@@ -263,6 +360,13 @@ class Bridge:
     def on_resolume(self, msg):
         self.count["res>apc"] += 1
         try:
+            if self.speed_enabled and msg.type == "control_change" and msg.channel == self.speed_channel:
+                if msg.control in self.speed_ccs:
+                    if self.cfg.get("sync_resolume_feedback", False):
+                        self._store_speed(msg)
+                    return  # Ring values belong exclusively to the animator.
+                if msg.control in [cc + 8 for cc in self.speed_ccs]:
+                    return  # Prevent incoming ring-style feedback fighting Single mode.
             if (self.cfg.get("sync_resolume_feedback", False)
                     and msg.type == "control_change" and msg.channel == 0
                     and msg.control in self.knobs):
@@ -313,6 +417,7 @@ class Bridge:
 
     def close(self):
         self.running = False
+        self._stop_speed_animation()
         self._close_ports()
         self.state.save()
 

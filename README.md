@@ -86,6 +86,10 @@ The recordings are aligned using Hue changes. The physical controller is on the 
 
 </details>
 
+## Animated speed rings
+
+Device knobs 5–8 can display a looping single dot whose speed follows group speed. Mouse edits are supported when Arena sends CC 20–23 feedback and MIDI sync is enabled. Enabled in the supplied config; missing key keeps the original behavior. [Configuration and validation limits](docs/navod.md#animated-group-speed-rings). Hardware testing is still pending.
+
 ## LED feedback
 
 Set `sync_resolume_feedback: true` in `config.json` to enable MIDI feedback. Hue CCs 48–55 update the hue; notes 32–39 update the Colorize state. Arena must send these messages to `APC VIRT B`. The current preset uses velocity **5 = effect active, 3 = bypass**.
