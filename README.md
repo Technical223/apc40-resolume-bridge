@@ -105,3 +105,7 @@ Legacy batch files remain available for compatibility; `START.bat` now opens the
 MIT · [Technical223](https://github.com/Technical223)
 
 **Known hardware issue (2026-10-29):** Animated ring CC values appear to interfere with the absolute device-knob values on the user’s APC40 mkII, causing speed jumps during rotation. The precise firmware interaction has not been independently measured. Keep `speed_ring_animation: false` for normal control and standard Arena feedback. Do not treat unchanged-message unit tests as proof that host-driven ring animation is independent of encoder state.
+
+### Speed-button range correction
+
+The supplied Arena shortcut range is 1–10 (normalized parameter bounds approximately 0.2502–1); these normalized bounds are not speed multipliers. MIDI CC 0 selects the lower bound (1x), and CC 127 the upper bound (10x). Button reset sends CC 0 to both Arena and the encoder, restarting the pulse phase. Pulse rate increases from 1 to 10 Hz across the MIDI range. Intermediate pulse rates are a linear indication of the shortcut position, not an exact measurement of Arena’s nonlinear speed curve. Physical knob input and mouse MIDI feedback remain unchanged. Replaces earlier descriptions of CC-127 reset and the 0.25–1 pulse range.

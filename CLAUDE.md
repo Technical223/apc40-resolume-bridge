@@ -141,3 +141,7 @@ Configuration: speed_button_pulse (false if absent), speed_button_notes ([58,59,
 Validation: tests cover LED-only animation traffic, unchanged first knob movement, normal mouse-style feedback, reset on press only, consumption of releases and duplicate presses, ownership of button LEDs against old preset feedback/general blinking, compatibility when disabled, and configuration conflicts. Physical button timing and real mouse edits still require user confirmation. No Arena preset files are modified.
 
 The user corrected the physical row: use the UPPER device-button row, notes 58-61 (Device Left/Right, Bank Left/Right), not lower notes 62-65. Lower-row Clear shortcuts remain unchanged. The upper row previously toggled Colorize bypass on flash layers 3/6/9/12 in JKB APC40 PRO; these old upper-row actions are consumed only while speed-button mode is enabled.
+
+### Speed-button range correction
+
+The supplied Arena shortcut range is 1–10 (normalized parameter bounds approximately 0.2502–1); these normalized bounds are not speed multipliers. MIDI CC 0 selects the lower bound (1x), and CC 127 the upper bound (10x). Button reset sends CC 0 to both Arena and the encoder, restarting the pulse phase. Pulse rate increases from 1 to 10 Hz across the MIDI range. Intermediate pulse rates are a linear indication of the shortcut position, not an exact measurement of Arena’s nonlinear speed curve. Physical knob input and mouse MIDI feedback remain unchanged. Replaces earlier descriptions of CC-127 reset and the 0.25–1 pulse range.

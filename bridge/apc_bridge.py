@@ -51,10 +51,10 @@ DEFAULT_CFG = {
     "poll_seconds": 2.0,
     "speed_button_pulse": False,
     "speed_button_notes": [58, 59, 60, 61],
-    "speed_button_base_seconds": 0.5,
-    "speed_button_min_multiplier": 0.25,
-    "speed_button_max_multiplier": 1.0,
-    "speed_button_reset_value": 127,
+    "speed_button_base_seconds": 1.0,
+    "speed_button_min_multiplier": 1.0,
+    "speed_button_max_multiplier": 10.0,
+    "speed_button_reset_value": 0,
     "speed_ring_animation": False,  # Missing key preserves original ring behavior.
     "speed_ring_ccs": [20, 21, 22, 23],
     "speed_ring_channel": 0,  # MIDI channel 1 in Arena.
@@ -141,10 +141,10 @@ def validate_speed_rings(cfg):
 
 
 def speed_button_period(value, cfg):
-    low = cfg.get("speed_button_min_multiplier", 0.25)
-    high = cfg.get("speed_button_max_multiplier", 1.0)
+    low = cfg.get("speed_button_min_multiplier", 1.0)
+    high = cfg.get("speed_button_max_multiplier", 10.0)
     multiplier = low + (high - low) * max(0, min(127, value)) / 127.0
-    return cfg.get("speed_button_base_seconds", 0.5) / multiplier
+    return cfg.get("speed_button_base_seconds", 1.0) / multiplier
 
 
 def validate_speed_buttons(cfg, ccs):
@@ -152,10 +152,10 @@ def validate_speed_buttons(cfg, ccs):
     notes = cfg.get("speed_button_notes", [58, 59, 60, 61])
     if not isinstance(notes, list) or len(notes) != len(ccs) or any(type(n) is not int or not 0 <= n <= 127 for n in notes) or len(set(notes)) != len(notes) or set(notes) & set(cfg["color_notes"]):
         raise ValueError("Speed button notes must be unique MIDI notes, one per speed CC, without Colorize overlap")
-    low, high, base = (cfg.get("speed_button_min_multiplier", 0.25), cfg.get("speed_button_max_multiplier", 1.0), cfg.get("speed_button_base_seconds", 0.5))
+    low, high, base = (cfg.get("speed_button_min_multiplier", 1.0), cfg.get("speed_button_max_multiplier", 10.0), cfg.get("speed_button_base_seconds", 1.0))
     if any(type(v) not in (float, int) or not math.isfinite(v) for v in (low, high, base)) or not 0 < low <= high <= 100 or not 0.05 <= base / high <= base / low <= 60:
         raise ValueError("Speed-button period range must be 0.05-60 seconds with positive multipliers")
-    reset = cfg.get("speed_button_reset_value", 127)
+    reset = cfg.get("speed_button_reset_value", 0)
     if type(reset) is not int or not 0 <= reset <= 127:
         raise ValueError("Speed-button reset value must be 0-127")
 
@@ -342,7 +342,7 @@ class Bridge:
     def _speed_button_tick(self, elapsed):
         with self.speed_lock:
             for i, (cc, note) in enumerate(zip(self.speed_ccs, self.speed_button_notes)):
-                value = self.state.speed.get(self._speed_key(cc), self.cfg.get("speed_button_reset_value", 127))
+                value = self.state.speed.get(self._speed_key(cc), self.cfg.get("speed_button_reset_value", 0))
                 self.speed_phase[i] = (self.speed_phase[i] + elapsed / speed_button_period(value, self.cfg)) % 1.0
                 on = self.speed_phase[i] < 0.5
                 if on != self.speed_last[i]:
@@ -353,7 +353,7 @@ class Bridge:
         with self.speed_lock:
             i = self.speed_button_notes.index(note)
             msg = self.mido.Message("control_change", channel=self.speed_channel,
-                                    control=self.speed_ccs[i], value=self.cfg.get("speed_button_reset_value", 127))
+                                    control=self.speed_ccs[i], value=self.cfg.get("speed_button_reset_value", 0))
             self._store_speed(msg)
             self.res_out.send(msg)
             self._to_apc(msg)  # Restore actual encoder/ring value, not an animation frame.
