@@ -164,5 +164,7 @@
   "speed_ring_channel": 0,
   "speed_ring_slowest_seconds": 2.0,
   "speed_ring_fastest_seconds": 0.25,
-  "speed_ring_update_hz": 120.0
+  "speed_ring_update_hz": 120.0,
+  "speed_ring_idle_seconds": 1.0,
+  "speed_ring_settle_seconds": 0.05
 }

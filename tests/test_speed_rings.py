@@ -47,20 +47,43 @@ class SpeedTests(unittest.TestCase):
         self.assertEqual(observed, list(range(15)) + list(range(13, -1, -1)))
         self.assertEqual(x.res_out.messages, [])
 
-    def test_apc_passthrough_feedback_storage_and_no_echo(self):
+    def test_takeover_discards_animated_baseline_then_passes_manual_values(self):
         x=self.make()
-        msg=Backend.Message("control_change",channel=0,control=20,value=127)
-        before=len(x.apc_out.messages)
-        x.on_apc(msg)
+        x.state.speed["0:20"]=60
+        with patch.object(b.time,"monotonic",return_value=100):
+            x.on_apc(Backend.Message("control_change",channel=0,control=20,value=126))
+        self.assertEqual(x.res_out.messages,[])
+        self.assertEqual(x.state.speed["0:20"],60)
+        self.assertEqual(x.apc_out.messages[-1].value,60)
+        with patch.object(b.time,"monotonic",return_value=100.01):
+            x.on_apc(Backend.Message("control_change",channel=0,control=20,value=120))
+        self.assertEqual(x.res_out.messages,[])
+        msg=Backend.Message("control_change",channel=0,control=20,value=61)
+        with patch.object(b.time,"monotonic",return_value=100.1): x.on_apc(msg)
         self.assertIs(x.res_out.messages[-1],msg)
-        self.assertEqual(x.state.speed["0:20"],127)
-        feedback=Backend.Message("control_change",channel=0,control=20,value=30)
-        x.on_resolume(feedback)
-        self.assertEqual(x.state.speed["0:20"],30)
-        self.assertEqual(len(x.apc_out.messages),before)
+        self.assertEqual(x.state.speed["0:20"],61)
+        target=lambda: [m for m in x.apc_out.messages if m.type=="control_change" and m.control==20]
+        before=len(target())
+        with patch.object(b.time,"monotonic",return_value=100.2): x._speed_tick(.1)
+        self.assertEqual(len(target()),before)
+        feedback=Backend.Message("control_change",channel=0,control=20,value=70)
+        with patch.object(b.time,"monotonic",return_value=100.3): x.on_resolume(feedback)
+        self.assertEqual(x.state.speed["0:20"],70)
+        self.assertIs(x.apc_out.messages[-1],feedback)
         self.assertEqual(len(x.res_out.messages),1)
-        x.on_resolume(Backend.Message("control_change",channel=0,control=28,value=3))
+        with patch.object(b.time,"monotonic",return_value=102): x._speed_tick(.1)
+        self.assertGreater(len(target()),before+1)
+        with patch.object(b.time,"monotonic",return_value=102.1):
+            x.on_apc(Backend.Message("control_change",channel=0,control=20,value=100))
+        self.assertEqual(x.apc_out.messages[-1].value,70)
+        self.assertEqual(len(x.res_out.messages),1)
+
+    def test_idle_feedback_updates_speed_without_writing_encoder(self):
+        x=self.make(); before=len(x.apc_out.messages)
+        x.on_resolume(Backend.Message("control_change",channel=0,control=20,value=55))
+        self.assertEqual(x.state.speed["0:20"],55)
         self.assertEqual(len(x.apc_out.messages),before)
+        self.assertEqual(x.res_out.messages,[])
 
     def test_sync_disabled_ignores_feedback_but_owns_ring(self):
         self.cfg["sync_resolume_feedback"]=False

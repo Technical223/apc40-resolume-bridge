@@ -236,30 +236,32 @@ namespace ApcBridge {
         readonly Dictionary<string,object> cfg;
         readonly TextBox apc,to,from;
         readonly NumericUpDown hue,blink;
-        readonly CheckBox feedback,lit;
+        readonly CheckBox feedback,lit,speedRings;
         public Settings(string home) {
             file=Path.Combine(home,"config.json");
             cfg=Backend.Json.Deserialize<Dictionary<string,object>>(File.ReadAllText(file,Encoding.UTF8));
-            Theme.Form(this,"Bridge settings",new Size(580,430));FormBorderStyle=FormBorderStyle.FixedDialog;MaximizeBox=false;MinimizeBox=false;
-            var root=new TableLayoutPanel{Dock=DockStyle.Fill,Padding=new Padding(24),ColumnCount=2,RowCount=9};
+            Theme.Form(this,"Bridge settings",new Size(650,540));FormBorderStyle=FormBorderStyle.FixedDialog;MaximizeBox=false;MinimizeBox=false;
+            var root=new TableLayoutPanel{Dock=DockStyle.Fill,Padding=new Padding(24),ColumnCount=2,RowCount=11};
             root.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,190));root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));Controls.Add(root);
-            for(int i=0;i<8;i++)root.RowStyles.Add(new RowStyle(SizeType.Absolute,38));
+            for(int i=0;i<10;i++)root.RowStyles.Add(new RowStyle(SizeType.Absolute,38));
             apc=Theme.Input(Get("apc_port_match","APC40"));to=Theme.Input(Get("to_resolume_port","APC VIRT A"));from=Theme.Input(Get("from_resolume_port","APC VIRT B"));
             hue=Number(Get("hue_max","0.63871"),0.001m,1m,5);blink=Number(Get("blink_hz","3"),0.5m,10m,1);
             feedback=new CheckBox{Text="Sync changes from Arena",Checked=GetBool("sync_resolume_feedback"),Dock=DockStyle.Fill,ForeColor=Theme.Text};
             lit=new CheckBox{Text="Keep utility buttons lit",Checked=GetBool("always_lit"),Dock=DockStyle.Fill,ForeColor=Theme.Text};
-            string[] labels={"Controller name","Port to Arena","Port from Arena","Hue upper limit","Blink rate / s","Feedback","Lighting"};
-            Control[] inputs={apc,to,from,hue,blink,feedback,lit};
+            speedRings=new CheckBox{Text="Animate speed rings while idle (experimental)",Checked=GetBool("speed_ring_animation"),Dock=DockStyle.Fill,ForeColor=Theme.Text};
+            string[] labels={"Controller name","Port to Arena","Port from Arena","Hue upper limit","Blink rate / s","Feedback","Lighting","Speed rings"};
+            Control[] inputs={apc,to,from,hue,blink,feedback,lit,speedRings};
             for(int i=0;i<labels.Length;i++){root.Controls.Add(Theme.Label(labels[i],10,Theme.Muted),0,i);root.Controls.Add(inputs[i],1,i);}
-            var note=Theme.Label("The Hue limit must match the MIDI preset in Arena.",9,Theme.Muted);root.Controls.Add(note,0,7);root.SetColumnSpan(note,2);
-            var save=Theme.Button("Save settings",true);root.Controls.Add(save,1,8);AcceptButton=save;
+            var note=Theme.Label("The Hue limit must match the MIDI preset in Arena.",9,Theme.Muted);root.Controls.Add(note,0,8);root.SetColumnSpan(note,2);
+            var speedNote=Theme.Label("First movement takes control; turn again to adjust speed. Restart to apply.",9,Theme.Muted);root.Controls.Add(speedNote,0,9);root.SetColumnSpan(speedNote,2);
+            var save=Theme.Button("Save settings",true);root.Controls.Add(save,1,10);AcceptButton=save;
             save.Click+=(s,e)=>{
                 if(string.IsNullOrWhiteSpace(apc.Text)||string.IsNullOrWhiteSpace(to.Text)||string.IsNullOrWhiteSpace(from.Text)||to.Text.Trim().Equals(from.Text.Trim(),StringComparison.OrdinalIgnoreCase)){
                     MessageBox.Show(this,"Enter the port names. Input and output virtual ports must be different.","Settings",MessageBoxButtons.OK,MessageBoxIcon.Information);return;
                 }
                 try{
                     cfg["apc_port_match"]=apc.Text.Trim();cfg["to_resolume_port"]=to.Text.Trim();cfg["from_resolume_port"]=from.Text.Trim();
-                    cfg["hue_max"]=hue.Value;cfg["blink_hz"]=blink.Value;cfg["sync_resolume_feedback"]=feedback.Checked;cfg["always_lit"]=lit.Checked;
+                    cfg["hue_max"]=hue.Value;cfg["blink_hz"]=blink.Value;cfg["sync_resolume_feedback"]=feedback.Checked;cfg["always_lit"]=lit.Checked;cfg["speed_ring_animation"]=speedRings.Checked;
                     string backup=file+".before-settings-"+DateTime.Now.ToString("yyyyMMdd-HHmmss-fff")+".bak";
                     string temp=file+".settings.tmp";
                     File.WriteAllText(temp,Backend.Json.Serialize(cfg),new UTF8Encoding(false));

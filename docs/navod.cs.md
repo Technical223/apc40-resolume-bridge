@@ -191,3 +191,5 @@ Jde o relativní ukazatel rychlosti, nikoli synchronizaci s beatem. Ringy mají 
 Animace ringů se pohybuje tam a zpět: první LED → poslední LED → první LED. Nastavená perioda znamená celou cestu tam i zpět; na konci se směr obrátí bez skoku na začátek.
 
 **Známý problém hardwaru:** Animace ringů podle hlášení způsobuje skoky při otáčení speed knobů. Výchozí nastavení je nyní `speed_ring_animation: false`, aby se zachovalo normální absolutní ovládání a zpětná vazba Areny.
+
+Volbu najdeš v Settings → Speed rings: Animate speed rings while idle (experimental). Po uložení restartuj bridge. Animace běží jen v nečinnosti; první pohyb vrátí knobu skutečnou hodnotu a nepředá se do Areny. Další otáčení už mění rychlost. Po sekundě nečinnosti se animace obnoví. Zpětná vazba myší zůstává podporovaná. Jde o softwarové obejití sdílené hodnoty ringu a encoderu; na skutečném hardwaru se nové chování teprve ověřuje, proto je výchozí stav vypnutý.

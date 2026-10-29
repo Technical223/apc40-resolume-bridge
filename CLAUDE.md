@@ -79,7 +79,7 @@ macOS validation: GitHub Actions run https://github.com/Technical223/apc40-resol
 
 ## Animated group-speed rings
 
-With `speed_ring_animation: true`, device knobs 5–8 show a single dot bouncing across their 15 ring LEDs (first → last → first). Faster group speed means a faster loop. CCs 20–23 on MIDI channel 1 (zero-based 0) still pass unchanged to Arena. The supplied configuration enables this feature; a missing key or `false` preserves the previous behavior.
+With `speed_ring_animation: true`, device knobs 5–8 show a single dot bouncing across their 15 ring LEDs (first → last → first). Faster group speed means a faster loop. After manual takeover, CCs 20–23 on MIDI channel 1 (zero-based 0) pass unchanged to Arena; takeover/settling messages are consumed locally. The supplied configuration enables this feature; a missing key or `false` preserves the previous behavior.
 
 Arena must send the matching speed CC feedback to **APC VIRT B** (IAC bus B on macOS). With `sync_resolume_feedback: true`, mouse edits update the stored speed and animation. Incoming ring positions/styles are suppressed for animated knobs, preventing a fight with the animator. With sync disabled, Arena speed feedback is ignored for these rings; physical knob movement still changes their speed.
 
@@ -111,3 +111,15 @@ The user clarified the desired motion is bounce/ping-pong, not a wraparound loop
 ## Hardware regression: animated rings vs encoder values
 
 User reports speed values jumping like relative input while rotating the animated device knobs. Akai documents device CCs as absolute. Suspected cause is shared encoder/ring value state, not yet independently captured. Immediately disabled animation in the installed configuration and restarted the live bridge. Repository default is now false. Keep animation experimental/disabled; do not claim the issue fixed or re-enable it without hardware validation. The original requirement for unchanged absolute passthrough may be incompatible with independent ring animation on this firmware. Normal passthrough and Arena feedback remain active with the feature off.
+
+## Idle-only speed-ring animation and manual takeover
+
+In **Settings → Speed rings**, enable **Animate speed rings while idle (experimental)**, save and restart the bridge. The default remains off.
+
+The ring bounces only while its knob is idle. The first physical movement pauses animation and re-anchors the encoder to the stored actual speed; that first message is **not sent to Arena**. Messages during the short settling window are also ignored. Subsequent manual values pass unchanged. Animation stays paused until one second after the last movement, then resumes. This is per knob: other rings can continue animating.
+
+Mouse feedback updates stored speed. While manual control is active, normal absolute feedback is also sent to the knob to keep its baseline aligned; while animating, feedback does not overwrite the dot. Keep sync_resolume_feedback enabled for mouse changes.
+
+Advanced configuration: speed_ring_idle_seconds (default 1.0, range 0.2–10) and speed_ring_settle_seconds (default 0.05, range 0.02–0.5, no longer than idle).
+
+Tradeoff: the first small turn after idle takes control rather than changing speed. The brief settling period may discard a little further movement. This avoids blindly forwarding an absolute value derived from the animated ring. It is a software workaround, not an independently addressable LED channel. Queuing and encoder firmware behavior still require real-hardware validation; do not claim the interference fixed solely from simulated tests. Leave the option off if jumps persist.

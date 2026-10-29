@@ -55,6 +55,8 @@ DEFAULT_CFG = {
     "speed_ring_slowest_seconds": 2.0,
     "speed_ring_fastest_seconds": 0.25,
     "speed_ring_update_hz": 120.0,
+    "speed_ring_idle_seconds": 1.0,
+    "speed_ring_settle_seconds": 0.05,
     # single-colour buttons: lit all the time, blinking while active
     "always_lit": True,
     "lit_track_notes": [48, 49, 50, 51, 52, 66],          # rec arm, solo, activator, track select, clip stop, A|B (ch 1-8)
@@ -125,6 +127,10 @@ def validate_speed_rings(cfg):
         raise ValueError("Speed ring periods must satisfy 0.05 <= fastest <= slowest <= 60; update rate 1-240 Hz")
     if cfg.get("apc_mode", 66) != 66:
         raise ValueError("Speed ring animation requires APC Alternate Ableton mode 66")
+    idle = cfg.get("speed_ring_idle_seconds", 1.0)
+    settle = cfg.get("speed_ring_settle_seconds", 0.05)
+    if any(type(v) not in (int, float) or not math.isfinite(v) for v in (idle, settle)) or not 0.2 <= idle <= 10 or not 0.02 <= settle <= min(idle, 0.5):
+        raise ValueError("Speed-ring idle must be 0.2-10 s; settling must be 0.02-0.5 s and no longer than idle")
     return ccs, channel
 
 
@@ -224,6 +230,8 @@ class Bridge:
         self.speed_lock = getattr(self.state, "_persist_lock", threading.RLock())
         self.speed_phase = [0.0] * len(self.speed_ccs)
         self.speed_last = [None] * len(self.speed_ccs)
+        self.speed_manual_until = [0.0] * len(self.speed_ccs)
+        self.speed_settle_until = [0.0] * len(self.speed_ccs)
         self.lock = threading.Lock()
         self.count = {"apc>res": 0, "res>apc": 0, "dropped": 0}
         self.lit = {}
@@ -275,9 +283,31 @@ class Bridge:
             self.state.speed[self._speed_key(msg.control)] = msg.value
             self.state.dirty = True
 
+    def _speed_input(self, msg):
+        # Ring CCs can change the encoder's own absolute baseline. Never forward
+        # the first movement after idle: stop animating and re-anchor the encoder.
+        with self.speed_lock:
+            i = self.speed_ccs.index(msg.control)
+            now = time.monotonic()
+            if now >= self.speed_manual_until[i]:
+                self.speed_manual_until[i] = now + self.cfg.get("speed_ring_idle_seconds", 1.0)
+                self.speed_settle_until[i] = now + self.cfg.get("speed_ring_settle_seconds", 0.05)
+                actual = self.state.speed.get(self._speed_key(msg.control), 0)
+                self._to_apc(self.mido.Message("control_change", channel=self.speed_channel, control=msg.control, value=actual))
+                self.speed_last[i] = None
+                return
+            self.speed_manual_until[i] = now + self.cfg.get("speed_ring_idle_seconds", 1.0)
+            if now < self.speed_settle_until[i]:
+                return  # Drain messages already queued before re-anchoring.
+            self._store_speed(msg)
+            self.res_out.send(msg)
+
     def _speed_tick(self, elapsed):
         with self.speed_lock:
+            now = time.monotonic()
             for i, cc in enumerate(self.speed_ccs):
+                if now < self.speed_manual_until[i]:
+                    continue  # No animation writes while the knob is in use.
                 value = self.state.speed.get(self._speed_key(cc), 0)
                 self.speed_phase[i] = (self.speed_phase[i] + elapsed / speed_ring_period(value, self.cfg)) % 1.0
                 # Ping-pong: 0..14..1, then back to 0. Each endpoint occurs once.
@@ -338,8 +368,7 @@ class Bridge:
         self.count["apc>res"] += 1
         try:
             if self.speed_enabled and msg.type == "control_change" and msg.channel == self.speed_channel and msg.control in self.speed_ccs:
-                self._store_speed(msg)
-                self.res_out.send(msg)
+                self._speed_input(msg)
                 return
             if msg.type == "control_change" and msg.channel == 0 and msg.control in self.knobs:
                 i = self.knobs.index(msg.control)
@@ -366,7 +395,11 @@ class Bridge:
             if self.speed_enabled and msg.type == "control_change" and msg.channel == self.speed_channel:
                 if msg.control in self.speed_ccs:
                     if self.cfg.get("sync_resolume_feedback", False):
-                        self._store_speed(msg)
+                        with self.speed_lock:
+                            self._store_speed(msg)
+                            i = self.speed_ccs.index(msg.control)
+                            if time.monotonic() < self.speed_manual_until[i]:
+                                self._to_apc(msg)  # Normal absolute feedback during manual control.
                     return  # Ring values belong exclusively to the animator.
                 if msg.control in [cc + 8 for cc in self.speed_ccs]:
                     return  # Prevent incoming ring-style feedback fighting Single mode.
