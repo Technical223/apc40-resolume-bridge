@@ -177,5 +177,6 @@
   "speed_button_base_seconds": 1.0,
   "speed_button_min_multiplier": 1.0,
   "speed_button_max_multiplier": 10.0,
-  "speed_button_reset_value": 0
+  "speed_button_reset_value": 0,
+  "speed_button_max_blink_hz": 3.0
 }

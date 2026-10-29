@@ -55,6 +55,7 @@ DEFAULT_CFG = {
     "speed_button_min_multiplier": 1.0,
     "speed_button_max_multiplier": 10.0,
     "speed_button_reset_value": 0,
+    "speed_button_max_blink_hz": 3.0,
     "speed_ring_animation": False,  # Missing key preserves original ring behavior.
     "speed_ring_ccs": [20, 21, 22, 23],
     "speed_ring_channel": 0,  # MIDI channel 1 in Arena.
@@ -143,8 +144,13 @@ def validate_speed_rings(cfg):
 def speed_button_period(value, cfg):
     low = cfg.get("speed_button_min_multiplier", 1.0)
     high = cfg.get("speed_button_max_multiplier", 10.0)
-    multiplier = low + (high - low) * max(0, min(127, value)) / 127.0
-    return cfg.get("speed_button_base_seconds", 1.0) / multiplier
+    base = cfg.get("speed_button_base_seconds", 1.0)
+    # Compress the full knob travel into a readable rate, rather than plateauing
+    # at the cap or strobing at 10 Hz at the fast end.
+    slow_hz = low / base
+    fast_hz = min(high / base, cfg.get("speed_button_max_blink_hz", 3.0))
+    position = max(0, min(127, value)) / 127.0
+    return 1.0 / (slow_hz + (fast_hz - slow_hz) * position)
 
 
 def validate_speed_buttons(cfg, ccs):
@@ -155,6 +161,9 @@ def validate_speed_buttons(cfg, ccs):
     low, high, base = (cfg.get("speed_button_min_multiplier", 1.0), cfg.get("speed_button_max_multiplier", 10.0), cfg.get("speed_button_base_seconds", 1.0))
     if any(type(v) not in (float, int) or not math.isfinite(v) for v in (low, high, base)) or not 0 < low <= high <= 100 or not 0.05 <= base / high <= base / low <= 60:
         raise ValueError("Speed-button period range must be 0.05-60 seconds with positive multipliers")
+    cap = cfg.get("speed_button_max_blink_hz", 3.0)
+    if type(cap) not in (float, int) or not math.isfinite(cap) or not low / base <= cap <= 5:
+        raise ValueError("Speed-button maximum blink rate must be at least the slow rate and no more than 5 Hz")
     reset = cfg.get("speed_button_reset_value", 0)
     if type(reset) is not int or not 0 <= reset <= 127:
         raise ValueError("Speed-button reset value must be 0-127")

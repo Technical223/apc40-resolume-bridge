@@ -15,7 +15,13 @@ class SpeedButtonTests(unittest.TestCase):
 
     def test_pulse_period_matches_multiplier(self):
         self.assertEqual(b.speed_button_period(0,self.cfg),1)
-        self.assertEqual(b.speed_button_period(127,self.cfg),.1)
+        self.assertEqual(b.speed_button_period(127,self.cfg),1/3)
+
+    def test_custom_cap_compresses_the_whole_travel(self):
+        self.cfg["speed_button_max_blink_hz"]=2
+        self.assertEqual(b.speed_button_period(0,self.cfg),1)
+        self.assertEqual(b.speed_button_period(127,self.cfg),.5)
+        self.assertGreater(b.speed_button_period(100,self.cfg),b.speed_button_period(127,self.cfg))
 
     def test_pulse_accelerates_monotonically_and_mouse_feedback_controls_it(self):
         periods = [b.speed_button_period(v,self.cfg) for v in range(128)]
@@ -25,7 +31,7 @@ class SpeedButtonTests(unittest.TestCase):
         x.speed_phase[0]=0
         x.speed_last[0]=True
         before=len(x.apc_out.messages)
-        x._speed_tick(.051)
+        x._speed_tick(.17)
         self.assertTrue(any(m.type=="note_on" and m.note==58 and m.velocity==0 for m in x.apc_out.messages[before:]))
         x.on_apc(Backend.Message("note_on",channel=0,note=58,velocity=127))
         self.assertEqual(x.state.speed["0:20"],0)
@@ -106,7 +112,7 @@ class SpeedButtonTests(unittest.TestCase):
         self.assertEqual(x.state.speed,{})
 
     def test_config_conflicts_and_notes_validated(self):
-        for changes in [dict(speed_ring_animation=True),dict(speed_button_notes=[58]*4),dict(speed_button_reset_value=128),dict(speed_button_min_multiplier=0)]:
+        for changes in [dict(speed_ring_animation=True),dict(speed_button_notes=[58]*4),dict(speed_button_reset_value=128),dict(speed_button_min_multiplier=0),dict(speed_button_max_blink_hz=10)]:
             self.cfg.update(changes)
             with self.assertRaises(ValueError): b.Bridge(self.cfg)
             for k in changes:self.cfg.pop(k,None)
