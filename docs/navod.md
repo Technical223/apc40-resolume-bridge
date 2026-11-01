@@ -18,36 +18,15 @@
 
 ## 1. Requirements
 
-| Component | Version | Notes |
-|---|---|---|
-| Windows | 10 / 11 | 64-bit |
-| Resolume Arena | 7.x | Tested with 7.25 |
-| Akai APC40 mkII | — | Connected via USB |
-| Python | 3.9+ | Setup installs 3.12 if missing |
-| [loopMIDI](https://www.tobias-erichsen.de/software/loopmidi.html) | — | Setup attempts installation via winget; see the publisher’s license for your use case |
-| Internet | — | Needed during initial setup |
+Windows 10/11 x64, Resolume Arena 7.x (tested with 7.25), and an Akai APC40 mkII connected by USB. The setup EXE includes Python and MIDI libraries. It downloads [loopMIDI](https://www.tobias-erichsen.de/software/loopmidi.html) only if missing; confirm the publisher's license and Windows permission prompts.
 
 ## 2. Installation and launch
 
-1. Extract the Windows package into a permanent folder. Close Arena before initial setup.
-2. Open **APC40 Bridge.exe**. If using the source ZIP, open **bridge/APC40 Bridge.vbs** to build and open the same dashboard.
-3. Click **Prepare and start**. Setup finds or installs Python, MIDI libraries, and loopMIDI.
-4. If virtual ports are missing, click **Open loopMIDI**, add **APC VIRT A** and **APC VIRT B**, then repeat setup. Keep loopMIDI autostart enabled.
-5. Setup updates Arena MIDI inputs/outputs, saves a backup, and copies the example preset if not already installed.
-6. In Arena, use **Any device** for the preset and match the Hue range below.
+Follow the [Windows installation guide](windows-installation.md) for the setup EXE, portable ZIP, offline use and updates. Setup prepares **APC VIRT A** (bridge → Arena) and **APC VIRT B** (Arena → bridge), preserves existing profiles and backs up Arena MIDI settings.
 
-![loopMIDI ports](img/loopmidi.svg)
+If loopMIDI was already running without these ports, restart it once. Open **APC40 Bridge → Start bridge**, then Arena. **Install / repair** repeats preparation; close Arena if its MIDI preferences need changing.
 
-| Port | Direction |
-|---|---|
-| APC VIRT A | Bridge → Resolume |
-| APC VIRT B | Resolume → bridge |
-
-For normal use, click **Start bridge**. Repeated launches do not create another process. **Start automatically when signing in to Windows** launches the watcher without opening the dashboard or running setup again. After moving the installation folder, turn this option off and on to update its shortcut.
-
-**Install / repair** can be used again; preparation alone does not restart a running bridge. If Arena is running and its MIDI settings need changing, setup asks you to close Arena. Restarting the bridge may send the physical fader and knob positions to the composition.
-
-Setup backs up the original MIDI settings as `midi.xml.pred-bridge.bak`. With Arena closed, **Restore Arena MIDI** restores that backup, stops the bridge, and disables its autostart. Open **View logs** for runtime and installation logs.
+**Start automatically when signing in to Windows** runs the bridge without opening the dashboard. After moving a portable installation, switch this option off and on to update its shortcut. **View logs** shows runtime and setup logs.
 
 ## 3. Resolume setup
 
@@ -55,7 +34,7 @@ Setup backs up the original MIDI settings as `midi.xml.pred-bridge.bak`. With Ar
 
 ![Resolume MIDI preset](img/resolume-preset.svg)
 
-- **The MIDI preset must use Any device.** A preset bound to APC40 mkII does not respond through the virtual port, because Resolume now receives input from `APC VIRT A`.
+- **Shortcut input:** use **Any device** or **APC VIRT A** so shortcuts receive the bridge's virtual-port messages.
 - Setup copies **APC40 BRIDGE EXAMPLE** into `Documents\Resolume Arena\Shortcuts\MIDI`. See the expected [composition layout](layout.md).
 - **Custom mapping:** relearn shortcuts in *Shortcuts → Edit MIDI*. Input from `APC VIRT A` is expected.
 - **Top grid row, notes 32–39:** toggles layer Colorize. The bridge owns the pad colors and can update them from optional MIDI feedback.
@@ -72,9 +51,9 @@ Open **Arena → Preferences → MIDI** and check the following when using the b
 | APC VIRT B | Off | Off | On |
 | APC40 mkII (physical USB controller) | On | Off | On |
 
-For the user-tested Windows configuration, leave physical **APC40 mkII MIDI Input and MIDI Output enabled** and select **Alternate Ableton Live Mode** in Arena (mode 66 / 0x42). The user confirmed that disabling the physical APC ports removes the required MIDI feedback. Keep the virtual A/B routing enabled as well.
+Keep physical **APC40 mkII MIDI Input and MIDI Output enabled** and select **Alternate Ableton Live Mode** (66 / 0x42). Disabling the physical ports removes feedback in the tested setup.
 
-**Install / repair** now keeps physical APC input/output enabled alongside virtual A/B routing and preserves the selected control-surface mode. Check **Alternate Ableton Live Mode** in Arena after initial setup; the setup routine does not change that selector.
+**Install / repair** preserves the selected control-surface mode; check **Alternate Ableton Live Mode** manually after first setup.
 
 **MIDI Middle C:** the supplied reference uses **Legacy**. This changes displayed note names only, not MIDI note numbers or bridge routing. Leave unrelated MIDI devices as required by your setup; Microsoft GS Wavetable Synth is not needed by the bridge.
 
@@ -82,8 +61,6 @@ Shortcuts should receive from **Any device** or **APC VIRT A**, and send feedbac
 
 <details>
 <summary>Reference screenshot: where to find these controls</summary>
-
-This is the user-tested configuration: physical APC input/output are **enabled**, and **Alternate Ableton Live Mode** is selected. Use these settings together with the virtual A/B ports in the table above.
 
 <img src="img/resolume-midi-preferences-reference.png" width="620" alt="Arena MIDI Preferences reference showing virtual ports, physical APC controls, and Legacy Middle C; physical APC input and output enabled in Alternate Ableton Live Mode">
 
@@ -177,10 +154,10 @@ Click **Restart** after changing settings.
 
 | Symptom | Cause | Solution |
 |---|---|---|
-| Setup reports missing ports | Missing or differently named loopMIDI ports | Create exactly `APC VIRT A` and `APC VIRT B` |
+| Setup reports missing ports | loopMIDI has not loaded the required names | Restart loopMIDI; check for `APC VIRT A` and `APC VIRT B` |
 | APC stays dark | Bridge or Arena is not running | Check `bridge.log`, click Start bridge, open Arena |
 | Log says “Waiting for ports” | APC disconnected or held by another program | Connect USB; close other MIDI apps; verify the tested MIDI preferences above |
-| Knobs/pads do nothing in Resolume | Preset bound to APC40 mkII | Use Any device (section 3) |
+| Knobs/pads do nothing in Resolume | Shortcut input misses the virtual port | Use Any device or APC VIRT A |
 | Resolume cannot see APC VIRT A | loopMIDI is not running | Start loopMIDI and enable its autostart |
 | Setup says Arena is running | MIDI preferences cannot be changed while Arena is open | Close Arena, then use Install / repair again |
 | Another controller triggers the same actions | Any device preset hears all enabled inputs | Disable that controller in *Preferences → MIDI* if unwanted |
@@ -191,77 +168,45 @@ Logs are available inside the app: **View logs → Bridge runtime / Setup / App 
 
 ## 7. Fallback mode and removal
 
-**Fallback mode during a show:**
+For direct APC control without bridge lighting, click **Stop**, keep physical APC MIDI input/output enabled and use an **Any device** preset.
 
-1. Click **Stop** or run `STOP.bat`.
-2. In Arena → *Preferences → MIDI*, enable physical **APC40 mkII** input and output.
-3. An Any device preset keeps working directly, without the bridge color pads and utility-button lighting.
-
-**Removal:**
-
-1. Disable autostart in the app and click **Stop**.
-2. With Arena closed, use **Restore Arena MIDI** to restore the original MIDI settings.
-3. Delete the installation folder and any desktop/Start Menu shortcuts you created. Uninstall Python and loopMIDI through Windows if no longer needed.
+To restore Arena's original MIDI settings, close Arena and click **Restore Arena MIDI**. This restores `midi.xml.pred-bridge.bak`, stops the bridge and disables its autostart. Remove the installed app through Windows Installed Apps; see [what is retained](windows-installation.md#updates-and-removal).
 
 ## Animated group-speed rings
 
-With `speed_ring_animation: true`, device knobs 5–8 show a single dot bouncing across their 15 ring LEDs (first → last → first). Faster group speed means a faster loop. After manual takeover, CCs 20–23 on MIDI channel 1 (zero-based 0) pass unchanged to Arena; takeover/settling messages are consumed locally. The supplied configuration disables this experimental feature; a missing key or `false` preserves the previous behavior.
+**Leave this experimental option off for normal use.** Ring CC animation can interfere with absolute knob values and cause speed jumps.
 
-Arena must send the matching speed CC feedback to **APC VIRT B** (IAC bus B on macOS). With `sync_resolume_feedback: true`, mouse edits update the stored speed and animation. Incoming ring positions/styles are suppressed for animated knobs, preventing a fight with the animator. With sync disabled, Arena speed feedback is ignored for these rings; physical knob movement still changes their speed.
+With **Settings → Speed rings → Animate speed rings while idle**, the dot bounces first → last → first. The first turn pauses animation and restores the stored value; that movement and a short settling interval are consumed locally. Later movement passes to Arena. Animation resumes after one second idle. Mouse updates require matching Arena MIDI feedback and `sync_resolume_feedback: true`.
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `speed_ring_animation` | false | Experimental animated rings; known encoder interference |
-| `speed_ring_ccs` | [20, 21, 22, 23] | Device-knob CCs; configurable subset of 16–23 |
-| `speed_ring_channel` | 0 | Zero-based MIDI channel |
-| `speed_ring_slowest_seconds` | 2.0 | Full out-and-back period at CC value 0 |
-| `speed_ring_fastest_seconds` | 0.25 | Full out-and-back period at CC value 127 |
-| `speed_ring_update_hz` | 120 | Scheduler rate; MIDI is sent only when the LED index changes |
-
-Period interpolates linearly between the configured endpoints. The animation is a relative speed indicator, not a beat clock or exact display of a percentage. The JKB preset maps these knobs to group speeds of approximately 25–100%. At the fastest default setting, traffic is at most about 112 CCs/s per ring (448 CCs/s total). A low update rate can skip intermediate LEDs.
-
-Last speed values are stored in `state.json` under `speed`, keyed by channel and CC (e.g. `0:20`). Old state files remain compatible. Until movement or feedback arrives, a missing value starts at the slowest period. Changing speed preserves animation phase. The animation thread stops and joins before ports close; send failures mark the connection unhealthy and trigger normal reconnection.
-
-Protocol: [Akai APC40 mkII Communications Protocol v1.2](https://cdn.inmusicbrands.com/akai/attachments/apc40II/APC40Mk2_Communications_Protocol_v1.2.pdf), pages 24–27. Device ring-style CC = knob CC + 8 (28–31 for knobs 5–8); value 1 selects Single. Fifteen values are selected from single-LED ranges, avoiding the intervening two-LED patterns. Mode 66 (Alternate Ableton) is required so the host owns the LEDs.
-
-Validation: hardware-free tests cover periods, protocol messages, passthrough, mouse-style feedback, sync disabled, old configuration/state, persistence, thread shutdown and animation send failures. Real LED appearance and direct mouse changes in Arena have **not yet been verified on hardware**. No API polling is added: mouse changes require actual matching Arena MIDI feedback and are subject to its mapping/range and 7-bit resolution.
-
-Restart the bridge after changing configuration. To revert, set `speed_ring_animation: false` and restart.
-
-**Known hardware issue (2026-10-29):** Animated ring CC values appear to interfere with the absolute device-knob values on the user’s APC40 mkII, causing speed jumps during rotation. The precise firmware interaction has not been independently measured. Keep `speed_ring_animation: false` for normal control and standard Arena feedback. Do not treat unchanged-message unit tests as proof that host-driven ring animation is independent of encoder state.
+Set `speed_ring_animation: false` and restart if control jumps. A hardware-free test cannot establish that encoder interference is fixed.
 
 ## Idle-only speed-ring animation and manual takeover
 
-In **Settings → Speed rings**, enable **Animate speed rings while idle (experimental)**, save and restart the bridge. The default remains off.
-
-The ring bounces only while its knob is idle. The first physical movement pauses animation and re-anchors the encoder to the stored actual speed; that first message is **not sent to Arena**. Messages during the short settling window are also ignored. Subsequent manual values pass unchanged. Animation stays paused until one second after the last movement, then resumes. This is per knob: other rings can continue animating.
-
-Mouse feedback updates stored speed. While manual control is active, normal absolute feedback is also sent to the knob to keep its baseline aligned; while animating, feedback does not overwrite the dot. Keep sync_resolume_feedback enabled for mouse changes.
-
-Advanced configuration: speed_ring_idle_seconds (default 1.0, range 0.2–10) and speed_ring_settle_seconds (default 0.05, range 0.02–0.5, no longer than idle).
-
-Tradeoff: the first small turn after idle takes control rather than changing speed. The brief settling period may discard a little further movement. This avoids blindly forwarding an absolute value derived from the animated ring. It is a software workaround, not an independently addressable LED channel. Queuing and encoder firmware behavior still require real-hardware validation; do not claim the interference fixed solely from simulated tests. Leave the option off if jumps persist.
+Advanced defaults in `config.json`: CCs `[20,21,22,23]`, channel `0`, out-and-back periods `2.0–0.25` seconds, update rate `120` Hz, idle `1.0` second, settling `0.05` second. The update rate is scheduler frequency, not constant MIDI traffic. See the [Akai protocol](https://cdn.inmusicbrands.com/akai/attachments/apc40II/APC40Mk2_Communications_Protocol_v1.2.pdf) for ring messages.
 
 ## Speed buttons: blink rate and 1x reset
 
-The preferred speed indication is now **Settings → Speed buttons → Blink speed buttons; press to reset to 1x**. Save and restart to apply. The repository default is off for compatibility; enabling this option replaces the original actions of the four device buttons beneath knobs 5–8.
+Enable **Settings → Speed buttons → Blink speed buttons; press to reset to 1x**, save and restart. This is off by default. It uses the **upper** device-button row beneath knobs 5–8: notes **58–61**, paired with CCs **20–23**, MIDI channel 1 (zero-based 0).
 
-This mode uses notes **58, 59, 60, 61** on MIDI channel 1 (zero-based 0), paired with speed CCs **20, 21, 22, 23**. The physical controller protocol identifies these as Device Left, Device Right, Bank Left and Bank Right (the upper of the two button rows). These buttons retain their original preset actions only when the speed-button option is off. Both press and release are consumed locally, so the old preset action does not reach Arena. Turning the option off restores the original mapping.
-
-Buttons blink on/off at a rate proportional to the mapped group-speed multiplier. These are single-color on/off LEDs; velocity does not provide smooth brightness fading. Default mapping is approximately 0.25x–1x: one cycle takes 2 seconds at minimum speed and 0.5 seconds at 1x. LED messages are sent only at on/off transitions and never to Arena.
-
-Knob rings use normal absolute feedback again. The first knob movement passes to Arena unchanged; there is no takeover gesture or animation write to an encoder. Mouse feedback updates stored speed and the pulse rate when sync_resolume_feedback is enabled, and passes through to the knob normally.
-
-Pressing a button sends its paired speed CC with value **127** to Arena and the APC. For the current 25–100% preset this resets speed to **1x (100%)**, restores the correct encoder/ring position and restarts that button pulse at the beginning. It does not reset clip playback. Custom preset ranges may require a different speed_button_reset_value.
-
-Configuration: speed_button_pulse (false if absent), speed_button_notes ([58,59,60,61]), speed_button_base_seconds (0.5), speed_button_min_multiplier (0.25), speed_button_max_multiplier (1.0), speed_button_reset_value (127). The existing speed_ring_ccs/channel define the paired knob mapping. Legacy ring animation and button pulsing cannot run together; saving Settings disables legacy ring animation.
-
-Validation: tests cover LED-only animation traffic, unchanged first knob movement, normal mouse-style feedback, reset on press only, consumption of releases and duplicate presses, ownership of button LEDs against old preset feedback/general blinking, compatibility when disabled, and configuration conflicts. Physical button timing and real mouse edits still require user confirmation. No Arena preset files are modified.
+While enabled, button presses/releases replace their original preset actions. Pressing sends the paired CC reset to Arena and the APC and restarts the pulse phase. Knobs keep normal absolute feedback; mouse changes update the indication when Arena sends matching feedback. These LEDs blink on/off, without smooth fading.
 
 ### Speed-button range correction
 
-The supplied Arena shortcut range is 1–10 (normalized parameter bounds approximately 0.2502–1); these normalized bounds are not speed multipliers. MIDI CC 0 selects the lower bound (1x), and CC 127 the upper bound (10x). Button reset sends CC 0 to both Arena and the encoder, restarting the pulse phase. Pulse rate increases from 1 to 3 Hz across the full MIDI range (speed 1x–10x). The display rate is compressed by speed_button_max_blink_hz, default 3; it is an indication of speed, not a 10 Hz strobe. Intermediate pulse rates are a linear indication of the shortcut position, not an exact measurement of Arena’s nonlinear speed curve. Physical knob input and mouse MIDI feedback remain unchanged. Replaces earlier descriptions of CC-127 reset and the 0.25–1 pulse range.
+With the supplied **1x–10x** mapping, CC **0 = 1x**, CC **127 = 10x**, and reset sends **0**. Blinking increases from **1 to 3 Hz**, indicating shortcut position rather than measuring Arena's nonlinear speed curve.
+
+| Configuration key | Default |
+|---|---|
+| `speed_button_pulse` | `false` |
+| `speed_button_notes` | `[58,59,60,61]` |
+| `speed_button_base_seconds` | `1.0` |
+| `speed_button_min_multiplier` / `speed_button_max_multiplier` | `1.0` / `10.0` |
+| `speed_button_reset_value` | `0` |
+| `speed_button_max_blink_hz` | `3.0` |
+
+Other mappings may need a different reset value. Speed buttons and legacy ring animation cannot run together; saving Settings disables ring animation.
 
 ### Arena reset and MIDI routing
 
-If a speed-reset button updates the APC ring/pulse but the Arena speed number stays unchanged, check that Arena is receiving APC VIRT A. Reopen that MIDI Input (off/on) in Arena preferences if a virtual port was recreated after Arena started. Keep physical APC40 MIDI Input and MIDI Output enabled, with Alternate Ableton Live Mode selected, matching the user-tested feedback configuration. The speed shortcuts must use Any Device or APC VIRT A for input and All Devices or APC VIRT B for output. Keep MIDI learning off during bridge restarts, which can cause the controller to resend controls. A CC reset changes the actual parameter and its displayed number together when the virtual input is connected.
+If the APC resets but Arena shows an old number, check shortcut input from **Any device** or **APC VIRT A** and feedback to **APC VIRT B** or **All devices**. After recreating a virtual port, toggle its Arena MIDI Input off/on. Keep physical APC input/output enabled as in [MIDI preferences](#arena-midi-preferences), and MIDI learning off during bridge restarts.
+
+For custom lighting and resets, use [Controller Studio](controller-studio.md).

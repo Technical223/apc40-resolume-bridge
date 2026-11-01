@@ -2,23 +2,43 @@
 
 [English](README.md) | **Česky**
 
-![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6)
-![Resolume](https://img.shields.io/badge/Resolume%20Arena-7.x-8A2BE2)
-![License](https://img.shields.io/badge/license-MIT-green)
+Windows aplikace pro osvětlení APC40 mkII a MIDI zpětnou vazbu z Resolume Areny. Pady ukazují odstín Colorize, změny myší se mohou přenášet na kontroler a Controller Studio umožňuje nastavit světla a resety bez úprav kódu. Rozhraní aplikace je anglicky.
 
-Barevné pady pod Hue knoby, tlačítka viditelná ve tmě a **jedno okno pro instalaci, spuštění a správu**.
+## Stažení a spuštění
 
-- Pad ukazuje odstín knobu; stisk přepíná Colorize.
-- Volitelná MIDI zpětná vazba přijímá změny z Areny i jiných ovladačů.
-- Bridge se aktivuje s Arenou a uvolní kontroler po jejím zavření.
-- Aplikace ukazuje stav kontroleru, Areny, portů a instalace. Bez terminálového okna.
+1. Stáhni **[APC40-Bridge-Setup.exe](https://github.com/Technical223/apc40-resolume-bridge/releases/latest)**. Při první instalaci zavři Arenu, při aktualizaci i bridge aplikaci.
+2. Klikni **Install**. Python a MIDI knihovny jsou přibalené. Chybějící loopMIDI instalátor stáhne od autora; jeho licenci a oprávnění Windows potvrdíš ručně.
+3. Otevři **APC40 Bridge → Start bridge**, potom Arenu. Porty **APC VIRT A** a **APC VIRT B** se připraví automaticky.
 
-<p align="center">
-  <a href="docs/media/app-showcase.gif"><img src="docs/media/app-showcase.gif" width="1000" alt="Animovaná prohlídka APC40 Bridge: přehled připojení, nastavení a provozní logy"></a>
-</p>
-<p align="center"><sub>Skutečné snímky Windows aplikace · přehled, nastavení a logy v jednom okně</sub></p>
+Potřebuješ Windows 10/11 x64, Resolume Arena 7.x a APC40 mkII. Instalátor není digitálně podepsaný. [Přenosný ZIP, offline instalace a aktualizace (anglicky)](docs/windows-installation.md).
 
-## Ukázky aplikace
+## Nastavení Areny
+
+V **Preferences → MIDI** nastav:
+
+| Zařízení | MIDI Input | MIDI Output |
+|---|---|---|
+| APC VIRT A | Zapnuto | Vypnuto |
+| APC VIRT B | Vypnuto | Zapnuto |
+| Fyzické APC40 mkII | **Zapnuto** | **Zapnuto** |
+
+Clock Input nech vypnutý a u fyzického APC vyber **Alternate Ableton Live Mode**. Ověřené zapojení potřebuje zapnutý fyzický vstup i výstup.
+
+Shortcuty přijímají z **Any device** nebo **APC VIRT A**, feedback posílají do **APC VIRT B** nebo **All devices**. Hue Range Max nastav na **0.63871**, stejně jako ve výchozí konfiguraci bridge. [Návod a referenční screenshot](docs/navod.cs.md#midi-předvolby-areny).
+
+## Controller Studio
+
+Klikni na ovladač na fotce, vyber barvu, blikání, zdrojový knob/fader nebo reset. Vyzkoušej náhled, ulož profil a restartuj bridge. **Live bridge feedback** ukazuje výstup běžícího bridge. [Návod k editoru (anglicky)](docs/controller-studio.md).
+
+![Controller Studio](docs/img/controller-studio.png)
+
+Volitelná **Speed buttons** blikají pod knoby 5–8; stisk s přiloženým mapováním vrací rychlost grupy na **1×**. Experimentální animaci ringů nech vypnutou kvůli rušení hodnot knobů. [Nastavení speed tlačítek](docs/navod.cs.md#blikání-speed-tlačítek-a-reset-na-1).
+
+## Ukázka
+
+[![Synchronizovaný APC40, Colorize a Composition Monitor](docs/media/controller-screen-sync.gif)](docs/media/controller-screen-sync.mp4)
+
+[36sekundové video](docs/media/controller-screen-sync.mp4) · [Prohlídka aplikace](docs/media/app-showcase.gif) · [Původní ukázka kontroleru](docs/media/demo.mp4)
 
 <table>
   <tr>
@@ -33,99 +53,16 @@ Barevné pady pod Hue knoby, tlačítka viditelná ve tmě a **jedno okno pro in
   </tr>
 </table>
 
-Kliknutím otevřeš snímek v plné velikosti.
+## Běžné použití a pomoc
 
-Rozhraní aplikace je anglicky; názvy tlačítek v tomto návodu odpovídají aplikaci.
+- **Start bridge**, **Stop** a **Restart** ovládají bridge na pozadí. Zavření hlavního okna ho nezastaví.
+- **Settings** obsahuje zpětnou vazbu a automatické spuštění po přihlášení. **View logs** zobrazí záznamy chyb.
+- Spuštění nebo restart může přenést fyzické polohy knobů/faderů do Areny; MIDI learning nech vypnutý.
 
-## Experimentální macOS verze
+[Nastavení a řešení problémů](docs/navod.cs.md) · [Instalace (anglicky)](docs/windows-installation.md) · [Controller Studio (anglicky)](docs/controller-studio.md)
 
-Samostatná [testovací verze pro Mac](https://github.com/Technical223/apc40-resolume-bridge/tree/main/macos) používá nativní IAC/CoreMIDI, jednoduché menu, tříminutový test a diagnostický ZIP. Je nepodepsaná, vyžaduje Python a ruční MIDI nastavení. Fyzický APC s Arenou na Macu ještě musí ověřit tester. [České pokyny](https://github.com/Technical223/apc40-resolume-bridge/blob/main/macos/TESTER.md). Windows aplikace zůstává oddělená.
+[Experimentální verze pro macOS](macos/README.md) je nepodepsaná, potřebuje Python a ruční nastavení IAC; Controller Studio neobsahuje. Čeká na ověření s hardwarem.
 
-## Začni tady — Windows
-
-1. Rozbal balíček **APC40-Bridge-Windows.zip** do složky, kde má zůstat. Při prvním nastavení zavři Arenu.
-2. Otevři **APC40 Bridge.exe**.
-3. Klikni **Prepare and start**. Příprava najde nebo nainstaluje potřebné součásti.
-4. Pokud chybí virtuální porty, klikni **Open loopMIDI**, vytvoř **APC VIRT A** a **APC VIRT B** a přípravu zopakuj.
-5. V Areně vyber MIDI preset na **Any device** a nastav Hue **Range Max 0,63871** (zobrazuje se zaokrouhleně 0,64).
-
-Pro další použití stačí aplikace a tlačítko **Start bridge**. Volba **Start automatically when signing in to Windows** spustí bridge bez otevírání správce.
-
-**Stažený zdrojový ZIP z GitHubu:** ve složce `bridge` otevři **APC40 Bridge.vbs**. Ten připraví aplikaci z přiložených zdrojů a otevře stejné okno. Není k tomu potřeba Python ani další vývojové nástroje; sestavení používá .NET Framework ve Windows.
-
-## Vše na jednom místě
-
-| Ovládání | Co dělá |
-|---|---|
-| Start bridge | Spustí hlídání Areny; při opakovaném spuštění nevytváří další proces |
-| Zastavit / Restartovat | Bezpečně uvolní kontroler nebo načte nové nastavení |
-| Install / repair | Připraví závislosti a MIDI nastavení; běžící bridge zbytečně nerestartuje |
-| Settings | Porty, Hue, zpětná vazba a osvětlení; zachová ostatní hodnoty a uloží zálohu |
-| View logs | Provoz, příprava i správa přímo v aplikaci |
-| Desktop shortcut | Přidá běžnou ikonu aplikace na plochu |
-| Restore Arena MIDI | Při zavřené Areně vrátí zálohu MIDI nastavení, zastaví bridge a vypne autostart |
-
-Zavření správce **nezastaví** bridge. Běží samostatně na pozadí. Restart může do Areny znovu přenést fyzické polohy faderů/knobů.
-
-## Bridge v akci
-
-<p align="center">
-  <a href="docs/media/controller-screen-sync.mp4"><img src="docs/media/controller-screen-sync.gif" width="1200" alt="Tři synchronizované pohledy vedle sebe: APC40 mkII, detail panelu Colorize a Composition Monitor"></a>
-</p>
-<p align="center"><sub>Stejný okamžik ze tří pohledů · APC40 mkII + Colorize + Composition Monitor · <a href="docs/media/controller-screen-sync.mp4">Přehrát 36s video v plné kvalitě (MP4)</a></sub></p>
-
-Záběry jsou časově srovnané podle změn Hue. Vlevo je skutečný kontroler, uprostřed detail panelu Colorize s hodnotou Hue a vpravo výřez Composition Monitoru. Video ukazuje změny odstínu a přepínání Colorize, bez zvuku.
-
-<details>
-<summary>Původní krátká ukázka kontroleru</summary>
-
-<p align="center">
-  <a href="docs/media/demo.mp4"><img src="docs/media/demo.gif" width="340" alt="Ukázka fyzického APC40: Hue knob mění barvu padu i výstupu v Resolume"></a>
-</p>
-<p align="center"><sub><a href="docs/media/demo.mp4">Přehrát původní ukázku APC40 v plné kvalitě</a></sub></p>
-
-</details>
-
-## Animované ringy rychlosti
-
-Device knoby 5–8 mohou ukazovat rychlost grup běžící tečkou. Změny myší se přebírají z MIDI feedbacku CC 20–23 při zapnuté synchronizaci. [Nastavení a omezení](docs/navod.cs.md#animované-ringy-rychlosti-grup). Skutečný hardware zatím není ověřený.
-
-## Zpětná vazba LED
-
-`sync_resolume_feedback: true` v `config.json` zapíná stávající MIDI zpětnou vazbu. Hue CC 48–55 aktualizují odstín, noty 32–39 stav Colorize. Arena je musí odesílat do `APC VIRT B`; pro aktuální preset platí velocity **5 = aktivní efekt, 3 = bypass**.
-
-Jde o 7bitovou MIDI hodnotu v rozsahu nastaveného presetu, nikoli plně přesné čtení přes API. Mimo rozsah `0–hue_max` není správný odstín zaručen. Režim lze vypnout v **Nastavení → Zpětná vazba**. Webserver ani další knihovna nejsou potřeba.
-
-👉 **[Podrobný návod, nastavení a řešení problémů](docs/navod.cs.md)**
-
-Pro další vývoj: [kontext a ověření změn](CLAUDE.md), [technický popis aplikace](docs/windows-app.cs.md).
-
-Původní dávkové soubory zůstávají pro kompatibilitu; `START.bat` nyní otevře správce.
+Pro vývojáře: [sestavení aplikace](docs/windows-app.cs.md) · [kontext projektu](CLAUDE.md). Ze zdrojového ZIPu lze otevřít **bridge/APC40 Bridge.vbs**; pro běžné použití doporučujeme instalátor.
 
 MIT · [Technical223](https://github.com/Technical223)
-
-Animace ringů se pohybuje tam a zpět: první LED → poslední LED → první LED. Nastavená perioda znamená celou cestu tam i zpět; na konci se směr obrátí bez skoku na začátek.
-
-**Známý problém hardwaru:** Animace ringů podle hlášení způsobuje skoky při otáčení speed knobů. Výchozí nastavení je nyní `speed_ring_animation: false`, aby se zachovalo normální absolutní ovládání a zpětná vazba Areny.
-
-Volbu najdeš v Settings → Speed rings: Animate speed rings while idle (experimental). Po uložení restartuj bridge. Animace běží jen v nečinnosti; první pohyb vrátí knobu skutečnou hodnotu a nepředá se do Areny. Další otáčení už mění rychlost. Po sekundě nečinnosti se animace obnoví. Zpětná vazba myší zůstává podporovaná. Jde o softwarové obejití sdílené hodnoty ringu a encoderu; na skutečném hardwaru se nové chování teprve ověřuje, proto je výchozí stav vypnutý.
-
-## Blikání speed tlačítek a reset na 1×
-
-V Settings → Speed buttons je volba **Blink speed buttons; press to reset to 1x**. Po uložení restartuj bridge. Čtyři tlačítka pod device knoby 5–8 blikají podle rychlosti grup; knoby a ringy mají opět běžné absolutní ovládání a feedback bez animace.
-
-Stisk tlačítka resetuje příslušnou rychlost na **1× (100 %)** a restartuje fázi bliknutí. Jde o CC 127 při současném rozsahu 25–100 %, nikoli reset pozice klipu. Tlačítka používají noty 58–61. Jejich původní akce presetu je při zapnutí volby potlačená, včetně uvolnění tlačítka. Vypnutí volby původní mapování vrátí.
-
-LED umí zapnout/vypnout, proto je to blikání, ne plynulé stmívání. Změny myší se přebírají přes MIDI feedback Areny. Výchozí konfigurace má volbu vypnutou kvůli kompatibilitě; v místní testovací instalaci ji při této změně zapínáme. Fyzické chování ještě vyžaduje potvrzení uživatelem.
-
-### MIDI předvolby Areny
-
-U **APC VIRT A** zapni pouze **MIDI Input**, u **APC VIRT B** pouze **MIDI Output**. U fyzického **APC40 mkII zapni MIDI Input i MIDI Output** a zvol **Alternate Ableton Live Mode**, stejně jako na ověřeném screenshotu. [Tabulka nastavení a referenční screenshot](docs/navod.cs.md#midi-předvolby-areny).
-
-## Controller Studio
-
-V aplikaci otevři **Controller Studio**, klikni na pad a vyber barvu, blikání nebo vazbu na knob či fader. Náhled neposílá MIDI. Profily lze uložit, exportovat a importovat; změny se projeví po restartu bridge. [Návod k editoru (anglicky)](docs/controller-studio.md).
-
-## Instalátor a offline provoz
-
-Na stránce Releases stáhni **APC40-Bridge-Setup.exe**. Python a MIDI knihovny už obsahuje. Chybějící loopMIDI se stáhne z oficiálního webu; potřebné názvy portů se připraví automaticky. Jeho licenci a případné oprávnění Windows potvrzuje uživatel. Při aktualizaci se zachovají profily a nastavení. [Podrobný návod k instalaci](docs/windows-installation.md).

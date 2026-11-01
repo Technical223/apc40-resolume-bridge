@@ -17,7 +17,7 @@ Controller Studio is the Windows app's visual editor for bridge lighting and but
 
 ![Controller Studio](img/controller-studio.png)
 
-The editor uses the supplied top-view APC40 mkII photograph with clickable regions over the actual controls: clip/scene pads, track/device buttons, sixteen main knobs, Cue level, track/master faders, crossfader and supported global buttons. Standard encoder ring feedback remains unchanged.
+The photo's clickable controls match the APC40 mkII layout. Standard encoder ring feedback remains unchanged.
 
 ## Live view
 
@@ -25,7 +25,7 @@ Enable **Live bridge feedback** to display the LED Note values and source CC pos
 
 The bridge must be running and connected. If it stops or the snapshot becomes stale, Studio shows an offline/waiting state instead of presenting simulated values as live. Turn Live off to return to the preview slider. Unsaved edits affect simulation only; live view continues to show the running configuration.
 
-Snapshots update at up to 10 Hz only while the editor requests Live view, with unchanged frames deduplicated and a one-second heartbeat. Closing Live view lets a short lease expire, so the engine stops writing snapshots when the monitor is unused. This is a visual monitor, not a sample-accurate representation of blinking at high rates. The snapshot worker stops and marks the view disconnected when the bridge closes.
+Live view updates at up to 10 Hz while requested; it stops writing snapshots when unused. It shows bridge output rather than an exact measurement of LED blink timing.
 
 ## Behaviors
 
@@ -64,14 +64,8 @@ Two examples are included in the app's **profiles** folder:
 
 Choose **Use default behavior** to remove only the selected control's override. Closing without saving leaves the installed configuration unchanged.
 
-## Validation
+## Platform and performance
 
-The shared Python engine validates profiles before opening ports. Tests cover fader-driven color, mouse CC feedback, one LED owner, deduplicated animation, reset press/release handling, coexistence with speed buttons, compatibility without a profile, and worker shutdown.
+Studio is Windows-only and uses the dashboard's native .NET UI. The photo is cached, minimized previews pause, and live snapshots stop when unused. Static rules need no animation worker. Test new mappings on your controller; performance in Arena depends on your composition and hardware.
 
-The Windows UI is built with the same bundled .NET Framework compiler as the dashboard; it adds no browser runtime, background service, or graphics dependency. This visual editor is Windows-only; the separate macOS preview has no Studio UI yet.
-
-The MIDI mapping is based on the [Akai APC40 mkII communications protocol](https://cdn.inmusicbrands.com/akai/attachments/apc40II/APC40Mk2_Communications_Protocol_v1.2.pdf). New custom hardware bindings still need to be checked on a connected controller.
-
-## Installation and performance
-
-Use the [Windows setup guide](windows-installation.md) for the ready-to-run EXE, automatic loopMIDI download, local offline dependency option, and automatic port preparation. The controller photograph is scaled once per resize and reused. Studio stops preview painting when minimized; the dashboard skips background status checks while its editor is open. Static lighting rules do not start an animation worker, unrelated/unchanged source CCs do not redraw their LEDs, and speed-button timing uses 30 updates per second instead of the legacy 120. These reduce work without claiming measured zero latency in Arena.
+[Windows installation](windows-installation.md) · [Akai APC40 mkII MIDI protocol](https://cdn.inmusicbrands.com/akai/attachments/apc40II/APC40Mk2_Communications_Protocol_v1.2.pdf)

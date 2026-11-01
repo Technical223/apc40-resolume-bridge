@@ -2,23 +2,43 @@
 
 **English** | [Česky](README.cs.md)
 
-![Windows](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6)
-![Resolume](https://img.shields.io/badge/Resolume%20Arena-7.x-8A2BE2)
-![License](https://img.shields.io/badge/license-MIT-green)
+Windows app for APC40 mkII lighting and MIDI feedback in Resolume Arena. Pads follow Colorize Hue, mouse edits can update the controller, and Controller Studio lets you customize lighting and button resets without editing code.
 
-Color pads beneath the Hue knobs, buttons you can see in the dark, and **one window for setup, launch, and management**.
+## Download and start
 
-- Each pad shows its knob’s hue; press it to toggle Colorize.
-- Optional MIDI feedback follows changes from Arena and other controllers.
-- The bridge activates with Arena and releases the controller when Arena closes.
-- The app shows controller, Arena, MIDI port, and setup status. No terminal window needed.
+1. Download **[APC40-Bridge-Setup.exe](https://github.com/Technical223/apc40-resolume-bridge/releases/latest)**. Close Arena for first setup and close the bridge app before updating.
+2. Click **Install**. Python and MIDI libraries are included. If loopMIDI is missing, setup downloads it from the publisher; confirm its license and Windows permission prompts.
+3. Open **APC40 Bridge → Start bridge**, then Arena. Setup prepares **APC VIRT A** and **APC VIRT B** automatically.
 
-<p align="center">
-  <a href="docs/media/app-showcase.gif"><img src="docs/media/app-showcase.gif" width="1000" alt="APC40 Bridge animated tour: connection status, settings, and live logs"></a>
-</p>
-<p align="center"><sub>Actual Windows app screenshots · status, settings, and logs in one window</sub></p>
+Requires Windows 10/11 x64, Resolume Arena 7.x and an APC40 mkII. The installer is unsigned. [Portable ZIP, offline use and updates](docs/windows-installation.md).
 
-## App screenshots
+## Arena setup
+
+In **Preferences → MIDI**, use:
+
+| Device | MIDI Input | MIDI Output |
+|---|---|---|
+| APC VIRT A | On | Off |
+| APC VIRT B | Off | On |
+| Physical APC40 mkII | **On** | **On** |
+
+Keep Clock Input off and select **Alternate Ableton Live Mode** for the physical APC. Both physical input and output are needed in the tested setup.
+
+Shortcuts receive from **Any device** or **APC VIRT A** and send feedback to **APC VIRT B** or **All devices**. Set Hue Range Max to **0.63871** to match the default bridge configuration. [Setup guide and reference screenshot](docs/navod.md#arena-midi-preferences).
+
+## Controller Studio
+
+Click a control on the photo to choose its color, blink rate, source knob/fader or reset action. Preview locally, save a profile and restart the bridge to apply it. **Live bridge feedback** shows the running bridge's output. [Editor guide](docs/controller-studio.md).
+
+![Controller Studio](docs/img/controller-studio.png)
+
+Optional **Speed buttons** blink beneath knobs 5–8; pressing one resets its group to **1x** with the supplied mapping. Leave experimental ring animation off to avoid knob interference. [Speed-button setup](docs/navod.md#speed-buttons-blink-rate-and-1x-reset).
+
+## See it in action
+
+[![APC40, Colorize and Composition Monitor synchronized](docs/media/controller-screen-sync.gif)](docs/media/controller-screen-sync.mp4)
+
+[Watch the 36-second video](docs/media/controller-screen-sync.mp4) · [App tour](docs/media/app-showcase.gif) · [Original controller demo](docs/media/demo.mp4)
 
 <table>
   <tr>
@@ -33,95 +53,16 @@ Color pads beneath the Hue knobs, buttons you can see in the dark, and **one win
   </tr>
 </table>
 
-Click a screenshot to view it at full size.
+## Everyday use and help
 
-## Controller Studio
+- **Start bridge**, **Stop** and **Restart** manage the background bridge. Closing the dashboard does not stop it.
+- **Settings** includes feedback and sign-in autostart. **View logs** helps diagnose connection problems.
+- Starting or restarting can send physical knob/fader positions to Arena; keep MIDI learning off.
 
-Click a pad on the APC40 diagram, choose its lighting, and link it to a knob or fader without editing code. Set colors, blink rates, and optional reset buttons, preview locally, then save or share a named profile. Existing controls retain their behavior until you override them.
+[Setup and troubleshooting](docs/navod.md) · [Windows installation](docs/windows-installation.md) · [Controller Studio](docs/controller-studio.md)
 
-[Visual editor guide](docs/controller-studio.md) · Windows app → **Controller Studio**
+[Experimental macOS preview](macos/README.md): unsigned, requires Python and manual IAC setup; no Controller Studio. Hardware testing is still needed.
 
-![Controller Studio visual lighting editor](docs/img/controller-studio.png)
-
-## macOS preview — testers wanted
-
-A separate [experimental macOS build](https://github.com/Technical223/apc40-resolume-bridge/tree/main/macos) uses native CoreMIDI/IAC buses, a small dialog-based control panel, a three-minute test and a local diagnostic ZIP. It is unsigned and requires Python plus manual MIDI setup. Real APC/Arena testing on a Mac is still needed; this is not a production release. The Windows app remains separate.
-
-## Get started — Windows
-
-1. Download **[APC40-Bridge-Setup.exe](https://github.com/Technical223/apc40-resolume-bridge/releases/latest)** and click **Install**. Close Arena for the first setup.
-2. Python and MIDI libraries are already bundled. If loopMIDI is missing, setup downloads its official installer; confirm its license and Windows prompts.
-3. The two required MIDI port names are prepared automatically. Existing settings and profiles are preserved.
-4. Open **APC40 Bridge** for the dashboard or **Controller Studio** for the visual lighting editor.
-5. In Arena, set shortcut input to **Any device** or **APC VIRT A**, feedback output to **APC VIRT B**, and Hue **Range Max to 0.63871**.
-
-[Installation, offline options and updates](docs/windows-installation.md) · [Visual editor guide](docs/controller-studio.md)
-
-**Arena MIDI routing:** enable only **MIDI Input** for APC VIRT A and only **MIDI Output** for APC VIRT B; keep physical **APC40 mkII MIDI Input and MIDI Output on**, with **Alternate Ableton Live Mode** selected, as in the tested screenshot. [MIDI preferences table and screenshot](docs/navod.md#arena-midi-preferences).
-
-For everyday use, open the app and click **Start bridge**. **Start automatically when signing in to Windows** runs the bridge without opening the dashboard.
-
-The app interface, setup messages, and primary documentation are in English.
-
-**Using GitHub’s source ZIP:** open **APC40 Bridge.vbs** in the `bridge` folder. It builds the app from the included sources and opens the same dashboard. Building the dashboard uses Windows’ .NET Framework and requires no Python or additional developer tools; bridge dependencies are handled during setup.
-
-## Everything in one place
-
-| Control | What it does |
-|---|---|
-| Start bridge | Starts watching for Arena; repeated launches do not create duplicate processes |
-| Stop / Restart | Safely releases the controller or reloads settings |
-| Install / repair | Prepares dependencies and MIDI settings without unnecessarily restarting a running bridge |
-| Settings | Ports, Hue, feedback, and lighting; preserves other values and saves a backup |
-| View logs | Runtime, setup, and management logs inside the app |
-| Desktop shortcut | Adds an app shortcut to your desktop |
-| Restore Arena MIDI | With Arena closed, restores its MIDI settings backup, stops the bridge, and disables autostart |
-
-Closing the dashboard **does not stop** the bridge: it runs independently in the background. Restarting may resend the physical fader and knob positions to Arena.
-
-## Bridge in action
-
-<p align="center">
-  <a href="docs/media/controller-screen-sync.mp4"><img src="docs/media/controller-screen-sync.gif" width="1200" alt="Three synchronized views side by side: APC40 mkII, Colorize controls, and Composition Monitor"></a>
-</p>
-<p align="center"><sub>The same moment from three perspectives · APC40 mkII + Colorize + Composition Monitor · <a href="docs/media/controller-screen-sync.mp4">Watch the full-quality 36-second video (MP4)</a></sub></p>
-
-The recordings are aligned using Hue changes. The physical controller is on the left, the Colorize panel and Hue value in the middle, and the Composition Monitor on the right. The silent video demonstrates hue changes and Colorize toggling.
-
-<details>
-<summary>Original short controller demo</summary>
-
-<p align="center">
-  <a href="docs/media/demo.mp4"><img src="docs/media/demo.gif" width="340" alt="Physical APC40 demo: the Hue knob changes the pad color and Resolume output"></a>
-</p>
-<p align="center"><sub><a href="docs/media/demo.mp4">Watch the original APC40 demo at full quality</a></sub></p>
-
-</details>
-
-## Speed indication and reset
-
-Optional blinking buttons beneath device knobs 5–8 indicate group speed. Press a button to reset its group to 1x (100% with the supplied mapping). Knobs retain normal absolute feedback, including mouse changes. This replaces the buttons’ original preset actions while enabled. [Configuration and validation](docs/navod.md#speed-buttons-blink-rate-and-1x-reset). Legacy ring animation remains experimental and is disabled by the new Settings option.
-
-## LED feedback
-
-Set `sync_resolume_feedback: true` in `config.json` to enable MIDI feedback. Hue CCs 48–55 update the hue; notes 32–39 update the Colorize state. Arena must send these messages to `APC VIRT B`. The current preset uses velocity **5 = effect active, 3 = bypass**.
-
-Feedback uses 7-bit MIDI values within the preset’s mapped range, rather than full-precision API readings. Correct hues outside `0–hue_max` are not guaranteed. Disable it under **Settings → Feedback**. No webserver or extra library is required.
-
-👉 **[Detailed setup and troubleshooting guide](docs/navod.md)**
-
-For development: [project context and validation](CLAUDE.md), [app technical notes](docs/windows-app.md).
-
-Legacy batch files remain available for compatibility; `START.bat` now opens the dashboard.
+For developers: [build notes](docs/windows-app.md) · [project context](CLAUDE.md). Source ZIP users can open **bridge/APC40 Bridge.vbs**; the setup EXE is recommended for normal use.
 
 MIT · [Technical223](https://github.com/Technical223)
-
-**Known hardware issue (2026-10-29):** Animated ring CC values appear to interfere with the absolute device-knob values on the user’s APC40 mkII, causing speed jumps during rotation. The precise firmware interaction has not been independently measured. Keep `speed_ring_animation: false` for normal control and standard Arena feedback. Do not treat unchanged-message unit tests as proof that host-driven ring animation is independent of encoder state.
-
-### Speed-button range correction
-
-The supplied Arena shortcut range is 1–10 (normalized parameter bounds approximately 0.2502–1); these normalized bounds are not speed multipliers. MIDI CC 0 selects the lower bound (1x), and CC 127 the upper bound (10x). Button reset sends CC 0 to both Arena and the encoder, restarting the pulse phase. Pulse rate increases from 1 to 3 Hz across the full MIDI range (speed 1x–10x). The display rate is compressed by speed_button_max_blink_hz, default 3; it is an indication of speed, not a 10 Hz strobe. Intermediate pulse rates are a linear indication of the shortcut position, not an exact measurement of Arena’s nonlinear speed curve. Physical knob input and mouse MIDI feedback remain unchanged. Replaces earlier descriptions of CC-127 reset and the 0.25–1 pulse range.
-
-### Arena reset and MIDI routing
-
-If a speed-reset button updates the APC ring/pulse but the Arena speed number stays unchanged, check that Arena is receiving APC VIRT A. Reopen that MIDI Input (off/on) in Arena preferences if a virtual port was recreated after Arena started. Keep physical APC40 MIDI Input and MIDI Output enabled, with Alternate Ableton Live Mode selected, matching the user-tested feedback configuration. The speed shortcuts must use Any Device or APC VIRT A for input and All Devices or APC VIRT B for output. Keep MIDI learning off during bridge restarts, which can cause the controller to resend controls. A CC reset changes the actual parameter and its displayed number together when the virtual input is connected.

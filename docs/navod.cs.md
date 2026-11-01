@@ -2,8 +2,6 @@
 
 [English](navod.md) | **Česky** · [Hlavní stránka](../README.cs.md)
 
-[← zpět na hlavní stránku](../README.cs.md)
-
 ![Jak to funguje](img/architecture.svg)
 
 ![Co bridge dělá na APC40](img/apc-overview.svg)
@@ -21,36 +19,15 @@
 
 ## 1. Co potřebuješ
 
-| | Verze | Poznámka |
-|---|---|---|
-| Windows | 10 / 11 | 64 bit |
-| Resolume Arena | 7.x | testováno 7.25 |
-| Akai APC40 mkII | – | připojený přes USB |
-| Python | 3.9+ | **nainstaluje se sám**, když chybí (3.12) |
-| [loopMIDI](https://www.tobias-erichsen.de/software/loopmidi.html) | – | **nainstaluje se sám** přes winget; zdarma pro nekomerční použití |
-| Internet | – | jen při první instalaci |
+Windows 10/11 x64, Resolume Arena 7.x (testováno 7.25) a Akai APC40 mkII přes USB. Instalátor obsahuje Python a MIDI knihovny. Chybějící [loopMIDI](https://www.tobias-erichsen.de/software/loopmidi.html) stáhne od autora; licenci a oprávnění Windows potvrdíš ručně.
 
 ## 2. Instalace a spuštění
 
-1. Rozbal Windows balíček do stálé složky. Při prvním nastavení zavři Arenu.
-2. Otevři **APC40 Bridge.exe**. Při stažení zdrojového ZIPu z GitHubu otevři **bridge/APC40 Bridge.vbs**; připraví stejné okno.
-3. Klikni **Prepare and start**. Příprava najde nebo nainstaluje Python, MIDI knihovny a loopMIDI.
-4. Chybí-li virtuální porty, klikni **Open loopMIDI**, přidej **APC VIRT A** a **APC VIRT B** a přípravu zopakuj. V loopMIDI ponech zapnutý jeho vlastní autostart.
-5. Příprava upraví MIDI vstupy/výstupy Areny, uloží jejich zálohu a nakopíruje ukázkový preset, pokud ještě není přítomný.
-6. V Areně zvol preset na **Any device** a srovnej rozsah Hue (kapitola 3).
+Postup pro instalátor, přenosný ZIP, offline provoz a aktualizace najdeš v [instalačním návodu (anglicky)](windows-installation.md). Instalátor připraví **APC VIRT A** (bridge → Arena) a **APC VIRT B** (Arena → bridge), zachová profily a zálohuje MIDI nastavení Areny.
 
-![loopMIDI](img/loopmidi.svg)
+Pokud loopMIDI běželo bez těchto portů, jednou ho restartuj. Otevři **APC40 Bridge → Start bridge**, potom Arenu. **Install / repair** zopakuje přípravu; potřebuje-li upravit MIDI předvolby, zavři Arenu.
 
-| Port | K čemu |
-|---|---|
-| APC VIRT A | bridge → Resolume |
-| APC VIRT B | Resolume → bridge |
-
-Pro běžné použití stačí **Start bridge**. Opakované spuštění nevytváří druhý proces. Volba **Start automatically when signing in to Windows** zapne watcher bez otevírání správce a bez opakované instalace. Po přesunutí složky volbu vypni/zapni, aby se aktualizoval zástupce.
-
-Tlačítko **Install / repair** lze použít znovu; samotná příprava běžící bridge nerestartuje. Pokud je potřeba změnit MIDI nastavení a Arena běží, příprava to oznámí a požádá o její zavření. Restart může do kompozice přenést polohy fyzických faderů a knobů.
-
-Příprava zálohuje původní MIDI nastavení jako midi.xml.pred-bridge.bak. Tlačítko **Restore Arena MIDI** při zavřené Areně vrátí tuto zálohu, zastaví bridge a vypne jeho autostart. Provozní a instalační záznamy jsou dostupné přes **View logs**.
+**Start automatically when signing in to Windows** spouští bridge bez hlavního okna. Po přesunu přenosné instalace volbu vypni a zapni kvůli aktualizaci zástupce. **View logs** zobrazí provozní a instalační záznamy.
 
 ## 3. Nastavení v Resolume
 
@@ -64,9 +41,9 @@ Otevři **Arena → Preferences → MIDI**. Při používání bridge nastav:
 | APC VIRT B | Vypnuto | Vypnuto | Zapnuto |
 | APC40 mkII (fyzický USB kontroler) | Zapnuto | Vypnuto | Zapnuto |
 
-V uživatelem ověřeném zapojení na Windows ponech u fyzického **APC40 mkII zapnutý MIDI Input i MIDI Output** a zvol **Alternate Ableton Live Mode** (66 / 0x42). Uživatel potvrdil, že bez zapnutí fyzických portů nefunguje potřebná MIDI zpětná vazba. Virtuální porty A/B ponech zapnuté podle tabulky.
+U fyzického **APC40 mkII ponech MIDI Input i MIDI Output zapnuté** a vyber **Alternate Ableton Live Mode** (66 / 0x42). V ověřeném zapojení po vypnutí fyzických portů zpětná vazba nefunguje.
 
-**Install / repair** nyní ponechává zapnutý fyzický vstup i výstup APC spolu s virtuálními porty A/B a zachovává vybraný režim kontroleru. Po první instalaci zkontroluj **Alternate Ableton Live Mode**; tuto volbu příprava sama nemění.
+**Install / repair** zachovává vybraný režim kontroleru. Po první instalaci zkontroluj **Alternate Ableton Live Mode** ručně.
 
 **MIDI Middle C:** referenční screenshot používá **Legacy**. Tato volba mění pouze zobrazované názvy not, ne jejich MIDI čísla. Ostatní zařízení ponech podle svého zapojení; Microsoft GS Wavetable Synth bridge nepotřebuje.
 
@@ -75,8 +52,6 @@ Shortcuty mají přijímat z **Any device** nebo **APC VIRT A** a posílat zpět
 <details>
 <summary>Referenční screenshot: kde nastavení najít</summary>
 
-Screenshot ukazuje ověřené funkční zapojení: fyzické APC má **zapnutý vstup i výstup** a režim **Alternate Ableton Live Mode**. Současně použij virtuální porty A/B podle tabulky výše.
-
 <img src="img/resolume-midi-preferences-reference.png" width="620" alt="MIDI předvolby Areny: virtuální porty, fyzické APC a Legacy Middle C; zapnutý vstup i výstup APC v režimu Alternate Ableton Live">
 
 </details>
@@ -84,10 +59,10 @@ Screenshot ukazuje ověřené funkční zapojení: fyzické APC má **zapnutý v
 
 ![Resolume MIDI preset](img/resolume-preset.svg)
 
-- **MIDI preset musí být nastavený na libovolné zařízení.** Preset vázaný na „APC40 mkII“ přes virtuální port nereaguje, protože Resolume teď vidí jen `APC VIRT A`.
+- **Vstup shortcutů:** vyber **Any device** nebo **APC VIRT A**, aby přijímaly zprávy virtuálního portu bridge.
 - **Ukázkový preset `APC40 BRIDGE EXAMPLE`** příprava nakopíruje do `Dokumenty\Resolume Arena\Shortcuts\MIDI`. Rozložení kompozice, se kterým počítá, je v [`docs/layout.md`](layout.cs.md).
 - **Vlastní mapping:** v *Shortcuts → Edit MIDI* shortcuty přeuč. Učí se z `APC VIRT A`, to je v pořádku.
-- **Horní řada gridu (noty 32–39)** má v presetu přepínač colorize vrstvy. Barvu padu kreslí bridge, Resolume do ní nemluví.
+- **Horní řada gridu (noty 32–39)** má v presetu přepínač colorize vrstvy. Barvu padu kreslí bridge, který může přijímat zpětnou vazbu Areny.
 - **Track knoby (CC 48–55)** mají v presetu hue colorize s rozsahem 0–0,63871 (červená → zelená → modrá), viz níže.
 - **Ulož kompozici.** Vybraný MIDI preset se pamatuje v ní.
 
@@ -97,7 +72,7 @@ Screenshot ukazuje ověřené funkční zapojení: fyzické APC má **zapnutý v
 
 Hue v Colorize jde dokola: 0 je červená a 1 je **zase červená**. Když knob mapuješ na celý rozsah, obě krajní polohy dají stejnou barvu a modrá je někde uprostřed. Proto má ukázkový preset knoby omezené na **0–0,63871** (končí na modré).
 
-Bridge Resolume nevidí, jen počítá barvu padu z polohy knobu. Proto **musí horní mez v Resolume odpovídat `hue_max` v `config.json`**, jinak pad ukazuje jinou barvu, než jakou má vrstva.
+Bridge počítá barvu padu z MIDI hodnoty knobu nebo zpětné vazby Areny. Proto **musí horní mez v Resolume odpovídat `hue_max` v `config.json`**, jinak pad ukazuje jinou barvu, než jakou má vrstva.
 
 **Kde se mez nastavuje v Resolume:**
 
@@ -124,9 +99,9 @@ Po změně nastavení klikni v aplikaci na **Restart**. Pad v režimu B ukazuje 
 | Situace | Co dělat |
 |---|---|
 | Autostart zapnutý | jen zapni Arenu, APC se během pár sekund rozsvítí |
-| Bez autostartu | aplikace → Spustit bridge, pak Arena |
+| Bez autostartu | aplikace → Start bridge, pak Arena |
 | Chci APC použít v jiném programu | zavři Arenu (bridge APC pustí) nebo `STOP.bat` |
-| Něco nejede | Zobrazit logy; případně Instalace / oprava |
+| Něco nejede | View logs; případně Install / repair |
 
 **Po startu bridge** APC pošle polohy všech faderů a knobů a Resolume je hned převezme. Fader, který je fyzicky dole, stáhne vrstvu na nulu.
 
@@ -180,7 +155,7 @@ Po změně nastavení klikni v aplikaci na **Restart**.
 
 | Příznak | Příčina | Řešení |
 |---|---|---|
-| Instalátor čeká na porty | v loopMIDI chybí porty nebo mají jiný název | vytvoř `APC VIRT A` a `APC VIRT B` přesně takto |
+| Instalátor čeká na porty | loopMIDI nenačetlo potřebné názvy | restartuj loopMIDI a ověř `APC VIRT A` a `APC VIRT B` |
 | APC nesvítí vůbec | bridge neběží nebo Arena neběží | `bridge.log`; `START.bat`; zapni Arenu |
 | `bridge.log`: „Waiting for ports“ | APC není připojený nebo ho drží jiný program | zapoj USB; zavři ostatní MIDI aplikace a ověř MIDI předvolby podle návodu výše |
 | Knoby/pady v Resolume nic nedělají | MIDI preset je vázaný na „APC40 mkII“ | preset na libovolné zařízení (kap. 3) |
@@ -194,38 +169,28 @@ Logy jsou přímo v aplikaci: **View logs → Bridge runtime / Setup / App manag
 
 ## 7. Nouzový režim a odinstalace
 
-**Nouzový režim (bridge nejede na akci):**
-1. `STOP.bat`
-2. Arena → *Preferences → MIDI*: zapni **APC40 mkII** (Input i Output)
-3. preset na libovolné zařízení funguje dál, jen bez barevné horní řady a svítících tlačítek
+Pro přímé ovládání bez osvětlení bridge klikni **Stop**, ponech fyzický MIDI vstup/výstup APC zapnutý a použij preset **Any device**.
 
-**Odinstalace:**
-1. V aplikaci vypni automatické spouštění a klikni **Stop**.
-2. **Restore Arena MIDI** při zavřené Areně vrátí původní MIDI nastavení.
-3. smaž složku; Python a loopMIDI odinstaluj ve Windows, pokud je nepotřebuješ
-
----
+Původní MIDI nastavení obnovíš při zavřené Areně tlačítkem **Restore Arena MIDI**. Vrátí zálohu `midi.xml.pred-bridge.bak`, zastaví bridge a vypne jeho autostart. Aplikaci odeber přes Nainstalované aplikace ve Windows; [co zůstane zachováno](windows-installation.md#updates-and-removal).
 
 ## Animované ringy rychlosti grup
 
-Volba `speed_ring_animation: true` zobrazí na device knobech 5–8 jednu běžící tečku. Rychlost smyčky sleduje hodnoty CC 20–23 na MIDI kanálu 1. Pohyb knobů se dál beze změny posílá do Areny.
+**Pro běžné použití nech experimentální animaci vypnutou.** Animované CC hodnoty ringů mohou rušit absolutní hodnotu knobu a způsobovat skoky rychlosti.
 
-Pro změny myší musí Arena posílat odpovídající speed CC feedback do **APC VIRT B** a `sync_resolume_feedback` musí být true. Animace neposílá nic do Areny. Příchozí polohy a typy animovaných ringů se nepropouštějí do APC, aby animaci nepřepisovaly.
+Volba **Settings → Speed rings → Animate speed rings while idle** nechá tečku běhat první → poslední → první LED. První pohyb animaci pozastaví a obnoví uloženou hodnotu; tento pohyb a krátké ustálení se do Areny neposílají. Další otáčení už prochází. Po sekundě nečinnosti animace pokračuje. Změny myší vyžadují odpovídající MIDI feedback a `sync_resolume_feedback: true`.
 
-Nastavení: `speed_ring_ccs` [20,21,22,23], `speed_ring_channel` 0 (číslování od nuly), `speed_ring_slowest_seconds` 2.0, `speed_ring_fastest_seconds` 0.25 a `speed_ring_update_hz` 120. MIDI se odesílá jen při změně LED. Poslední hodnoty se ukládají do `state.json` pod `speed`. Chybějící volba nebo false zachová původní chování. Po změně konfigurace restartuj bridge.
-
-Jde o relativní ukazatel rychlosti, nikoli synchronizaci s beatem. Ringy mají 15 LED; CC pro typ jsou 28–31, hodnota 1 znamená Single. Ověřeno proti oficiálnímu protokolu Akai v1.2, nikoli zatím na skutečném kontroleru. Zpětná vazba ve formě změn myší je pokrytá simulovanými MIDI zprávami, přímý test s Arenou zatím neproběhl.
-
-Animace ringů se pohybuje tam a zpět: první LED → poslední LED → první LED. Nastavená perioda znamená celou cestu tam i zpět; na konci se směr obrátí bez skoku na začátek.
-
-**Známý problém hardwaru:** Animace ringů podle hlášení způsobuje skoky při otáčení speed knobů. Výchozí nastavení je nyní `speed_ring_animation: false`, aby se zachovalo normální absolutní ovládání a zpětná vazba Areny.
-
-Volbu najdeš v Settings → Speed rings: Animate speed rings while idle (experimental). Po uložení restartuj bridge. Animace běží jen v nečinnosti; první pohyb vrátí knobu skutečnou hodnotu a nepředá se do Areny. Další otáčení už mění rychlost. Po sekundě nečinnosti se animace obnoví. Zpětná vazba myší zůstává podporovaná. Jde o softwarové obejití sdílené hodnoty ringu a encoderu; na skutečném hardwaru se nové chování teprve ověřuje, proto je výchozí stav vypnutý.
+Při skocích nastav `speed_ring_animation: false` a restartuj bridge. [Pokročilé parametry (anglicky)](navod.md#idle-only-speed-ring-animation-and-manual-takeover). Test bez hardwaru neprokazuje odstranění rušení encoderu.
 
 ## Blikání speed tlačítek a reset na 1×
 
-V Settings → Speed buttons je volba **Blink speed buttons; press to reset to 1x**. Po uložení restartuj bridge. Čtyři tlačítka pod device knoby 5–8 blikají podle rychlosti grup; knoby a ringy mají opět běžné absolutní ovládání a feedback bez animace.
+Zapni **Settings → Speed buttons → Blink speed buttons; press to reset to 1x**, ulož a restartuj. Výchozí stav je vypnuto. Používá **horní** řadu tlačítek pod knoby 5–8: noty **58–61**, párované s CC **20–23**, MIDI kanál 1 (v kódu 0).
 
-Stisk tlačítka resetuje příslušnou rychlost na **1× (100 %)** a restartuje fázi bliknutí. Jde o CC 127 při současném rozsahu 25–100 %, nikoli reset pozice klipu. Tlačítka používají noty 58–61. Jejich původní akce presetu je při zapnutí volby potlačená, včetně uvolnění tlačítka. Vypnutí volby původní mapování vrátí.
+Při zapnutí nahrazuje stisk i uvolnění původní akce presetu. Stisk pošle reset do Areny i APC a restartuje fázi bliknutí. Knoby mají běžnou absolutní zpětnou vazbu; změny myší se přebírají, pokud Arena pošle odpovídající feedback.
 
-LED umí zapnout/vypnout, proto je to blikání, ne plynulé stmívání. Změny myší se přebírají přes MIDI feedback Areny. Výchozí konfigurace má volbu vypnutou kvůli kompatibilitě; v místní testovací instalaci ji při této změně zapínáme. Fyzické chování ještě vyžaduje potvrzení uživatelem.
+Přiložené mapování má **1×–10×**: CC **0 = 1×**, CC **127 = 10×**, reset posílá **0**. Blikání roste od **1 do 3 Hz**; ukazuje polohu shortcutu, ne přesnou nelineární rychlost Areny. LED pouze zapíná/vypíná. [Konfigurační hodnoty (anglicky)](navod.md#speed-button-range-correction).
+
+Jiné mapování může potřebovat jinou hodnotu resetu. Speed tlačítka a animace ringů nemohou běžet společně; uložení Settings animaci ringů vypne.
+
+Pokud se APC resetuje, ale číslo v Areně zůstane staré, ověř vstup shortcutu **Any device/APC VIRT A** a výstup **APC VIRT B/All devices**. Po znovuvytvoření portu vypni/zapni jeho MIDI Input v Areně. Fyzický vstup/výstup APC ponech zapnutý podle [MIDI předvoleb](#midi-předvolby-areny); MIDI learning při restartu bridge vypni.
+
+Vlastní světla a resety nastavíš v [Controller Studio (anglicky)](controller-studio.md).
