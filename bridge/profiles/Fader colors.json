@@ -1,0 +1,103 @@
+{
+  "format": "apc40-bridge-profile",
+  "version": 1,
+  "name": "Fader colors",
+  "control_rules": [
+    {
+      "channel": 0,
+      "note": 32,
+      "mode": "hue",
+      "source_channel": 0,
+      "source_cc": 7,
+      "color": 5,
+      "press": "passthrough",
+      "reset_value": 0,
+      "rate_min": 1,
+      "rate_max": 3
+    },
+    {
+      "channel": 0,
+      "note": 33,
+      "mode": "hue",
+      "source_channel": 1,
+      "source_cc": 7,
+      "color": 5,
+      "press": "passthrough",
+      "reset_value": 0,
+      "rate_min": 1,
+      "rate_max": 3
+    },
+    {
+      "channel": 0,
+      "note": 34,
+      "mode": "hue",
+      "source_channel": 2,
+      "source_cc": 7,
+      "color": 5,
+      "press": "passthrough",
+      "reset_value": 0,
+      "rate_min": 1,
+      "rate_max": 3
+    },
+    {
+      "channel": 0,
+      "note": 35,
+      "mode": "hue",
+      "source_channel": 3,
+      "source_cc": 7,
+      "color": 5,
+      "press": "passthrough",
+      "reset_value": 0,
+      "rate_min": 1,
+      "rate_max": 3
+    },
+    {
+      "channel": 0,
+      "note": 36,
+      "mode": "hue",
+      "source_channel": 4,
+      "source_cc": 7,
+      "color": 5,
+      "press": "passthrough",
+      "reset_value": 0,
+      "rate_min": 1,
+      "rate_max": 3
+    },
+    {
+      "channel": 0,
+      "note": 37,
+      "mode": "hue",
+      "source_channel": 5,
+      "source_cc": 7,
+      "color": 5,
+      "press": "passthrough",
+      "reset_value": 0,
+      "rate_min": 1,
+      "rate_max": 3
+    },
+    {
+      "channel": 0,
+      "note": 38,
+      "mode": "hue",
+      "source_channel": 6,
+      "source_cc": 7,
+      "color": 5,
+      "press": "passthrough",
+      "reset_value": 0,
+      "rate_min": 1,
+      "rate_max": 3
+    },
+    {
+      "channel": 0,
+      "note": 39,
+      "mode": "hue",
+      "source_channel": 7,
+      "source_cc": 7,
+      "color": 5,
+      "press": "passthrough",
+      "reset_value": 0,
+      "rate_min": 1,
+      "rate_max": 3
+    }
+  ]
+}

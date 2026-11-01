@@ -10,6 +10,12 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Web.Script.Serialization;
 
+[assembly: System.Reflection.AssemblyTitle("APC40 Bridge")]
+[assembly: System.Reflection.AssemblyProduct("APC40 Bridge")]
+[assembly: System.Reflection.AssemblyCompany("Technical223")]
+[assembly: System.Reflection.AssemblyVersion("1.3.0.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.3.0.0")]
+
 namespace ApcBridge {
     static class Program {
         [STAThread] static void Main(string[] args) {
@@ -25,7 +31,7 @@ namespace ApcBridge {
             string key = Convert.ToBase64String(System.Security.Cryptography.SHA256.Create().ComputeHash(Encoding.UTF8.GetBytes(home.ToLowerInvariant()))).Replace("/", "_");
             using (var mutex = new Mutex(true, "Local\\APC40ControlPanel_" + key, out created)) {
                 if (!created) { MessageBox.Show("The bridge dashboard is already open.", "APC40 Bridge", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
-                Application.Run(new Dashboard(home));
+                Application.Run(args.Contains("--studio") ? (Form)new ControllerEditor(home) : new Dashboard(home));
             }
         }
     }
@@ -150,12 +156,14 @@ namespace ApcBridge {
             autostart=new CheckBox { Text="Start automatically when signing in to Windows", Dock=DockStyle.Fill, ForeColor=Theme.Text, Font=new Font("Segoe UI",10), Margin=new Padding(2,0,0,0), Cursor=Cursors.Hand };
             autostart.CheckedChanged+=async (s,e)=> { if (!applying) await Perform("Saving autostart settings…",autostart.Checked?"autostart-on":"autostart-off"); };
             actions.Add(autostart);root.Controls.Add(autostart,0,4);
-            var more=new TableLayoutPanel { Dock=DockStyle.Fill, ColumnCount=5, RowCount=1, Margin=new Padding(0,4,0,8) };
-            for(int i=0;i<5;i++)more.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,20));
+            var more=new TableLayoutPanel { Dock=DockStyle.Fill, ColumnCount=6, RowCount=1, Margin=new Padding(0,4,0,8) };
+            for(int i=0;i<6;i++)more.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100f/6));
             Button loop=Theme.Button("Open loopMIDI",false), settings=Theme.Button("Settings",false), logs=Theme.Button("View logs",false), shortcut=Theme.Button("Desktop shortcut",false), restore=Theme.Button("Restore Arena MIDI",false);
-            foreach(var b in new[]{settings,logs,shortcut,loop,restore}) b.Font=new Font("Segoe UI",9);
-            more.Controls.Add(settings,0,0);more.Controls.Add(logs,1,0);more.Controls.Add(shortcut,2,0);more.Controls.Add(loop,3,0);more.Controls.Add(restore,4,0);
-            actions.AddRange(new Control[]{settings,shortcut,restore});root.Controls.Add(more,0,5);
+            Button studio=Theme.Button("Controller Studio",false);
+            foreach(var b in new[]{studio,settings,logs,shortcut,loop,restore}) b.Font=new Font("Segoe UI",9);
+            more.Controls.Add(studio,0,0);more.Controls.Add(settings,1,0);more.Controls.Add(logs,2,0);more.Controls.Add(shortcut,3,0);more.Controls.Add(loop,4,0);more.Controls.Add(restore,5,0);
+            actions.AddRange(new Control[]{studio,settings,shortcut,restore});
+            studio.Click+=(s,e)=>{try{using(var dialog=new ControllerEditor(home))dialog.ShowDialog(this);}catch(Exception ex){ShowError(ex.Message);}};root.Controls.Add(more,0,5);
             settings.Click+=(s,e)=> { try { using(var dialog=new Settings(home)) if(dialog.ShowDialog(this)==DialogResult.OK) notice.Text="Settings saved. Click Restart to apply the changes."; }catch(Exception ex){ ShowError(ex.Message); } };
             logs.Click+=(s,e)=> { using(var dialog=new Logs(home)) dialog.ShowDialog(this); };
             loop.Click+=(s,e)=> {
@@ -173,14 +181,14 @@ namespace ApcBridge {
             };
             notice=Theme.Label("Everything in one place. Closing this window does not stop the bridge.",9,Theme.Muted);
             notice.TextAlign=ContentAlignment.TopLeft; notice.Padding=new Padding(2,12,0,0);root.Controls.Add(notice,0,6);
-            root.Controls.Add(Theme.Label("1.2   •   WINDOWS 10 / 11   •   LOCAL MIDI BRIDGE",8,Theme.Muted),0,7);
+            root.Controls.Add(Theme.Label("1.3   •   WINDOWS 10 / 11   •   LOCAL MIDI BRIDGE",8,Theme.Muted),0,7);
             FormClosing+=(s,e)=> { if(busy){e.Cancel=true;notice.Text="Please wait for the current operation to finish."; } };
             Shown+=async(s,e)=>await RefreshStatus();
             timer.Interval=5000;timer.Tick+=async(s,e)=>await RefreshStatus();timer.Start();
             FormClosed+=(s,e)=>timer.Dispose();
         }
         async Task RefreshStatus() {
-            if (busy || refreshing || IsDisposed) return;
+            if (busy || refreshing || IsDisposed || !Enabled) return;
             refreshing=true;
             try {
                 var status=await Task.Run(()=>Backend.Action(home,"status"));

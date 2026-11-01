@@ -24,7 +24,14 @@ jobs:
       - name: Build Windows package
         shell: powershell
         run: ./bridge/package-release.ps1
+      - name: Build bundled-runtime installer
+        shell: powershell
+        run: python bridge/build-offline.py --output dist/offline
       - uses: actions/upload-artifact@v4
         with:
           name: APC40-Bridge-Windows
-          path: dist/APC40-Bridge-Windows.zip
+          path: |
+            dist/APC40-Bridge-Windows.zip
+            dist/offline/APC40-Bridge-Setup.exe
+            dist/offline/APC40-Bridge-Portable.zip
+            dist/offline/SHA256SUMS.txt

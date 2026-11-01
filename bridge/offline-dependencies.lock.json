@@ -1,0 +1,37 @@
+{
+  "python": {
+    "version": "3.12.10",
+    "url": "https://www.python.org/ftp/python/3.12.10/python-3.12.10-embed-amd64.zip",
+    "file": "python-3.12.10-embed-amd64.zip",
+    "sha256": "4acbed6dd1c744b0376e3b1cf57ce906f9dc9e95e68824584c8099a63025a3c3"
+  },
+  "wheels": [
+    {
+      "name": "mido",
+      "version": "1.3.3",
+      "file": "mido-1.3.3-py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/fd/28/45deb15c11859d2f10702b32e71de9328a9fa494f989626916db39a9617f/mido-1.3.3-py3-none-any.whl",
+      "sha256": "01033c9b10b049e4436fca2762194ca839b09a4334091dd3c34e7f4ae674fd8a"
+    },
+    {
+      "name": "python-rtmidi",
+      "version": "1.5.8",
+      "file": "python_rtmidi-1.5.8-cp312-cp312-win_amd64.whl",
+      "url": "https://files.pythonhosted.org/packages/93/46/6af077d262f521ea2bf1ab60b8aad72f34fe6dd55af739176605369d449c/python_rtmidi-1.5.8-cp312-cp312-win_amd64.whl",
+      "sha256": "052c89933cae4fca354012d8ca7248f4f9e1e3f062471409d48415a7f7d7e59e"
+    },
+    {
+      "name": "packaging",
+      "version": "25.0",
+      "file": "packaging-25.0-py3-none-any.whl",
+      "url": "https://files.pythonhosted.org/packages/20/12/38679034af332785aac8774540895e234f4d07f7545804097de4b666afd8/packaging-25.0-py3-none-any.whl",
+      "sha256": "29572ef2b1f17581046b3a2227d5c611fb25ec70ca1ba8554b24b0e69331a484"
+    }
+  ],
+  "loopmidi": {
+    "version": "1.0.16.27",
+    "url": "https://www.tobias-erichsen.de/wp-content/uploads/2020/01/loopMIDISetup_1_0_16_27.zip",
+    "setup_sha256": "86db060b586b57dbeeaab32412602a9dd7f9e4298ab7586e667b7e7dbcf60ed6",
+    "redistribution": "Not included in public builds. Prior written author permission is required."
+  }
+}

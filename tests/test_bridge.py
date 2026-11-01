@@ -57,6 +57,8 @@ class BridgeTests(unittest.TestCase):
         self.patches = [
             patch.dict(sys.modules, {"mido": self.backend}),
             patch.object(b, "State", FakeState),
+            patch.object(b.Bridge, "_live_worker"),
+            patch.object(b.Bridge, "_live_publish"),
             patch.object(b, "find_port", side_effect=lambda kind, match, exclude=None: match),
             patch.object(b, "ports_ready", return_value=True),
         ]

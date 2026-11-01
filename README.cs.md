@@ -121,3 +121,11 @@ LED umí zapnout/vypnout, proto je to blikání, ne plynulé stmívání. Změny
 ### MIDI předvolby Areny
 
 U **APC VIRT A** zapni pouze **MIDI Input**, u **APC VIRT B** pouze **MIDI Output**. U fyzického **APC40 mkII zapni MIDI Input i MIDI Output** a zvol **Alternate Ableton Live Mode**, stejně jako na ověřeném screenshotu. [Tabulka nastavení a referenční screenshot](docs/navod.cs.md#midi-předvolby-areny).
+
+## Controller Studio
+
+V aplikaci otevři **Controller Studio**, klikni na pad a vyber barvu, blikání nebo vazbu na knob či fader. Náhled neposílá MIDI. Profily lze uložit, exportovat a importovat; změny se projeví po restartu bridge. [Návod k editoru (anglicky)](docs/controller-studio.md).
+
+## Instalátor a offline provoz
+
+Na stránce Releases stáhni **APC40-Bridge-Setup.exe**. Python a MIDI knihovny už obsahuje. Chybějící loopMIDI se stáhne z oficiálního webu; potřebné názvy portů se připraví automaticky. Jeho licenci a případné oprávnění Windows potvrzuje uživatel. Při aktualizaci se zachovají profily a nastavení. [Podrobný návod k instalaci](docs/windows-installation.md).

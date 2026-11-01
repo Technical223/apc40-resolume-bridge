@@ -66,7 +66,7 @@ Otevři **Arena → Preferences → MIDI**. Při používání bridge nastav:
 
 V uživatelem ověřeném zapojení na Windows ponech u fyzického **APC40 mkII zapnutý MIDI Input i MIDI Output** a zvol **Alternate Ableton Live Mode** (66 / 0x42). Uživatel potvrdil, že bez zapnutí fyzických portů nefunguje potřebná MIDI zpětná vazba. Virtuální porty A/B ponech zapnuté podle tabulky.
 
-Po **Install / repair** nastavení ručně zkontroluj: současná příprava při úpravě předvoleb Areny fyzické APC stále vypíná. Znovu je zapni podle tohoto návodu; automatická příprava pro toto zapojení ještě nebyla upravena a ověřena na hardwaru.
+**Install / repair** nyní ponechává zapnutý fyzický vstup i výstup APC spolu s virtuálními porty A/B a zachovává vybraný režim kontroleru. Po první instalaci zkontroluj **Alternate Ableton Live Mode**; tuto volbu příprava sama nemění.
 
 **MIDI Middle C:** referenční screenshot používá **Legacy**. Tato volba mění pouze zobrazované názvy not, ne jejich MIDI čísla. Ostatní zařízení ponech podle svého zapojení; Microsoft GS Wavetable Synth bridge nepotřebuje.
 

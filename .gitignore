@@ -13,3 +13,8 @@ bridge/*.exe
 *.settings.tmp
 backups/
 dist/
+
+# Read-only Controller Studio live snapshots
+bridge/controller-live.json
+bridge/controller-live.json.tmp
+bridge/controller-live-request.json

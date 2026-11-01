@@ -30,6 +30,8 @@ CFG_PATH = os.path.join(BASE, "config.json")
 STATE_PATH = os.path.join(BASE, "state.json")
 LOG_PATH = os.path.join(BASE, "bridge.log")
 PID_PATH = os.path.join(BASE, "bridge.pid")
+LIVE_PATH = os.path.join(BASE, "controller-live.json")
+LIVE_REQUEST_PATH = os.path.join(BASE, "controller-live-request.json")
 
 DEFAULT_CFG = {
     "apc_port_match": "APC40",
@@ -169,6 +171,69 @@ def validate_speed_buttons(cfg, ccs):
         raise ValueError("Speed-button reset value must be 0-127")
 
 
+def validate_control_rules(cfg):
+    """Validate the optional editor profile before opening any MIDI ports."""
+    rules = cfg.get("control_rules", [])
+    if not isinstance(rules, list) or len(rules) > 160:
+        raise ValueError("Controller profile must contain at most 160 rules")
+    targets = set()
+    allowed = {(0, n) for n in list(range(40)) + list(range(58, 66)) + [80] + list(range(82, 92)) + list(range(93, 104))}
+    allowed.update((ch, n) for ch in range(8) for n in [48, 49, 50, 51, 52, 66])
+    import math
+    for rule in rules:
+        if not isinstance(rule, dict):
+            raise ValueError("Each controller rule must be an object")
+        ch, note = rule.get("channel"), rule.get("note")
+        if type(ch) is not int or type(note) is not int or (ch, note) not in allowed or (ch, note) in targets:
+            raise ValueError("Controller rules need unique supported APC button targets")
+        targets.add((ch, note))
+        mode = rule.get("mode")
+        if mode not in ("off", "solid", "hue", "level", "blink", "speed"):
+            raise ValueError("Unknown controller lighting behavior")
+        rgb = ch == 0 and (note < 40 or 82 <= note <= 86)
+        if mode == "hue" and not rgb:
+            raise ValueError("Hue following requires an RGB pad")
+        color = rule.get("color", 1)
+        if type(color) is not int or not 1 <= color <= 127:
+            raise ValueError("LED palette index must be 1-127")
+        action = rule.get("press", "passthrough")
+        if action not in ("passthrough", "reset"):
+            raise ValueError("Unknown controller press action")
+        if mode in ("hue", "level", "speed") or action == "reset":
+            for key, high in (("source_channel", 15), ("source_cc", 119)):
+                v = rule.get(key)
+                if type(v) is not int or not 0 <= v <= high:
+                    raise ValueError("Choose a valid source MIDI channel and CC (0-119)")
+        for key, default in (("rate_min", 1.0), ("rate_max", 3.0)):
+            v = rule.get(key, default)
+            if type(v) not in (int, float) or not math.isfinite(v) or not 0.2 <= v <= 5:
+                raise ValueError("Profile blink rates must be 0.2-5 Hz")
+        if rule.get("rate_min", 1.0) > rule.get("rate_max", 3.0):
+            raise ValueError("Minimum blink rate cannot exceed maximum")
+        v = rule.get("reset_value", 0)
+        if type(v) is not int or not 0 <= v <= 127:
+            raise ValueError("Reset value must be 0-127")
+    if rules and cfg.get("speed_ring_animation", False):
+        raise ValueError("Turn legacy ring animation off before using a controller profile")
+    return {(rule["channel"], rule["note"]): dict(rule) for rule in rules}
+
+
+def profile_velocity(rule, value, phase, cfg):
+    """LED-only rendering. Never send an animation frame to an encoder CC."""
+    rgb = rule["channel"] == 0 and (rule["note"] < 40 or 82 <= rule["note"] <= 86)
+    on = rule.get("color", 1) if rgb else 1
+    mode = rule["mode"]
+    if mode == "off":
+        return 0
+    if mode == "hue":
+        return hue_to_velocity(value, cfg)
+    if mode == "level":
+        return on if value > 0 else 0
+    if mode in ("blink", "speed"):
+        return on if phase < 0.5 else 0
+    return on
+
+
 class State:
     def __init__(self, n):
         self.hue = [0] * n
@@ -257,6 +322,24 @@ class Bridge:
         self.cfg = cfg
         self.knobs = cfg["knob_ccs"]
         self.notes = cfg["color_notes"]
+        self.live_lock = threading.Lock()
+        self.live_leds = {}
+        self.live_controls = {}
+        self.live_stop = threading.Event()
+        self.live_thread = None
+        self.live_warned = False
+        self.live_previous = None
+        self.live_written = 0
+        self.profile_rules = validate_control_rules(cfg)
+        self.profile_lock = threading.RLock()
+        self.profile_values = {}
+        self.profile_phase = {}
+        self.profile_last = {}
+        self.profile_held = set()
+        self.profile_sources = {(v.get("source_channel", 0), v.get("source_cc", 0))
+                                for v in self.profile_rules.values() if v["mode"] in ("hue", "level", "speed")}
+        self.profile_stop = threading.Event()
+        self.profile_thread = None
         self.state = State(len(self.knobs))
         self.speed_enabled = bool(cfg.get("speed_ring_animation", False))
         self.speed_buttons_enabled = bool(cfg.get("speed_button_pulse", False))
@@ -283,6 +366,8 @@ class Bridge:
                     self.lit[(n, ch)] = False
             for n in cfg["lit_global_notes"]:
                 self.lit[(n, 0)] = False
+        for ch, note in self.profile_rules:
+            self.lit.pop((note, ch), None)
         for note in self.speed_button_notes:
             self.lit.pop((note, self.speed_channel), None)  # A single owner for these LEDs.
         self.invert = {tuple(k) for k in cfg.get("lit_invert", [])}
@@ -308,18 +393,154 @@ class Bridge:
                 self._speed_tick(0)
             if self.speed_buttons_enabled:
                 self._speed_tick(0)
+            if self.profile_rules:
+                self._profile_tick(0)
+            self.live_thread = threading.Thread(target=self._live_worker, name="APC-studio-snapshot", daemon=True)
+            self.live_thread.start()
             self.apc_in.callback = self.on_apc
             self.res_in.callback = self.on_resolume
             if self.speed_enabled or self.speed_buttons_enabled:
                 self.speed_thread = threading.Thread(target=self._speed_animator, name="APC-speed-rings", daemon=True)
                 self.speed_thread.start()
+            if any(v["mode"] in ("blink", "speed") for v in self.profile_rules.values()):
+                self.profile_thread = threading.Thread(target=self._profile_worker, name="APC-profile-LEDs", daemon=True)
+                self.profile_thread.start()
             if self.lit:
                 threading.Thread(target=self._blinker, daemon=True).start()
         except Exception:
             self.running = False
+            self._stop_live()
+            self._stop_profile()
             self._stop_speed_animation()
             self._close_ports()
             raise
+
+    def _live_observe(self, msg):
+        if msg.type == "control_change":
+            with self.live_lock:
+                self.live_controls["%d:%d" % (msg.channel, msg.control)] = msg.value
+
+    def _live_publish(self, connected=True):
+        with self.live_lock:
+            snapshot = {"version": 1, "updated": time.time(), "connected": connected,
+                        "leds": dict(self.live_leds), "controls": dict(self.live_controls)}
+        if connected and self.live_previous == (snapshot["leds"], snapshot["controls"]) and snapshot["updated"] - self.live_written < 1:
+            return
+        temp = LIVE_PATH + ".tmp"
+        try:
+            with open(temp, "w", encoding="utf-8") as f:
+                json.dump(snapshot, f, separators=(",", ":"))
+            os.replace(temp, LIVE_PATH)
+            self.live_previous = (snapshot["leds"], snapshot["controls"])
+            self.live_written = snapshot["updated"]
+        except OSError:
+            if not self.live_warned:
+                logging.warning("Studio live preview unavailable; MIDI routing is unaffected")
+                self.live_warned = True
+
+    def _live_worker(self):
+        expires, check_at = 0, 0
+        while not self.live_stop.wait(0.1 if expires > time.time() else 0.5):
+            now = time.time()
+            if now >= check_at:
+                try:
+                    with open(LIVE_REQUEST_PATH, encoding="utf-8") as f:
+                        expires = min(now + 6, float(json.load(f).get("expires", 0)))
+                except (OSError, ValueError, TypeError):
+                    expires = 0
+                check_at = now + 1
+            if expires > now:
+                self._live_publish()
+
+    def _stop_live(self):
+        self.live_stop.set()
+        if self.live_thread is not None and self.live_thread.ident is not None:
+            self.live_thread.join()
+            self._live_publish(connected=False)
+
+    def _profile_value(self, rule):
+        key = (rule.get("source_channel", 0), rule.get("source_cc", 0))
+        if key in self.profile_values:
+            return self.profile_values[key]
+        if key[0] == 0 and key[1] in self.knobs:
+            return self.state.hue[self.knobs.index(key[1])]
+        return self.state.speed.get("%d:%d" % key, 0)
+
+    def _profile_tick(self, elapsed, source=None):
+        with self.profile_lock:
+            for key, rule in self.profile_rules.items():
+                if source is not None and (rule.get("source_channel", 0), rule.get("source_cc", 0)) != source:
+                    continue
+                if elapsed > 0 and rule["mode"] not in ("blink", "speed"):
+                    continue
+                value = self._profile_value(rule)
+                rate = rule.get("rate_min", 1.0)
+                if rule["mode"] == "speed":
+                    rate += (rule.get("rate_max", 3.0) - rate) * value / 127.0
+                phase = (self.profile_phase.get(key, 0) + elapsed * rate) % 1.0
+                self.profile_phase[key] = phase
+                velocity = profile_velocity(rule, value, phase, self.cfg)
+                if velocity != self.profile_last.get(key):
+                    self._to_apc(self.mido.Message("note_on", channel=key[0], note=key[1], velocity=velocity))
+                    self.profile_last[key] = velocity
+
+    def _profile_observe(self, msg, feedback=False):
+        if msg.type == "control_change" and (not feedback or self.cfg.get("sync_resolume_feedback", False)):
+            key = (msg.channel, msg.control)
+            if key not in self.profile_sources:
+                return
+            with self.profile_lock:
+                if self.profile_values.get(key) == msg.value:
+                    return
+                self.profile_values[key] = msg.value
+                self._profile_tick(0, source=key)
+
+    def _profile_press(self, msg):
+        if msg.type not in ("note_on", "note_off"):
+            return False
+        key = (msg.channel, msg.note)
+        rule = self.profile_rules.get(key)
+        if not rule or rule.get("press", "passthrough") != "reset":
+            return False
+        with self.profile_lock:
+            if msg.type == "note_on" and msg.velocity > 0:
+                if key not in self.profile_held:
+                    self.profile_held.add(key)
+                    cc = self.mido.Message("control_change", channel=rule["source_channel"],
+                                           control=rule["source_cc"], value=rule.get("reset_value", 0))
+                    self.res_out.send(cc)
+                    # A true parameter reset, never a synthetic ring animation value.
+                    self._to_apc(cc)
+                    self.profile_values[(cc.channel, cc.control)] = cc.value
+                    if cc.channel == 0 and cc.control in self.knobs:
+                        idx = self.knobs.index(cc.control)
+                        self.state.hue[idx] = cc.value
+                        self.state.dirty = True
+                        self.draw(idx)
+                    if cc.channel == self.speed_channel and cc.control in self.speed_ccs:
+                        self._store_speed(cc)
+                    self.profile_phase[key] = 0
+                    self.profile_last.pop(key, None)
+                    self._profile_tick(0)
+            else:
+                self.profile_held.discard(key)
+        return True
+
+    def _profile_worker(self):
+        last = time.monotonic()
+        try:
+            while not self.profile_stop.wait(0.025):
+                now = time.monotonic()
+                self._profile_tick(now - last)
+                last = now
+        except Exception:
+            logging.exception("Controller profile LEDs")
+            self.failed.set()
+
+    def _stop_profile(self):
+        self.profile_stop.set()
+        if self.profile_thread is not None and self.profile_thread.ident is not None:
+            self.profile_thread.join()
 
     def _speed_key(self, cc):
         return "%d:%d" % (self.speed_channel, cc)
@@ -351,6 +572,8 @@ class Bridge:
     def _speed_button_tick(self, elapsed):
         with self.speed_lock:
             for i, (cc, note) in enumerate(zip(self.speed_ccs, self.speed_button_notes)):
+                if (self.speed_channel, note) in self.profile_rules:
+                    continue
                 value = self.state.speed.get(self._speed_key(cc), self.cfg.get("speed_button_reset_value", 0))
                 self.speed_phase[i] = (self.speed_phase[i] + elapsed / speed_button_period(value, self.cfg)) % 1.0
                 on = self.speed_phase[i] < 0.5
@@ -392,7 +615,7 @@ class Bridge:
     def _speed_animator(self):
         last = time.monotonic()
         try:
-            while not self.speed_stop.wait(1.0 / self.cfg.get("speed_ring_update_hz", 120.0)):
+            while not self.speed_stop.wait(1.0 / (30.0 if self.speed_buttons_enabled else self.cfg.get("speed_ring_update_hz", 120.0))):
                 now = time.monotonic()
                 self._speed_tick(now - last)
                 last = now
@@ -427,8 +650,15 @@ class Bridge:
     def _to_apc(self, msg):
         with self.lock:
             self.apc_out.send(msg)
+            if msg.type in ("note_on", "note_off"):
+                with self.live_lock:
+                    self.live_leds["%d:%d" % (msg.channel, msg.note)] = msg.velocity if msg.type == "note_on" else 0
+            elif msg.type == "control_change":
+                self._live_observe(msg)
 
     def draw(self, i):
+        if (0, self.notes[i]) in self.profile_rules:
+            return
         if self.state.color_on[i]:
             vel = hue_to_velocity(self.state.hue[i], self.cfg)
         else:
@@ -438,7 +668,11 @@ class Bridge:
     def on_apc(self, msg):
         self.count["apc>res"] += 1
         try:
-            if self.speed_buttons_enabled and msg.type in ("note_on", "note_off") and msg.channel == self.speed_channel and msg.note in self.speed_button_notes:
+            self._live_observe(msg)
+            self._profile_observe(msg)
+            if self._profile_press(msg):
+                return
+            if self.speed_buttons_enabled and msg.type in ("note_on", "note_off") and msg.channel == self.speed_channel and msg.note in self.speed_button_notes and (msg.channel, msg.note) not in self.profile_rules:
                 with self.speed_lock:
                     if msg.type == "note_on" and msg.velocity > 0:
                         if msg.note not in self.speed_reset_held:
@@ -476,6 +710,9 @@ class Bridge:
     def on_resolume(self, msg):
         self.count["res>apc"] += 1
         try:
+            self._profile_observe(msg, feedback=True)
+            if msg.type in ("note_on", "note_off") and (msg.channel, msg.note) in self.profile_rules and not (msg.channel == 0 and msg.note in self.notes):
+                return  # Keep Colorize state tracking below; draw() suppresses owned LEDs.
             if self.speed_buttons_enabled:
                 if msg.type in ("note_on", "note_off") and msg.channel == self.speed_channel and msg.note in self.speed_button_notes:
                     return  # Ignore old button feedback; only the pulse owns its LED.
@@ -545,6 +782,8 @@ class Bridge:
 
     def close(self):
         self.running = False
+        self._stop_live()
+        self._stop_profile()
         self._stop_speed_animation()
         self._close_ports()
         self.state.save()
@@ -620,29 +859,25 @@ def resolume_pref_dirs():
 
 
 def patch_midi_xml(path, cfg, dry=False):
-    """Resolume: physical APC40 off, loopMIDI ports on. Returns True when a change is (or was) needed."""
+    """Prepare virtual routing while keeping the user-verified physical APC feedback."""
+    path = os.fspath(path)
     tree = ET.parse(path)
     root = tree.getroot()
     changed = False
     to_res, from_res, match = cfg["to_resolume_port"], cfg["from_resolume_port"], cfg["apc_port_match"]
+    physical = next((d.get("name") for tag in ("inputDevices", "outputDevices")
+                     for d in root.findall(tag + "/device")
+                     if match.lower() in d.get("name", "").lower() and "virt" not in d.get("name", "").lower()),
+                    "APC40 mkII" if match.lower() == "apc40" else match)
     for section, keep in (("inputDevices", to_res), ("outputDevices", from_res)):
         sec = root.find(section)
         if sec is None:
             sec = ET.SubElement(root, section)
-        for d in list(sec):
-            n = d.get("name", "")
-            if match.lower() in n.lower() and n != keep:
-                sec.remove(d)
+        for name in (keep, physical):
+            if not any(d.get("name") == name for d in sec):
+                ET.SubElement(sec, "device", {"name": name})
                 changed = True
-        if not any(d.get("name") == keep for d in sec):
-            ET.SubElement(sec, "device", {"name": keep})
-            changed = True
-    cs = root.find("controlSurfaces")
-    if cs is not None:
-        for d in list(cs):
-            if match.lower() in d.get("port", "").lower():
-                cs.remove(d)
-                changed = True
+    # Preserve the user's Alternate Ableton mode and other control surfaces.
     if changed and not dry:
         bak = path + ".pred-bridge.bak"
         if not os.path.exists(bak):

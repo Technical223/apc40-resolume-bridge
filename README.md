@@ -35,17 +35,27 @@ Color pads beneath the Hue knobs, buttons you can see in the dark, and **one win
 
 Click a screenshot to view it at full size.
 
+## Controller Studio
+
+Click a pad on the APC40 diagram, choose its lighting, and link it to a knob or fader without editing code. Set colors, blink rates, and optional reset buttons, preview locally, then save or share a named profile. Existing controls retain their behavior until you override them.
+
+[Visual editor guide](docs/controller-studio.md) · Windows app → **Controller Studio**
+
+![Controller Studio visual lighting editor](docs/img/controller-studio.png)
+
 ## macOS preview — testers wanted
 
 A separate [experimental macOS build](https://github.com/Technical223/apc40-resolume-bridge/tree/main/macos) uses native CoreMIDI/IAC buses, a small dialog-based control panel, a three-minute test and a local diagnostic ZIP. It is unsigned and requires Python plus manual MIDI setup. Real APC/Arena testing on a Mac is still needed; this is not a production release. The Windows app remains separate.
 
 ## Get started — Windows
 
-1. Extract **APC40-Bridge-Windows.zip** into the folder where you want to keep it. Close Arena before the initial setup.
-2. Open **APC40 Bridge.exe**.
-3. Click **Prepare and start**. Setup finds or installs the required components.
-4. If virtual MIDI ports are missing, click **Open loopMIDI**, create **APC VIRT A** and **APC VIRT B**, then run setup again.
-5. In Arena, set the MIDI preset to **Any device** and Hue **Range Max to 0.63871** (displayed rounded to 0.64).
+1. Download **[APC40-Bridge-Setup.exe](https://github.com/Technical223/apc40-resolume-bridge/releases/latest)** and click **Install**. Close Arena for the first setup.
+2. Python and MIDI libraries are already bundled. If loopMIDI is missing, setup downloads its official installer; confirm its license and Windows prompts.
+3. The two required MIDI port names are prepared automatically. Existing settings and profiles are preserved.
+4. Open **APC40 Bridge** for the dashboard or **Controller Studio** for the visual lighting editor.
+5. In Arena, set shortcut input to **Any device** or **APC VIRT A**, feedback output to **APC VIRT B**, and Hue **Range Max to 0.63871**.
+
+[Installation, offline options and updates](docs/windows-installation.md) · [Visual editor guide](docs/controller-studio.md)
 
 **Arena MIDI routing:** enable only **MIDI Input** for APC VIRT A and only **MIDI Output** for APC VIRT B; keep physical **APC40 mkII MIDI Input and MIDI Output on**, with **Alternate Ableton Live Mode** selected, as in the tested screenshot. [MIDI preferences table and screenshot](docs/navod.md#arena-midi-preferences).
 

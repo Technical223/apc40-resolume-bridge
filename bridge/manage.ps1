@@ -69,6 +69,8 @@ try {
             & $py -c "import mido,rtmidi" 2>$null
             if ($LASTEXITCODE -ne 0) { throw 'MIDI libraries are missing. Click Install / repair.' }
             Save-BridgePython $py
+            $addedPorts = @(Initialize-BridgeMidiPorts)
+            if (($addedPorts.Count -gt 0) -and (Get-Process loopMIDI -ErrorAction SilentlyContinue)) { throw 'MIDI ports are prepared. Close and reopen loopMIDI to load them, then start the bridge again.' }
             $loop = @("${env:ProgramFiles(x86)}\Tobias Erichsen\loopMIDI\loopMIDI.exe", "$env:ProgramFiles\Tobias Erichsen\loopMIDI\loopMIDI.exe") | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
             if (-not (Get-Process loopMIDI -ErrorAction SilentlyContinue)) {
                 if (-not $loop) { throw 'loopMIDI is missing. Click Install / repair.' }

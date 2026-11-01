@@ -1,4 +1,4 @@
-﻿param([switch]$Silent, [ValidateSet('','on','off')][string]$Autostart='', [switch]$NoPopup, [switch]$PrepareOnly)
+﻿param([switch]$Silent, [ValidateSet('','on','off')][string]$Autostart='', [switch]$NoPopup, [switch]$PrepareOnly, [switch]$Offline)
 $OutputEncoding = [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
 # APC40 Bridge - setup and launch. Open APC40 Bridge.exe.
 $ErrorActionPreference = 'Continue'   # Avoid treating Python/winget stderr as fatal in PS 5.1
@@ -18,8 +18,10 @@ if ($Autostart -ne '') {
 
 # ---------- 1) Python
 . (Join-Path $Here 'runtime.ps1')
+$Offline = $Offline -or (Test-Path -LiteralPath (Join-Path $Here 'runtime\python.exe'))
 $Py = Find-BridgePython
 if (-not $Py) {
+    if ($Offline) { Fail 'The bundled runtime is missing. Reinstall APC40 Bridge using the setup EXE.' }
     Say 'Python not found. Installing Python 3.12 for your user account...'
     $done = $false
     if (Get-Command winget -ErrorAction SilentlyContinue) {
@@ -43,6 +45,7 @@ if (-not (Test-Path $PyW)) { $PyW = $Py }
 # ---------- 2) libraries
 & $Py -c "import mido, rtmidi" 2>$null
 if ($LASTEXITCODE -ne 0) {
+    if ($Offline) { Fail 'The bundled MIDI libraries are missing. Reinstall APC40 Bridge using the setup EXE.' }
     Say 'Installing mido and python-rtmidi...'
     & $Py -m ensurepip --user 2>$null | Out-Null
     & $Py -m pip install --user --disable-pip-version-check --quiet mido python-rtmidi
@@ -53,6 +56,7 @@ if ($LASTEXITCODE -ne 0) {
 # ---------- 3) loopMIDI
 $LoopExe = @("${env:ProgramFiles(x86)}\Tobias Erichsen\loopMIDI\loopMIDI.exe", "$env:ProgramFiles\Tobias Erichsen\loopMIDI\loopMIDI.exe") | Where-Object { Test-Path $_ } | Select-Object -First 1
 if (-not $LoopExe) {
+    if ($Offline) { Fail 'loopMIDI is required. Run the APC40 Bridge setup EXE to download it automatically, or use its local offline dependency installer.' }
     Say 'loopMIDI not found. Installing...'
     if (Get-Command winget -ErrorAction SilentlyContinue) {
         & winget install -e --id TobiasErichsen.loopMIDI --silent --accept-package-agreements --accept-source-agreements | Out-Null
@@ -63,6 +67,9 @@ if (-not $LoopExe) {
         Fail 'Install loopMIDI from the page that just opened, then run setup again.'
     }
 }
+$addedPorts = @(Initialize-BridgeMidiPorts)
+if ($addedPorts.Count -gt 0) { Say ('Prepared MIDI ports: ' + ($addedPorts -join ', ')) }
+if (($addedPorts.Count -gt 0) -and (Get-Process loopMIDI -ErrorAction SilentlyContinue)) { Fail 'The MIDI ports are prepared. Close and reopen loopMIDI to load them, then run preparation again. Existing ports were preserved.' }
 if (-not (Get-Process loopMIDI -ErrorAction SilentlyContinue)) { Start-Process $LoopExe -WindowStyle Hidden; Start-Sleep -Seconds 3 }
 
 # ---------- 4) virtual ports
@@ -93,7 +100,7 @@ if ($r -match 'RESOLUME_RUNNING') {
     if ($NoPopup) { exit 2 }; exit 0
 }
 if ($r -match 'RESOLUME_PREFS_NOT_FOUND' -and $NoPopup) { Fail 'Launch and close Arena once to create its settings, then run setup again.' }
-if ($r -match 'RESOLUME_PREFS_NOT_FOUND') { Say 'Resolume settings not found. In Arena > Preferences > MIDI, enable APC VIRT A input and APC VIRT B output, and disable APC40 mkII.' }
+if ($r -match 'RESOLUME_PREFS_NOT_FOUND') { Say 'Resolume settings not found. In Arena > Preferences > MIDI, enable APC VIRT A input and APC VIRT B output, and keep APC40 mkII input/output enabled in Alternate Ableton Live Mode.' }
 
 # ---------- 5b) sample Resolume MIDI preset (only if missing)
 $PresetSrc = Join-Path $Here 'resolume'

@@ -74,7 +74,7 @@ Open **Arena → Preferences → MIDI** and check the following when using the b
 
 For the user-tested Windows configuration, leave physical **APC40 mkII MIDI Input and MIDI Output enabled** and select **Alternate Ableton Live Mode** in Arena (mode 66 / 0x42). The user confirmed that disabling the physical APC ports removes the required MIDI feedback. Keep the virtual A/B routing enabled as well.
 
-After **Install / repair**, check these settings manually: the existing setup routine still disables physical APC ports when patching Arena preferences. Re-enable them as shown here; the automatic setup has not yet been updated or hardware-validated for this configuration.
+**Install / repair** now keeps physical APC input/output enabled alongside virtual A/B routing and preserves the selected control-surface mode. Check **Alternate Ableton Live Mode** in Arena after initial setup; the setup routine does not change that selector.
 
 **MIDI Middle C:** the supplied reference uses **Legacy**. This changes displayed note names only, not MIDI note numbers or bridge routing. Leave unrelated MIDI devices as required by your setup; Microsoft GS Wavetable Synth is not needed by the bridge.
 
