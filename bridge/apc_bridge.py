@@ -340,6 +340,7 @@ class Bridge:
                                 for v in self.profile_rules.values() if v["mode"] in ("hue", "level", "speed")}
         self.profile_stop = threading.Event()
         self.profile_thread = None
+        self.profile_config_stamp = None
         self.state = State(len(self.knobs))
         self.speed_enabled = bool(cfg.get("speed_ring_animation", False))
         self.speed_buttons_enabled = bool(cfg.get("speed_button_pulse", False))
@@ -366,8 +367,6 @@ class Bridge:
                     self.lit[(n, ch)] = False
             for n in cfg["lit_global_notes"]:
                 self.lit[(n, 0)] = False
-        for ch, note in self.profile_rules:
-            self.lit.pop((note, ch), None)
         for note in self.speed_button_notes:
             self.lit.pop((note, self.speed_channel), None)  # A single owner for these LEDs.
         self.invert = {tuple(k) for k in cfg.get("lit_invert", [])}
@@ -443,6 +442,8 @@ class Bridge:
         while not self.live_stop.wait(0.1 if expires > time.time() else 0.5):
             now = time.time()
             if now >= check_at:
+                if hasattr(self, "profile_config_stamp"):
+                    self._reload_profile()
                 try:
                     with open(LIVE_REQUEST_PATH, encoding="utf-8") as f:
                         expires = min(now + 6, float(json.load(f).get("expires", 0)))
@@ -457,6 +458,43 @@ class Bridge:
         if self.live_thread is not None and self.live_thread.ident is not None:
             self.live_thread.join()
             self._live_publish(connected=False)
+
+    def _reload_profile(self):
+        try:
+            stamp = os.stat(CFG_PATH).st_mtime_ns
+            if stamp == self.profile_config_stamp:
+                return
+            self.profile_config_stamp = stamp
+            with open(CFG_PATH, encoding="utf-8") as f:
+                document = json.load(f)
+            config = dict(self.cfg, control_rules=document.get("control_rules", []))
+            rules = validate_control_rules(config)
+            with self.profile_lock:
+                if rules == self.profile_rules:
+                    return
+                removed = self.profile_rules.keys() - rules.keys()
+                self.profile_rules = rules
+                self.profile_sources = {(v.get("source_channel", 0), v.get("source_cc", 0))
+                                        for v in rules.values() if v["mode"] in ("hue", "level", "speed")}
+                self.profile_last.clear()
+                self.profile_phase.clear()
+                self._profile_tick(0)
+                for ch, note in removed:
+                    if ch == 0 and note in self.notes:
+                        self.draw(self.notes.index(note))
+                    elif (note, ch) in self.lit:
+                        self.draw_lit((note, ch))
+                    elif not (self.speed_buttons_enabled and ch == self.speed_channel and note in self.speed_button_notes):
+                        self._to_apc(self.mido.Message("note_on", channel=ch, note=note, velocity=0))
+            with self.speed_lock:
+                self.speed_last = [None] * len(self.speed_ccs)
+                if self.speed_buttons_enabled:
+                    self._speed_button_tick(0)
+            if any(v["mode"] in ("blink", "speed") for v in rules.values()) and self.profile_thread is None:
+                self.profile_thread = threading.Thread(target=self._profile_worker, name="APC-profile-LEDs", daemon=True)
+                self.profile_thread.start()
+        except (OSError, ValueError, TypeError):
+            logging.warning("Studio profile could not be applied; keeping the last valid lighting", exc_info=True)
 
     def _profile_value(self, rule):
         key = (rule.get("source_channel", 0), rule.get("source_cc", 0))
@@ -529,7 +567,7 @@ class Bridge:
     def _profile_worker(self):
         last = time.monotonic()
         try:
-            while not self.profile_stop.wait(0.025):
+            while not self.profile_stop.wait(0.025 if any(v["mode"] in ("blink", "speed") for v in self.profile_rules.values()) else 0.5):
                 now = time.monotonic()
                 self._profile_tick(now - last)
                 last = now
@@ -636,6 +674,8 @@ class Bridge:
             self.speed_thread.join()
 
     def draw_lit(self, key):
+        if (key[1], key[0]) in self.profile_rules:
+            return
         on = (not self.lit[key]) or self.blink_on
         self._to_apc(self.mido.Message("note_on", channel=key[1], note=key[0],
                                        velocity=self.cfg["idle_velocity"] if on else 0))

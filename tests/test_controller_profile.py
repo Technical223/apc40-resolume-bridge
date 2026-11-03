@@ -68,7 +68,9 @@ class ControllerProfileTests(unittest.TestCase):
         self.cfg["always_lit"]=True
         with patch.object(b.Bridge,"_blinker"):
             x=self.make()
-        self.assertNotIn((58,0),x.lit)
+        before=len(x.apc_out.messages)
+        x.draw_lit((58,0))
+        self.assertEqual(len(x.apc_out.messages),before)
         before=len(x.apc_out.messages)
         x._profile_tick(.51)
         self.assertEqual(x.apc_out.messages[-1].note,58)
@@ -139,6 +141,34 @@ class ControllerProfileTests(unittest.TestCase):
         x=self.make()
         x.on_resolume(Message("control_change",channel=0,control=48,value=127))
         self.assertEqual(x.profile_values,{})
+
+    def test_reload_applies_and_removes_lighting_without_reopening_ports(self):
+        self.rule(mode="solid",color=45)
+        x=self.make()
+        ports=list(self.backend.ports)
+        with tempfile.TemporaryDirectory() as d:
+            path=Path(d)/"config.json"
+            with patch.object(b,"CFG_PATH",str(path)):
+                path.write_text(json.dumps({"control_rules":[dict(self.cfg["control_rules"][0],color=5)]}))
+                x._reload_profile()
+                self.assertEqual(x.apc_out.messages[-1].velocity,5)
+                path.write_text(json.dumps({"control_rules":[]}))
+                x.profile_config_stamp=None
+                x._reload_profile()
+                self.assertEqual(x.profile_rules,{})
+                self.assertEqual(x.res_out.messages,[])
+                self.assertEqual(self.backend.ports,ports)
+                self.assertFalse(any(p.closed for p in ports))
+
+    def test_invalid_reload_keeps_last_valid_profile(self):
+        self.rule(mode="solid",color=45)
+        x=self.make()
+        with tempfile.TemporaryDirectory() as d:
+            path=Path(d)/"config.json";path.write_text('{"control_rules":[{"mode":"bad"}]}')
+            with patch.object(b,"CFG_PATH",str(path)),self.assertLogs(level="WARNING"):
+                x._reload_profile()
+        self.assertEqual(x.profile_rules[(0,32)]["color"],45)
+        self.assertFalse(x.failed.is_set())
 
     def test_invalid_profile_fails_before_opening_any_port(self):
         changes=[dict(mode="bad"),dict(mode="hue",note=58),dict(source_cc=127),dict(rate_max=10),dict(reset_value=-1),dict(note=90),dict(channel=True)]

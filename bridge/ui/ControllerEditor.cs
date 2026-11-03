@@ -7,7 +7,6 @@ using System.Drawing.Drawing2D;
 using System.Collections;
 using System.Collections.Generic;
 using System.Windows.Forms;
-using System.Threading.Tasks;
 
 namespace ApcBridge {
     sealed class SurfaceControl {
@@ -223,7 +222,8 @@ namespace ApcBridge {
         readonly TableLayoutPanel fields;
         readonly DateTime began=DateTime.UtcNow;
         SurfaceControl selected;
-        bool loading,dirty,picking,applying;
+        bool loading,dirty,picking,backedUp;
+        DateTime applyAt=DateTime.MaxValue;
         static readonly string[] ModeNames={"Default bridge","LED off","Solid light","Follow Hue","Follow level (on / off)","Blink","Speed indicator"};
         static readonly string[] ModeKeys={"inherit","off","solid","hue","level","blink","speed"};
         public ControllerEditor(string path) {
@@ -273,9 +273,9 @@ namespace ApcBridge {
             Add(Theme.Label("Reset position  ·  0 left / 127 right",9,Theme.Muted),28);reset=Number(0,127,0);reset.DecimalPlaces=0;Add(reset,32);
             summary=Theme.Label("",9,Theme.Muted);Add(summary,58);
             defaults=Theme.Button("Use default behavior",false);defaults.Font=new Font("Segoe UI",9);Add(defaults,36);
-            var footer=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=2,RowCount=1,Padding=new Padding(0,14,0,0),Margin=Padding.Empty};footer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));footer.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,180));
-            notice=Theme.Label("Preview only. Save & apply restarts a running bridge and may resend knob/fader positions.",9,Theme.Muted);footer.Controls.Add(notice,0,0);
-            save=Theme.Button("Save & apply",true);footer.Controls.Add(save,1,0);root.Controls.Add(footer,0,2);
+            var footer=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=3,RowCount=1,Padding=new Padding(0,14,0,0),Margin=Padding.Empty};footer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));footer.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,180));footer.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,110));
+            notice=Theme.Label("Changes save automatically and update a running bridge without restarting.",9,Theme.Muted);footer.Controls.Add(notice,0,0);
+            save=Theme.Button("Save now",true);footer.Controls.Add(save,1,0);var close=Theme.Button("Close",false);close.Click+=(s,e)=>Close();footer.Controls.Add(close,2,0);root.Controls.Add(footer,0,2);
             loading=true;ReadRules(config);profileName.TextChanged+=(s,e)=>Changed();loading=false;
             canvas.Picked+=SelectControl;
             live.CheckedChanged+=(s,e)=>{preview.Enabled=!live.Checked;lastLiveRead=DateTime.MinValue;UpdateLive();canvas.Invalidate();};
@@ -284,19 +284,10 @@ namespace ApcBridge {
             slow.ValueChanged+=(s,e)=>{if(!loading&&slow.Value>fast.Value)fast.Value=slow.Value;Edit();};fast.ValueChanged+=(s,e)=>{if(!loading&&fast.Value<slow.Value)slow.Value=fast.Value;Edit();};reset.ValueChanged+=(s,e)=>Edit();
             pickSource.Click+=(s,e)=>{picking=true;notice.Text="Click a knob or fader on the controller to link it.";};
             defaults.Click+=(s,e)=>{if(selected!=null&&!selected.Source){rules.Remove(selected.Id);Changed();LoadSelection();canvas.Invalidate();}};
-            save.Click+=async(s,e)=>{
-                if(applying||!Save())return;
-                applying=true;Enabled=false;UseWaitCursor=true;
-                try {
-                    bool running=await Task.Run(()=>Backend.Flag(Backend.Action(home,"status"),"bridge_running"));
-                    if(running){await Task.Run(()=>{Backend.Action(home,"stop");Backend.Action(home,"start");});notice.Text="Profile applied. Live feedback shows the running bridge.";}
-                    else notice.Text="Profile saved. Start bridge from the dashboard to use it.";
-                }catch(Exception ex){notice.Text="Profile saved, but not applied. "+ex.Message;}
-                finally {applying=false;Enabled=true;UseWaitCursor=false;}
-            };
+            save.Click+=(s,e)=>Save();
             export.Click+=(s,e)=>Export();import.Click+=(s,e)=>Import();
-            timer.Interval=100;timer.Tick+=(s,e)=>{if(WindowState==FormWindowState.Minimized)return;UpdateLive();canvas.Phase=(DateTime.UtcNow-began).TotalSeconds;if(canvas.LiveMode||canvas.DefaultSpeed||rules.Values.Any(x=>x.Mode=="blink"||x.Mode=="speed"))canvas.Invalidate();};timer.Start();
-            FormClosing+=(s,e)=>{if(applying){e.Cancel=true;return;}if(dirty&&MessageBox.Show(this,"Close without saving the controller changes?","Unsaved profile",MessageBoxButtons.YesNo,MessageBoxIcon.Question)!=DialogResult.Yes)e.Cancel=true;};
+            timer.Interval=100;timer.Tick+=(s,e)=>{if(dirty&&!string.IsNullOrWhiteSpace(profileName.Text)&&DateTime.UtcNow>=applyAt){applyAt=DateTime.MaxValue;Save();}if(WindowState==FormWindowState.Minimized)return;UpdateLive();canvas.Phase=(DateTime.UtcNow-began).TotalSeconds;if(canvas.LiveMode||canvas.DefaultSpeed||rules.Values.Any(x=>x.Mode=="blink"||x.Mode=="speed"))canvas.Invalidate();};timer.Start();
+            FormClosing+=(s,e)=>{if(dirty&&!Save())e.Cancel=true;};
             FormClosed+=(s,e)=>timer.Dispose();
             SelectControl(canvas.Items.First(c=>c.Id=="n:0:32"));
         }
@@ -345,7 +336,7 @@ namespace ApcBridge {
             return c;
         }
         static NumericUpDown Number(decimal min,decimal max,decimal value){return new NumericUpDown{Minimum=min,Maximum=max,Value=value,DecimalPlaces=1,Increment=.1m,BackColor=Theme.Bg,ForeColor=Theme.Text,Dock=DockStyle.Fill,BorderStyle=BorderStyle.FixedSingle};}
-        void Changed(){if(loading)return;dirty=true;notice.Text="Unsaved changes · preview only";save.Text="Save & apply";canvas.Invalidate();}
+        void Changed(){if(loading)return;dirty=true;notice.Text="Applying changes…";save.Text="Save now";applyAt=DateTime.UtcNow.AddMilliseconds(400);canvas.Invalidate();}
         void SelectControl(SurfaceControl c){
             if(picking&&c.Source){picking=false;source.SelectedItem=c;notice.Text="Linked to "+c.Name+". Save and restart to apply.";return;}
             picking=false;selected=c;canvas.Selected=c;LoadSelection();canvas.Invalidate();
@@ -401,9 +392,9 @@ namespace ApcBridge {
                 var cfg=Backend.Json.Deserialize<Dictionary<string,object>>(original);
                 cfg["control_rules"]=RuleArray();cfg["controller_profile_name"]=profileName.Text.Trim();cfg["speed_ring_animation"]=false;
                 string temp=file+".studio-"+Guid.NewGuid().ToString("N")+".tmp";
-                try {File.WriteAllText(temp,Backend.Json.Serialize(cfg),new UTF8Encoding(false));File.Replace(temp,file,file+".before-studio-"+DateTime.Now.ToString("yyyyMMdd-HHmmss-fff")+".bak");}
+                try {File.WriteAllText(temp,Backend.Json.Serialize(cfg),new UTF8Encoding(false));File.Replace(temp,file,backedUp?null:file+".before-studio-"+DateTime.Now.ToString("yyyyMMdd-HHmmss-fff")+".bak");backedUp=true;}
                 finally {if(File.Exists(temp))File.Delete(temp);}
-                original=File.ReadAllText(file,Encoding.UTF8);dirty=false;notice.Text="Profile saved.";save.Text="Saved";return true;
+                original=File.ReadAllText(file,Encoding.UTF8);dirty=false;notice.Text="Saved · running bridge updates automatically; no restart needed.";save.Text="Saved";return true;
             }catch(Exception ex){MessageBox.Show(this,ex.Message,"Could not save profile",MessageBoxButtons.OK,MessageBoxIcon.Warning);return false;}
         }
         void ReadRules(Dictionary<string,object> document){
@@ -436,7 +427,7 @@ namespace ApcBridge {
                 var data=Backend.Json.Deserialize<Dictionary<string,object>>(File.ReadAllText(dialog.FileName,Encoding.UTF8));
                 if(!data.ContainsKey("format")||Convert.ToString(data["format"])!="apc40-bridge-profile"||!data.ContainsKey("version")||Convert.ToInt32(data["version"])!=1||!data.ContainsKey("control_rules"))throw new Exception("Choose a supported APC40 Bridge profile.");
                 ReadRules(data);loading=true;profileName.Text=data.ContainsKey("name")?Convert.ToString(data["name"]).Substring(0,Math.Min(60,Convert.ToString(data["name"]).Length)):"Imported profile";loading=false;
-                Changed();LoadSelection();notice.Text="Profile imported into preview. Save changes to use it.";canvas.Invalidate();
+                Changed();LoadSelection();notice.Text="Profile imported. Applying changes…";canvas.Invalidate();
             }}catch(Exception ex){MessageBox.Show(this,ex.Message,"Could not import profile");}
         }
     }
