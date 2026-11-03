@@ -12,7 +12,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 LOCK = json.loads((ROOT / "bridge/offline-dependencies.lock.json").read_text(encoding="utf-8"))
-VERSION = "1.3.0"
+VERSION = "1.4.0"
 
 def download(item, cache):
     path = cache / item["file"]
@@ -56,7 +56,7 @@ def compile_setup(output, payload=None):
     cmd.append(ROOT / "bridge/installer/Setup.cs")
     run(cmd)
 
-def build(output, cache):
+def build(output, cache, visualizer=None):
     output.mkdir(parents=True, exist_ok=True)
     cache.mkdir(parents=True, exist_ok=True)
     names = ("APC40-Bridge-Setup.exe", "APC40-Bridge-Portable.zip")
@@ -78,6 +78,12 @@ def build(output, cache):
         shutil.copytree(ROOT / "docs", stage / "docs", ignore=shutil.ignore_patterns("media"))
         for name in ("README.md", "README.cs.md", "LICENSE", "CLAUDE.md"):
             shutil.copy2(ROOT / name, stage / name)
+        viewer = visualizer or ROOT / "bridge/visualizer"
+        if viewer.is_dir():
+            excluded = ["__pycache__", "*.pyc", "active-layout.js", "viewer-session.json", "*.download"]
+            if visualizer is None:
+                excluded.append("SpoutCam64.ax")
+            shutil.copytree(viewer, stage / "visualizer", ignore=shutil.ignore_patterns(*excluded))
         runtime = stage / "runtime"
         runtime.mkdir()
         extract_safe(download(LOCK["python"], cache), runtime)
@@ -121,5 +127,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--output", type=Path, default=ROOT / "dist/offline")
     parser.add_argument("--cache", type=Path, default=Path(tempfile.gettempdir()) / "APC40-build-cache")
+    parser.add_argument("--visualizer", type=Path, help="Private offline visualizer assets")
     args = parser.parse_args()
-    build(args.output.resolve(), args.cache.resolve())
+    build(args.output.resolve(), args.cache.resolve(), args.visualizer)

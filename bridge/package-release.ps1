@@ -9,6 +9,8 @@ $files=@('APC40 Bridge.exe','APC40 Bridge.vbs','apc_bridge.py','config.json','se
 foreach ($name in $files) { Copy-Item -LiteralPath (Join-Path $PSScriptRoot $name) -Destination (Join-Path $app $name) }
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'ui') -Destination (Join-Path $app 'ui') -Recurse
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'profiles') -Destination (Join-Path $app 'profiles') -Recurse
+New-Item -ItemType Directory -Path (Join-Path $app 'visualizer') -Force | Out-Null
+foreach ($name in @('preview.html','prepare.py','launcher.py','install_camera.py','physical-layout.json','room-current.glb','THIRD-PARTY-NOTICES.txt')) { Copy-Item -LiteralPath (Join-Path $PSScriptRoot ('visualizer/'+$name)) -Destination (Join-Path $app 'visualizer') }
 foreach ($folder in @('docs','resolume')) { Copy-Item -LiteralPath (Join-Path $Repo $folder) -Destination (Join-Path $app $folder) -Recurse }
 foreach ($name in @('README.md','README.cs.md','LICENSE','CLAUDE.md')) { Copy-Item -LiteralPath (Join-Path $Repo $name) -Destination (Join-Path $app $name) }
 New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null

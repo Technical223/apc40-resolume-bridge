@@ -17,8 +17,8 @@ using Microsoft.Win32;
 [assembly: System.Reflection.AssemblyTitle("APC40 Bridge Setup")]
 [assembly: System.Reflection.AssemblyProduct("APC40 Bridge")]
 [assembly: System.Reflection.AssemblyCompany("Technical223")]
-[assembly: System.Reflection.AssemblyVersion("1.3.0.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.3.0.0")]
+[assembly: System.Reflection.AssemblyVersion("1.4.0.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.4.0.0")]
 
 namespace ApcSetup {
  static class Package {
@@ -106,23 +106,26 @@ namespace ApcSetup {
   readonly string target=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Programs","APC40 Bridge");
   bool busy;
   public SetupForm(){
-   Text="Install APC40 Bridge";ClientSize=new Size(590,530);StartPosition=FormStartPosition.CenterScreen;FormBorderStyle=FormBorderStyle.FixedDialog;MaximizeBox=false;
+   Text="Install APC40 Bridge";ClientSize=new Size(860,580);StartPosition=FormStartPosition.CenterScreen;FormBorderStyle=FormBorderStyle.FixedDialog;MaximizeBox=false;
    BackColor=Color.FromArgb(18,22,28);ForeColor=Color.FromArgb(238,243,249);Font=new Font("Segoe UI",10);
-   var root=new TableLayoutPanel{Dock=DockStyle.Fill,Padding=new Padding(28),ColumnCount=1,RowCount=7};
-   foreach(int h in new[]{56,44,80,48,32,42,54})root.RowStyles.Add(new RowStyle(SizeType.Absolute,h));Controls.Add(root);
-   root.Controls.Add(Label("APC40 Bridge",25,ForeColor),0,0);
-   root.Controls.Add(Label("Controller Studio + Resolume MIDI feedback",11,Color.FromArgb(154,167,184)),0,1);
-   root.Controls.Add(Label("Ready-to-run app with a private Python runtime.\nNo separate Python installation or command window.\nMissing loopMIDI is downloaded from its official publisher.",10,ForeColor),0,2);
+   var shell=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=2,RowCount=1,Margin=Padding.Empty};shell.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,224));shell.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));Controls.Add(shell);
+   var sidebar=new TableLayoutPanel{Dock=DockStyle.Fill,Padding=new Padding(24,34,16,24),BackColor=Color.FromArgb(25,32,43),ColumnCount=1,RowCount=4};sidebar.RowStyles.Add(new RowStyle(SizeType.Absolute,78));sidebar.RowStyles.Add(new RowStyle(SizeType.Absolute,64));sidebar.RowStyles.Add(new RowStyle(SizeType.Absolute,160));sidebar.RowStyles.Add(new RowStyle(SizeType.Percent,100));
+   sidebar.Controls.Add(Label("APC40\nBRIDGE",22,Color.FromArgb(105,229,181)),0,0);sidebar.Controls.Add(Label("WINDOWS SETUP",10,Color.FromArgb(154,167,184)),0,1);sidebar.Controls.Add(Label("01  Application\n\n02  MIDI routing\n\n03  Ready to connect",11,ForeColor),0,2);sidebar.Controls.Add(Label("Your controller.\nYour workflow.",12,Color.FromArgb(154,167,184)),0,3);shell.Controls.Add(sidebar,0,0);
+   var root=new TableLayoutPanel{Dock=DockStyle.Fill,Padding=new Padding(32),ColumnCount=1,RowCount=7};shell.Controls.Add(root,1,0);
+   foreach(int h in new[]{60,46,106,66,26,52,58})root.RowStyles.Add(new RowStyle(SizeType.Absolute,h));
+   root.Controls.Add(Label("Ready for your controller",23,ForeColor),0,0);
+   root.Controls.Add(Label("APC40 mkII + Resolume Arena",12,Color.FromArgb(154,167,184)),0,1);
+   root.Controls.Add(Label("Install the app, Controller Studio and MIDI feedback.\nEverything runs locally on your computer.\nSetup prepares MIDI ports and guides you through loopMIDI when needed.",10,ForeColor),0,2);
    root.Controls.Add(Label("Install for this Windows account\n"+target,9,Color.FromArgb(154,167,184)),0,3);
    progress=new ProgressBar{Dock=DockStyle.Fill,Style=ProgressBarStyle.Continuous};root.Controls.Add(progress,0,4);
    state=Label("Your existing settings and profiles will be preserved.",9,Color.FromArgb(154,167,184));root.Controls.Add(state,0,5);
    var bottom=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=2};bottom.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,60));bottom.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,40));
-   launch=new CheckBox{Text="Open Controller Studio",Checked=true,Dock=DockStyle.Fill,ForeColor=ForeColor};bottom.Controls.Add(launch,0,0);
-   install=new Button{Text="Install",Dock=DockStyle.Fill,FlatStyle=FlatStyle.Flat,BackColor=Color.FromArgb(105,229,181),ForeColor=BackColor};bottom.Controls.Add(install,1,0);root.Controls.Add(bottom,0,6);
+   launch=new CheckBox{Text="Open APC40 Bridge",Checked=true,Dock=DockStyle.Fill,ForeColor=ForeColor};bottom.Controls.Add(launch,0,0);
+   install=new Button{Text="Install APC40 Bridge",Font=new Font("Segoe UI",11,FontStyle.Regular),Cursor=Cursors.Hand,Dock=DockStyle.Fill,FlatStyle=FlatStyle.Flat,BackColor=Color.FromArgb(105,229,181),ForeColor=BackColor};bottom.Controls.Add(install,1,0);root.Controls.Add(bottom,0,6);
    install.Click+=async(s,e)=>await Install();
    FormClosing+=(s,e)=>{if(busy){e.Cancel=true;state.Text="Please wait for installation to finish."; }};
   }
-  static Label Label(string text,int size,Color color){return new Label{Text=text,Dock=DockStyle.Fill,ForeColor=color,Font=new Font("Segoe UI",size),TextAlign=ContentAlignment.MiddleLeft};}
+  static Label Label(string text,int size,Color color){return new Label{Text=text,Dock=DockStyle.Fill,ForeColor=color,Font=new Font("Segoe UI",Math.Max(10,size)),TextAlign=ContentAlignment.MiddleLeft};}
   void Update(string text,int value){if(IsDisposed)return;BeginInvoke(new Action(()=>{state.Text=text;progress.Value=value;}));}
   async Task Install(){
    if(Package.AppOpen(target)){MessageBox.Show(this,"Close APC40 Bridge, then click Install again.","App is open");return;}
@@ -155,7 +158,7 @@ namespace ApcSetup {
      int result=Package.RunScript(target,"setup.ps1","-Offline -NoPopup -PrepareOnly",3);
      Update(result==0?"Installed. Your app is ready.":"Installed. Open the app's Setup log to complete Arena preparation.",100);
     });
-    if(launch.Checked)Process.Start(new ProcessStartInfo(Path.Combine(target,"APC40 Bridge.exe"),"--studio"){UseShellExecute=true});
+    if(launch.Checked)Process.Start(new ProcessStartInfo(Path.Combine(target,"APC40 Bridge.exe")){UseShellExecute=true});
     install.Text="Installed";launch.Enabled=false;
    }catch(Exception ex){state.Text=ex.Message;MessageBox.Show(this,ex.Message,"Installation could not finish",MessageBoxButtons.OK,MessageBoxIcon.Warning);install.Enabled=true;}
    finally{Package.CleanTemp(stage);busy=false;}

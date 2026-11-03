@@ -66,3 +66,7 @@ Volitelná **Speed buttons** blikají pod knoby 5–8; stisk s přiloženým map
 Pro vývojáře: [sestavení aplikace](docs/windows-app.cs.md) · [kontext projektu](CLAUDE.md). Ze zdrojového ZIPu lze otevřít **bridge/APC40 Bridge.vbs**; pro běžné použití doporučujeme instalátor.
 
 MIT · [Technical223](https://github.com/Technical223)
+
+## Novinky ve verzi 1.4
+
+Přehled, Controller Studio, nastavení a logy jsou v jednom okně. Vizualizér nabízí editor výstupů, fixtures a jednotlivých pixelů podle uloženého Advanced Outputu. Výběr se ukládá pro každý preset zvlášť a nemění nastavení Areny. [Návod k vizualizéru (anglicky)](docs/visualizer.md).

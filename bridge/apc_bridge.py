@@ -340,6 +340,7 @@ class Bridge:
                                 for v in self.profile_rules.values() if v["mode"] in ("hue", "level", "speed")}
         self.profile_stop = threading.Event()
         self.profile_thread = None
+        self.visualizer_opened = False
         self.profile_config_stamp = None
         self.state = State(len(self.knobs))
         self.speed_enabled = bool(cfg.get("speed_ring_animation", False))
@@ -467,6 +468,21 @@ class Bridge:
             self.profile_config_stamp = stamp
             with open(CFG_PATH, encoding="utf-8") as f:
                 document = json.load(f)
+            enabled = bool(document.get("led_visualizer", False))
+            if os.name == "nt" and enabled and not self.visualizer_opened:
+                page = os.path.join(BASE, "visualizer", "preview.html")
+                if os.path.isfile(page):
+                    try:
+                        prepare = os.path.join(BASE, "visualizer", "prepare.py")
+                        if os.path.isfile(prepare):
+                            import subprocess
+                            subprocess.run([sys.executable, prepare, "--open"], timeout=12,
+                                           creationflags=subprocess.CREATE_NO_WINDOW, check=True)
+                        else:
+                            os.startfile(page)
+                    except Exception:
+                        logging.exception("LED visualizer could not prepare or open")
+            self.visualizer_opened = enabled
             config = dict(self.cfg, control_rules=document.get("control_rules", []))
             rules = validate_control_rules(config)
             with self.profile_lock:
@@ -717,6 +733,12 @@ class Bridge:
         try:
             self._live_observe(msg)
             self._profile_observe(msg)
+            if (self.cfg.get("global_crossfade", False) and msg.type == "control_change"
+                    and msg.channel == 0 and msg.control == 15):
+                for cc in range(110, 115):
+                    value = 127 - msg.value if cc == 110 else msg.value
+                    self.res_out.send(self.mido.Message("control_change", channel=15, control=cc, value=value))
+                return
             if self._profile_press(msg):
                 return
             if self.speed_buttons_enabled and msg.type in ("note_on", "note_off") and msg.channel == self.speed_channel and msg.note in self.speed_button_notes:
@@ -850,6 +872,39 @@ def arena_running(proc_name):
     return proc_name.lower() in out.lower()
 
 
+_session_stamp = None
+
+
+def record_arena_session():
+    """Remember saved Arena preferences observed while the bridge is connected."""
+    global _session_stamp
+    try:
+        for folder in resolume_pref_dirs():
+            config = os.path.join(folder, "config.xml")
+            root = ET.parse(config).getroot()
+            app = root.find("Application")
+            recent = app.get("recentCompositions", "").splitlines() if app is not None else []
+            if not recent:
+                continue
+            composition = recent[0]
+            stamp = (config, os.stat(config).st_mtime_ns, composition, os.stat(composition).st_mtime_ns)
+            if stamp == _session_stamp:
+                return
+            tree = ET.parse(composition)
+            midi = next((p.get("value", "") for p in tree.iter("Param") if p.get("name") == "MidiShortcutPreset"), "")
+            data = {"composition": os.path.splitext(os.path.basename(composition))[0],
+                    "mapping": midi, "observed_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+                    "source": "saved Arena preferences"}
+            target = os.path.join(BASE, "last-session.json")
+            with open(target + ".tmp", "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False)
+            os.replace(target + ".tmp", target)
+            _session_stamp = stamp
+            return
+    except (OSError, ET.ParseError):
+        pass  # Optional history must never interrupt MIDI.
+
+
 def run_loop(cfg, watch):
     bridge = None
     waiting_logged = False
@@ -871,6 +926,7 @@ def run_loop(cfg, watch):
                 bridge.close()
                 bridge = None
             if bridge is not None:
+                record_arena_session()
                 bridge.state.save()
                 c = dict(bridge.count)
                 if c != last_count:

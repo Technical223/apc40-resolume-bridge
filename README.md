@@ -28,11 +28,17 @@ Shortcuts receive from **Any device** or **APC VIRT A** and send feedback to **A
 
 ## Controller Studio
 
-Click a control on the photo to choose its color, blink rate, source knob/fader or reset action. Preview locally, save a profile and restart the bridge to apply it. **Live bridge feedback** shows the running bridge's output. [Editor guide](docs/controller-studio.md).
+Click a control on the photo to choose its color, blink rate, source knob/fader or reset action. Preview locally; edits save automatically and update a running bridge. **Live bridge feedback** shows the running bridge's output. [Editor guide](docs/controller-studio.md).
 
 ![Controller Studio](docs/img/controller-studio.png)
 
 Optional **Speed buttons** blink beneath knobs 5–8; pressing one resets its group to **1x** with the supplied mapping. Leave experimental ring animation off to avoid knob interference. [Speed-button setup](docs/navod.md#speed-buttons-blink-rate-and-1x-reset).
+
+## Dashboard and LED preview
+
+Overview, Controller Studio, Settings and Logs now share one window. Numeric controls use sliders with keyboard support.
+
+**Visualizer** opens the optional local LED preview. Its **Edit output mapping** view selects outputs, fixtures and individual pixels using names and Lumiverse IDs from saved Advanced Output. Selections save per preset and affect only the preview. [Visualizer guide](docs/visualizer.md).
 
 ## See it in action
 
@@ -42,8 +48,8 @@ Optional **Speed buttons** blink beneath knobs 5–8; pressing one resets its gr
 
 <table>
   <tr>
-    <td width="33%" align="center"><a href="docs/img/app-dashboard.png"><img src="docs/img/app-dashboard.png" alt="APC40 Bridge dashboard with controller, Arena, port, and setup status"></a></td>
-    <td width="33%" align="center"><a href="docs/img/app-settings.png"><img src="docs/img/app-settings.png" alt="MIDI port, Hue, feedback, and lighting settings"></a></td>
+    <td width="33%" align="center"><a href="docs/img/app-dashboard-v140.jpg"><img src="docs/img/app-dashboard-v140.jpg" alt="APC40 Bridge dashboard with controller, Arena, port, and setup status"></a></td>
+    <td width="33%" align="center"><a href="docs/img/app-settings-v140.jpg"><img src="docs/img/app-settings-v140.jpg" alt="MIDI port, Hue, feedback, and lighting settings"></a></td>
     <td width="33%" align="center"><a href="docs/img/app-logs.png"><img src="docs/img/app-logs.png" alt="APC40 Bridge log viewer"></a></td>
   </tr>
   <tr>

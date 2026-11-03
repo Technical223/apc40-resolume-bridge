@@ -13,8 +13,8 @@ using System.Web.Script.Serialization;
 [assembly: System.Reflection.AssemblyTitle("APC40 Bridge")]
 [assembly: System.Reflection.AssemblyProduct("APC40 Bridge")]
 [assembly: System.Reflection.AssemblyCompany("Technical223")]
-[assembly: System.Reflection.AssemblyVersion("1.3.0.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.3.0.0")]
+[assembly: System.Reflection.AssemblyVersion("1.4.0.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.4.0.0")]
 
 namespace ApcBridge {
     static class Program {
@@ -31,7 +31,7 @@ namespace ApcBridge {
             string key = Convert.ToBase64String(System.Security.Cryptography.SHA256.Create().ComputeHash(Encoding.UTF8.GetBytes(home.ToLowerInvariant()))).Replace("/", "_");
             using (var mutex = new Mutex(true, "Local\\APC40ControlPanel_" + key, out created)) {
                 if (!created) { MessageBox.Show("The bridge dashboard is already open.", "APC40 Bridge", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
-                Application.Run(args.Contains("--studio") ? (Form)new ControllerEditor(home) : new Dashboard(home));
+                Application.Run(new Dashboard(home,args.Contains("--studio")));
             }
         }
     }
@@ -67,6 +67,12 @@ namespace ApcBridge {
         }
         public static bool Flag(Dictionary<string, object> value, string key) { return value.ContainsKey(key) && value[key] is bool && (bool)value[key]; }
         public static string Tail(string text, int length) { return text.Length <= length ? text : text.Substring(text.Length-length); }
+        public static string LastSession(string home) {
+            try {
+                var data=Json.Deserialize<Dictionary<string,object>>(File.ReadAllText(Path.Combine(home,"last-session.json")));
+                return "Last saved Arena setup: "+Convert.ToString(data["composition"])+"  |  MIDI: "+Convert.ToString(data["mapping"]);
+            }catch{return "Last saved Arena setup: not recorded yet";}
+        }
         public static string ReadLog(string file) {
             if (!File.Exists(file)) return "No log entries yet.";
             using (var stream = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete)) {
@@ -83,11 +89,11 @@ namespace ApcBridge {
         public static Color Bg = Color.FromArgb(18,22,28), Card = Color.FromArgb(29,35,44), Muted = Color.FromArgb(154,167,184),
             Text = Color.FromArgb(238,243,249), Accent = Color.FromArgb(105,229,181), Line = Color.FromArgb(51,62,76);
         public static Label Label(string text, float size, Color color) {
-            return new Label { Text=text, ForeColor=color, Font=new Font("Segoe UI",size,FontStyle.Regular), AutoSize=false, Dock=DockStyle.Fill, TextAlign=ContentAlignment.MiddleLeft };
+            return new Label { Text=text, ForeColor=color, Font=new Font("Segoe UI",Math.Max(10,size),FontStyle.Regular), AutoSize=false, Dock=DockStyle.Fill, TextAlign=ContentAlignment.MiddleLeft };
         }
         public static Button Button(string text, bool primary) {
-            var b = new Button { Text=text, Dock=DockStyle.Fill, FlatStyle=FlatStyle.Flat, Height=44, Cursor=Cursors.Hand,
-                ForeColor=primary ? Bg : Text, BackColor=primary ? Accent : Card, Font=new Font("Segoe UI",10,FontStyle.Bold),
+            var b = new ModernButton { Text=text, Dock=DockStyle.Fill, FlatStyle=FlatStyle.Flat, Height=44, Cursor=Cursors.Hand,
+                ForeColor=primary ? Bg : Text, BackColor=primary ? Accent : Card, Font=new Font("Segoe UI",10,FontStyle.Regular),
                 Margin=new Padding(0,0,10,0), UseVisualStyleBackColor=false };
             b.FlatAppearance.BorderSize=primary ? 0 : 1;
             b.FlatAppearance.BorderColor=Line;
@@ -96,12 +102,30 @@ namespace ApcBridge {
         }
         public static void Form(Form f, string title, Size size) {
             f.Text=title; f.ClientSize=size; f.BackColor=Bg; f.ForeColor=Text;
-            f.Font=new Font("Segoe UI",9); f.StartPosition=FormStartPosition.CenterScreen;
+            f.Font=new Font("Segoe UI",10); f.StartPosition=FormStartPosition.CenterScreen;
             f.AutoScaleMode=AutoScaleMode.Dpi;
+            f.HandleCreated+=(sender,e)=>{try{int enabled=1;DwmSetWindowAttribute(f.Handle,20,ref enabled,4);}catch{}};
             try { f.Icon=Icon.ExtractAssociatedIcon(Application.ExecutablePath); } catch {}
         }
+        [System.Runtime.InteropServices.DllImport("dwmapi.dll")]static extern int DwmSetWindowAttribute(IntPtr window,int attribute,ref int value,int size);
         public static TextBox Input(string value) {
             return new TextBox { Text=value, Dock=DockStyle.Fill, BackColor=Card, ForeColor=Text, BorderStyle=BorderStyle.FixedSingle, Margin=new Padding(0,8,0,8) };
+        }
+    }
+    sealed class ModernButton : Button {
+        bool hover;
+        public ModernButton(){SetStyle(ControlStyles.UserPaint|ControlStyles.AllPaintingInWmPaint|ControlStyles.OptimizedDoubleBuffer|ControlStyles.ResizeRedraw,true);}
+        protected override void OnMouseEnter(EventArgs e){base.OnMouseEnter(e);hover=true;Invalidate();}
+        protected override void OnMouseLeave(EventArgs e){base.OnMouseLeave(e);hover=false;Invalidate();}
+        protected override void OnPaint(PaintEventArgs e){
+            var g=e.Graphics;g.Clear(Parent==null?Theme.Bg:Parent.BackColor);g.SmoothingMode=System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            Color fill=Enabled?(hover?FlatAppearance.MouseOverBackColor:BackColor):Theme.Card;
+            using(var path=new System.Drawing.Drawing2D.GraphicsPath()){
+                int right=Math.Max(8,Width-1),bottom=Math.Max(8,Height-1);path.AddArc(0,0,12,12,180,90);path.AddArc(right-12,0,12,12,270,90);path.AddArc(right-12,bottom-12,12,12,0,90);path.AddArc(0,bottom-12,12,12,90,90);path.CloseFigure();
+                using(var brush=new SolidBrush(fill))g.FillPath(brush,path);if(FlatAppearance.BorderSize>0)using(var pen=new Pen(Theme.Line))g.DrawPath(pen,path);
+            }
+            var bounds=new Rectangle(12,0,Math.Max(1,Width-24),Height);var flags=TextFormatFlags.VerticalCenter|TextFormatFlags.EndEllipsis|(TextAlign==ContentAlignment.MiddleLeft?TextFormatFlags.Left:TextFormatFlags.HorizontalCenter);
+            TextRenderer.DrawText(g,Text,Font,bounds,Enabled?ForeColor:Theme.Muted,flags);if(Focused)ControlPaint.DrawFocusRectangle(g,new Rectangle(4,4,Width-8,Height-8));
         }
     }
     sealed class Dashboard : Form {
@@ -114,10 +138,10 @@ namespace ApcBridge {
         bool busy, refreshing, applying;
         bool ready, running;
         readonly List<Control> actions = new List<Control>();
-        public Dashboard(string path) {
+        public Dashboard(string path,bool openStudio=false) {
             home=path;
-            Theme.Form(this,"APC40 Bridge",new Size(830,590));
-            MinimumSize=new Size(760,620); MaximizeBox=false; FormBorderStyle=FormBorderStyle.FixedSingle;
+            Theme.Form(this,"APC40 Bridge",new Size(1160,780));
+            MinimumSize=new Size(1040,740); MaximizeBox=true; FormBorderStyle=FormBorderStyle.Sizable;
             var root=new TableLayoutPanel { Dock=DockStyle.Fill, Padding=new Padding(26), ColumnCount=1, RowCount=8 };
             foreach (int h in new[]{76,122,90,58,52,58,66}) root.RowStyles.Add(new RowStyle(SizeType.Absolute,h));
             root.RowStyles.Add(new RowStyle(SizeType.Percent,100));
@@ -160,12 +184,33 @@ namespace ApcBridge {
             for(int i=0;i<6;i++)more.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100f/6));
             Button loop=Theme.Button("Open loopMIDI",false), settings=Theme.Button("Settings",false), logs=Theme.Button("View logs",false), shortcut=Theme.Button("Desktop shortcut",false), restore=Theme.Button("Restore Arena MIDI",false);
             Button studio=Theme.Button("Controller Studio",false);
+            var visualizer=Theme.Button("Visualizer",true);
+            more.ColumnCount=4;more.ColumnStyles.Clear();
+            for(int i=0;i<4;i++)more.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,25));
+
+            more.Controls.Add(visualizer,3,0);
+            visualizer.Font=new Font("Segoe UI",9);
+            visualizer.Click+=(sender,e)=>{
+                try {
+                    string page=Path.Combine(home,"visualizer","preview.html");
+                    if(!File.Exists(page))throw new Exception("Install the optional visualizer package first.");
+                    string layoutScript=Path.Combine(home,"visualizer","prepare.py");
+                    if(File.Exists(layoutScript)) {
+                        var layoutStart=new ProcessStartInfo(Path.Combine(home,"runtime","python.exe"),"\""+layoutScript+"\" --open"){UseShellExecute=false,CreateNoWindow=true,RedirectStandardError=true,RedirectStandardOutput=true};
+                        using(var process=Process.Start(layoutStart)) {
+                            if(!process.WaitForExit(10000)){process.Kill();process.WaitForExit();throw new Exception("Preparing the output layout timed out.");}
+                            if(process.ExitCode!=0)throw new Exception("Could not read the saved Advanced Output preset. Save it in Arena first.\n"+process.StandardError.ReadToEnd());
+                        }
+                    }
+                    else Process.Start(new ProcessStartInfo(page){UseShellExecute=true});
+                }catch(Exception ex){ShowError(ex.Message);}
+            };
             foreach(var b in new[]{studio,settings,logs,shortcut,loop,restore}) b.Font=new Font("Segoe UI",9);
-            more.Controls.Add(studio,0,0);more.Controls.Add(settings,1,0);more.Controls.Add(logs,2,0);more.Controls.Add(shortcut,3,0);more.Controls.Add(loop,4,0);more.Controls.Add(restore,5,0);
+            more.Controls.Add(loop,0,0);more.Controls.Add(shortcut,1,0);more.Controls.Add(restore,2,0);
             actions.AddRange(new Control[]{studio,settings,shortcut,restore});
-            studio.Click+=(s,e)=>{try{using(var dialog=new ControllerEditor(home))dialog.ShowDialog(this);}catch(Exception ex){ShowError(ex.Message);}};root.Controls.Add(more,0,5);
-            settings.Click+=(s,e)=> { try { using(var dialog=new Settings(home)) if(dialog.ShowDialog(this)==DialogResult.OK) notice.Text="Settings saved. Click Restart to apply the changes."; }catch(Exception ex){ ShowError(ex.Message); } };
-            logs.Click+=(s,e)=> { using(var dialog=new Logs(home)) dialog.ShowDialog(this); };
+            studio.Click+=(s,e)=>{try{ShowPage(()=>new ControllerEditor(home));}catch(Exception ex){ShowError(ex.Message);}};root.Controls.Add(more,0,5);
+            settings.Click+=(s,e)=> { try { ShowPage(()=>new Settings(home)); }catch(Exception ex){ ShowError(ex.Message); } };
+            logs.Click+=(s,e)=> { ShowPage(()=>new Logs(home)); };
             loop.Click+=(s,e)=> {
                 try {
                     string[] candidates={Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), "Tobias Erichsen", "loopMIDI", "loopMIDI.exe"),Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "Tobias Erichsen", "loopMIDI", "loopMIDI.exe")};
@@ -181,11 +226,50 @@ namespace ApcBridge {
             };
             notice=Theme.Label("Everything in one place. Closing this window does not stop the bridge.",9,Theme.Muted);
             notice.TextAlign=ContentAlignment.TopLeft; notice.Padding=new Padding(2,12,0,0);root.Controls.Add(notice,0,6);
-            root.Controls.Add(Theme.Label("1.3   •   WINDOWS 10 / 11   •   LOCAL MIDI BRIDGE",8,Theme.Muted),0,7);
+            root.Controls.Add(Theme.Label(Backend.LastSession(home),9,Theme.Muted),0,7);
             FormClosing+=(s,e)=> { if(busy){e.Cancel=true;notice.Text="Please wait for the current operation to finish."; } };
             Shown+=async(s,e)=>await RefreshStatus();
             timer.Interval=5000;timer.Tick+=async(s,e)=>await RefreshStatus();timer.Start();
             FormClosed+=(s,e)=>timer.Dispose();
+            BuildNavigation(root);
+            FormClosing+=(sender,e)=>{if(!ClosePage())e.Cancel=true;};
+            if(openStudio)Shown+=(sender,e)=>ShowPage(()=>new ControllerEditor(home));
+        }
+        Panel pageHost;
+        Control overview;
+        Form activePage;
+        bool switching;
+        void BuildNavigation(Control content){
+            overview=content;Controls.Remove(content);
+            var shell=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=2,RowCount=1,Margin=Padding.Empty};
+            shell.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,190));shell.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));
+            var nav=new FlowLayoutPanel{Dock=DockStyle.Fill,FlowDirection=FlowDirection.TopDown,WrapContents=false,Padding=new Padding(16,26,10,16),BackColor=Theme.Card};
+            nav.Controls.Add(new Label{Text="APC40 BRIDGE",AutoSize=false,Width=155,Height=56,ForeColor=Theme.Accent,Font=new Font("Segoe UI",12,FontStyle.Bold)});
+            string[] names={"Overview","Controller Studio","Settings","Logs"};
+            for(int i=0;i<names.Length;i++){
+                int index=i;var button=Theme.Button(names[i],false);button.Dock=DockStyle.None;button.Width=155;button.Height=46;button.Margin=new Padding(0,0,0,8);button.TextAlign=ContentAlignment.MiddleLeft;
+                button.Click+=(sender,e)=>{if(index==0)ShowOverview();else if(index==1)ShowPage(()=>new ControllerEditor(home));else if(index==2)ShowPage(()=>new Settings(home));else ShowPage(()=>new Logs(home));};nav.Controls.Add(button);
+            }
+            pageHost=new Panel{Dock=DockStyle.Fill};pageHost.Controls.Add(content);shell.Controls.Add(nav,0,0);shell.Controls.Add(pageHost,1,0);Controls.Add(shell);
+        }
+        bool ClosePage(){
+            if(activePage==null)return true;
+            var closing=activePage;switching=true;closing.Close();switching=false;
+            if(!closing.IsDisposed)return false;activePage=null;return true;
+        }
+        void ShowOverview(){if(!ClosePage())return;overview.Show();overview.BringToFront();timer.Start();}
+        void ShowPage(Func<Form> create){
+            if(busy||!ClosePage())return;
+            activePage=create();activePage.MinimumSize=Size.Empty;activePage.MaximumSize=Size.Empty;activePage.TopLevel=false;activePage.FormBorderStyle=FormBorderStyle.None;activePage.Dock=DockStyle.Fill;
+            activePage.FormClosed+=(sender,e)=>{if(!switching){if(sender is Settings&&((Form)sender).DialogResult==DialogResult.OK)notice.Text="Settings saved. Restart the bridge to apply MIDI settings.";activePage=null;overview.Show();overview.BringToFront();timer.Start();}};
+            overview.Hide();timer.Stop();pageHost.Controls.Add(activePage);activePage.Show();activePage.BringToFront();AnimatePage(activePage);
+        }
+        void AnimatePage(Form page){
+            if(!SystemInformation.IsMenuAnimationEnabled)return;
+            page.Dock=DockStyle.None;page.Anchor=AnchorStyles.Top|AnchorStyles.Bottom|AnchorStyles.Left|AnchorStyles.Right;
+            var watch=Stopwatch.StartNew();var motion=new System.Windows.Forms.Timer{Interval=16};
+            page.Disposed+=(sender,e)=>motion.Dispose();
+            motion.Tick+=(sender,e)=>{if(page.IsDisposed){motion.Dispose();return;}double amount=Math.Min(1,watch.Elapsed.TotalMilliseconds/140.0);int offset=(int)(16*(1-amount)*(1-amount));page.SetBounds(offset,0,Math.Max(1,pageHost.Width-offset),pageHost.Height);if(amount>=1){page.Dock=DockStyle.Fill;page.Invalidate(true);page.Refresh();motion.Dispose();}};motion.Start();
         }
         async Task RefreshStatus() {
             if (busy || refreshing || IsDisposed || !Enabled) return;
@@ -239,19 +323,32 @@ namespace ApcBridge {
             for(int row=0;row<4;row++)for(int col=0;col<8;col++)using(var brush=new SolidBrush(row==0?colors[col]:Color.FromArgb(46,57,70)))e.Graphics.FillRectangle(brush,left+col*(size+gap),10+row*(size+gap),size,size);
         }
     }
+    sealed class ValueSlider : Control {
+        readonly decimal minimum,maximum;readonly int digits;decimal current;bool dragging;
+        public event EventHandler ValueChanged;
+        public decimal Value{get{return current;}set{decimal next=Math.Round(Math.Max(minimum,Math.Min(maximum,value)),digits);if(next==current)return;current=next;Invalidate();if(ValueChanged!=null)ValueChanged(this,EventArgs.Empty);}}
+        public ValueSlider(decimal min,decimal max,decimal value,int precision){minimum=min;maximum=max;digits=precision;current=Math.Max(min,Math.Min(max,value));Dock=DockStyle.Fill;TabStop=true;Cursor=Cursors.Hand;SetStyle(ControlStyles.UserPaint|ControlStyles.AllPaintingInWmPaint|ControlStyles.OptimizedDoubleBuffer|ControlStyles.Selectable|ControlStyles.ResizeRedraw,true);Height=42;}
+        void Pick(int x){Value=minimum+(maximum-minimum)*(decimal)Math.Max(0,Math.Min(1,(x-10.0)/Math.Max(1,Width-110)));}
+        protected override void OnMouseDown(MouseEventArgs e){base.OnMouseDown(e);Focus();dragging=true;Capture=true;Pick(e.X);}
+        protected override void OnMouseMove(MouseEventArgs e){base.OnMouseMove(e);if(dragging)Pick(e.X);}
+        protected override void OnMouseUp(MouseEventArgs e){base.OnMouseUp(e);dragging=false;Capture=false;}
+        protected override bool IsInputKey(Keys key){return key==Keys.Left||key==Keys.Right||key==Keys.Home||key==Keys.End||base.IsInputKey(key);}
+        protected override void OnKeyDown(KeyEventArgs e){base.OnKeyDown(e);decimal step=digits==0?1m:(maximum-minimum)/1000m;if(e.KeyCode==Keys.Left)Value-=step;if(e.KeyCode==Keys.Right)Value+=step;if(e.KeyCode==Keys.Home)Value=minimum;if(e.KeyCode==Keys.End)Value=maximum;}
+        protected override void OnPaint(PaintEventArgs e){base.OnPaint(e);var g=e.Graphics;g.Clear(Parent==null?Theme.Bg:Parent.BackColor);g.SmoothingMode=System.Drawing.Drawing2D.SmoothingMode.AntiAlias;float end=Math.Max(11,Width-100),y=Height/2f,x=10+(end-10)*(float)((current-minimum)/(maximum-minimum));using(var track=new Pen(Theme.Line,4))g.DrawLine(track,10,y,end,y);using(var active=new Pen(Theme.Accent,4))g.DrawLine(active,10,y,x,y);using(var fill=new SolidBrush(Theme.Accent))g.FillEllipse(fill,x-6,y-6,12,12);TextRenderer.DrawText(g,current.ToString(digits==0?"0":"0."+new string('0',digits),System.Globalization.CultureInfo.InvariantCulture),Font,new Rectangle((int)end+10,0,90,Height),Theme.Text,TextFormatFlags.VerticalCenter|TextFormatFlags.Left);if(Focused)ControlPaint.DrawFocusRectangle(g,ClientRectangle);}
+    }
     sealed class FrequencySlider : UserControl {
-        readonly TrackBar slider;
+        readonly ValueSlider slider;
         readonly Label caption;
         public event EventHandler ValueChanged;
         public decimal Value {
-            get { return slider.Value / 10m; }
-            set { slider.Value=Math.Max(slider.Minimum,Math.Min(slider.Maximum,(int)Math.Round(value*10))); }
+            get { return slider.Value; }
+            set { slider.Value=value; }
         }
         public FrequencySlider(decimal minimum,decimal maximum,decimal value) {
             Dock=DockStyle.Fill;Margin=new Padding(0,2,0,2);
             var layout=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=1,RowCount=2,Margin=Padding.Empty};
             layout.RowStyles.Add(new RowStyle(SizeType.Percent,100));layout.RowStyles.Add(new RowStyle(SizeType.Absolute,19));Controls.Add(layout);
-            slider=new TrackBar{Minimum=(int)(minimum*10),Maximum=(int)(maximum*10),Value=(int)(value*10),SmallChange=1,LargeChange=5,TickStyle=TickStyle.None,AutoSize=false,Dock=DockStyle.Fill,Margin=Padding.Empty,BackColor=Theme.Card,AccessibleName="Blink speed in Hz"};
+            slider=new ValueSlider(minimum,maximum,value,1){AccessibleName="Blink speed in Hz"};
             caption=Theme.Label("",9,Theme.Muted);caption.TextAlign=ContentAlignment.MiddleCenter;
             layout.Controls.Add(slider,0,0);layout.Controls.Add(caption,0,1);
             slider.ValueChanged+=(sender,e)=>{UpdateCaption();if(ValueChanged!=null)ValueChanged(this,EventArgs.Empty);};
@@ -263,16 +360,17 @@ namespace ApcBridge {
         readonly string file;
         readonly Dictionary<string,object> cfg;
         readonly TextBox apc,to,from;
-        readonly NumericUpDown hue;
+        readonly ValueSlider hue;
         readonly FrequencySlider blink;
         readonly CheckBox feedback,lit,speedRings;
         public Settings(string home) {
             file=Path.Combine(home,"config.json");
             cfg=Backend.Json.Deserialize<Dictionary<string,object>>(File.ReadAllText(file,Encoding.UTF8));
-            Theme.Form(this,"Bridge settings",new Size(650,566));FormBorderStyle=FormBorderStyle.FixedDialog;MaximizeBox=false;MinimizeBox=false;
-            var root=new TableLayoutPanel{Dock=DockStyle.Fill,Padding=new Padding(24),ColumnCount=2,RowCount=11};
+            Theme.Form(this,"Bridge settings",new Size(650,604));FormBorderStyle=FormBorderStyle.FixedDialog;MaximizeBox=false;MinimizeBox=false;
+            var root=new TableLayoutPanel{Dock=DockStyle.Fill,Padding=new Padding(24),ColumnCount=2,RowCount=12};
             root.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,190));root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));Controls.Add(root);
-            for(int i=0;i<10;i++)root.RowStyles.Add(new RowStyle(SizeType.Absolute,i==4?64:38));
+            for(int i=0;i<11;i++)root.RowStyles.Add(new RowStyle(SizeType.Absolute,i==4?64:38));
+            root.RowStyles.Add(new RowStyle(SizeType.Absolute,52));root.RowCount=13;root.RowStyles.Add(new RowStyle(SizeType.Percent,100));
             apc=Theme.Input(Get("apc_port_match","APC40"));to=Theme.Input(Get("to_resolume_port","APC VIRT A"));from=Theme.Input(Get("from_resolume_port","APC VIRT B"));
             hue=Number(Get("hue_max","0.63871"),0.001m,1m,5);blink=new FrequencySlider(.5m,10m,Math.Max(.5m,Math.Min(10m,decimal.Parse(Get("blink_hz","3"),System.Globalization.CultureInfo.InvariantCulture))));
             feedback=new CheckBox{Text="Sync changes from Arena",Checked=GetBool("sync_resolume_feedback"),Dock=DockStyle.Fill,ForeColor=Theme.Text};
@@ -281,16 +379,22 @@ namespace ApcBridge {
             string[] labels={"Controller name","Port to Arena","Port from Arena","Hue upper limit","Utility blink speed","Feedback","Lighting","Speed buttons"};
             Control[] inputs={apc,to,from,hue,blink,feedback,lit,speedRings};
             for(int i=0;i<labels.Length;i++){root.Controls.Add(Theme.Label(labels[i],10,Theme.Muted),0,i);root.Controls.Add(inputs[i],1,i);}
-            var note=Theme.Label("The Hue limit must match the MIDI preset in Arena.",9,Theme.Muted);root.Controls.Add(note,0,8);root.SetColumnSpan(note,2);
-            var speedNote=Theme.Label("Speed buttons follow their knob; customize them in Controller Studio.",9,Theme.Muted);root.Controls.Add(speedNote,0,9);root.SetColumnSpan(speedNote,2);
-            var save=Theme.Button("Save settings",true);root.Controls.Add(save,1,10);AcceptButton=save;
+            var note=Theme.Label(Backend.LastSession(home),9,Theme.Muted);root.Controls.Add(note,0,8);root.SetColumnSpan(note,2);
+            var crossfade=new CheckBox{Text="Crossfader: A = GLOBAL, B = four groups (show mapping)",Checked=GetBool("global_crossfade"),Dock=DockStyle.Fill,ForeColor=Theme.Text};root.Controls.Add(crossfade,0,9);root.SetColumnSpan(crossfade,2);
+            string previewDir=Path.Combine(home,"visualizer");
+            var visual=new CheckBox{Text="Open LED visualizer with Arena (SpoutCam)",Checked=GetBool("led_visualizer"),Enabled=File.Exists(Path.Combine(previewDir,"preview.html")),Dock=DockStyle.Fill,ForeColor=Theme.Text};
+            root.Controls.Add(visual,0,10);root.SetColumnSpan(visual,2);
+            var save=Theme.Button("Save settings",true);root.Controls.Add(save,1,11);AcceptButton=save;
             save.Click+=(s,e)=>{
                 if(string.IsNullOrWhiteSpace(apc.Text)||string.IsNullOrWhiteSpace(to.Text)||string.IsNullOrWhiteSpace(from.Text)||to.Text.Trim().Equals(from.Text.Trim(),StringComparison.OrdinalIgnoreCase)){
                     MessageBox.Show(this,"Enter the port names. Input and output virtual ports must be different.","Settings",MessageBoxButtons.OK,MessageBoxIcon.Information);return;
                 }
                 try{
                     cfg["apc_port_match"]=apc.Text.Trim();cfg["to_resolume_port"]=to.Text.Trim();cfg["from_resolume_port"]=from.Text.Trim();
-                    cfg["hue_max"]=hue.Value;cfg["blink_hz"]=blink.Value;cfg["sync_resolume_feedback"]=feedback.Checked;cfg["always_lit"]=lit.Checked;cfg["speed_button_pulse"]=speedRings.Checked;cfg["speed_ring_animation"]=false;
+                    if(visual.Checked&&!GetBool("led_visualizer")&&MessageBox.Show(this,"Install and register SpoutCam? If needed, the camera is downloaded from its publisher and verified. Windows will ask for administrator permission. Choose No if it is already registered.","LED visualizer",MessageBoxButtons.YesNo)==DialogResult.Yes)
+                        Process.Start(new ProcessStartInfo(Path.Combine(home,"runtime","pythonw.exe"),"\""+Path.Combine(previewDir,"install_camera.py")+"\""){WorkingDirectory=previewDir,UseShellExecute=false,CreateNoWindow=true});
+                    cfg["led_visualizer"]=visual.Checked;
+                    cfg["global_crossfade"]=crossfade.Checked;cfg["hue_max"]=hue.Value;cfg["blink_hz"]=blink.Value;cfg["sync_resolume_feedback"]=feedback.Checked;cfg["always_lit"]=lit.Checked;cfg["speed_button_pulse"]=speedRings.Checked;cfg["speed_ring_animation"]=false;
                     string backup=file+".before-settings-"+DateTime.Now.ToString("yyyyMMdd-HHmmss-fff")+".bak";
                     string temp=file+".settings.tmp";
                     File.WriteAllText(temp,Backend.Json.Serialize(cfg),new UTF8Encoding(false));
@@ -301,9 +405,9 @@ namespace ApcBridge {
         }
         string Get(string key,string fallback){return cfg.ContainsKey(key)?Convert.ToString(cfg[key],System.Globalization.CultureInfo.InvariantCulture):fallback;}
         bool GetBool(string key){return cfg.ContainsKey(key)&&cfg[key] is bool&&(bool)cfg[key];}
-        NumericUpDown Number(string value,decimal min,decimal max,int digits){
-            decimal number; if(!decimal.TryParse(value,System.Globalization.NumberStyles.Float,System.Globalization.CultureInfo.InvariantCulture,out number))throw new Exception("Invalid numeric value in config.json.");
-            return new NumericUpDown{Minimum=min,Maximum=max,Value=Math.Max(min,Math.Min(max,number)),DecimalPlaces=digits,Increment=digits==5?0.001m:0.5m,Dock=DockStyle.Fill,BackColor=Theme.Card,ForeColor=Theme.Text,Margin=new Padding(0,8,0,8)};
+        ValueSlider Number(string value,decimal min,decimal max,int digits){
+            decimal number;if(!decimal.TryParse(value,System.Globalization.NumberStyles.Float,System.Globalization.CultureInfo.InvariantCulture,out number))throw new Exception("Invalid numeric setting.");
+            return new ValueSlider(min,max,number,digits);
         }
     }
     sealed class Logs : Form {

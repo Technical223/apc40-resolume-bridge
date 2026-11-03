@@ -24,6 +24,15 @@ class ControllerProfileTests(unittest.TestCase):
         self.cfg["control_rules"]=[rule]
         return rule
 
+    def test_global_crossfade_inverts_only_global(self):
+        self.cfg["global_crossfade"]=True
+        x=self.make()
+        for value in (0,64,127):
+            x.res_out.messages.clear()
+            x.on_apc(Message("control_change",channel=0,control=15,value=value))
+            self.assertEqual([(m.channel,m.control,m.value) for m in x.res_out.messages],
+                             [(15,110,127-value)]+[(15,cc,value) for cc in range(111,115)])
+
     def test_absent_profile_keeps_existing_midi_and_no_profile_worker(self):
         x=self.make()
         self.assertIsNone(x.profile_thread)
@@ -191,6 +200,24 @@ class ControllerProfileTests(unittest.TestCase):
         self.assertTrue(all(p.closed for p in self.backend.ports))
 
 class InstallerFeedbackTests(unittest.TestCase):
+    def test_session_history_uses_saved_preferences_and_does_not_rewrite_unchanged_data(self):
+        with tempfile.TemporaryDirectory() as d:
+            folder=Path(d)
+            comp=folder/"Example.avc"
+            comp.write_text('<Composition><Param name="MidiShortcutPreset" value="Test mapping"/></Composition>')
+            root=b.ET.Element("Arena")
+            b.ET.SubElement(root,"Application",recentCompositions=str(comp))
+            b.ET.ElementTree(root).write(folder/"config.xml")
+            with patch.object(b,"BASE",d),patch.object(b,"resolume_pref_dirs",return_value=[d]),patch.object(b,"_session_stamp",None):
+                b.record_arena_session()
+                path=folder/"last-session.json"
+                data=json.loads(path.read_text())
+                self.assertEqual((data["composition"],data["mapping"]),("Example","Test mapping"))
+                self.assertEqual(data["source"],"saved Arena preferences")
+                stamp=path.stat().st_mtime_ns
+                b.record_arena_session()
+                self.assertEqual(path.stat().st_mtime_ns,stamp)
+
     def test_repair_preserves_physical_ports_and_mode(self):
         xml='<midiController><inputDevices><device name="APC40 mkII"/></inputDevices><outputDevices><device name="APC40 mkII"/></outputDevices><controlSurfaces><device port="APC40 mkII" option="3"/></controlSurfaces></midiController>'
         with tempfile.TemporaryDirectory() as d:

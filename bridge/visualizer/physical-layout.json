@@ -1,0 +1,22 @@
+{
+  "comp": [
+    1920,
+    1080
+  ],
+  "camera": {
+    "pos": [
+      3,
+      2,
+      6
+    ],
+    "target": [
+      3,
+      2,
+      0
+    ],
+    "fovV": 45
+  },
+  "fixtures": [],
+  "outputFixtures": [],
+  "preset": ""
+}

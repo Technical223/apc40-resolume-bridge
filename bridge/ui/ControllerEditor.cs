@@ -209,12 +209,12 @@ namespace ApcBridge {
         readonly Label selectedName,detail,notice,previewCaption,summary;
         readonly ComboBox behavior,source,color,press;
         readonly FrequencySlider slow,fast;
-        readonly NumericUpDown reset;
+        readonly ValueSlider reset;
         readonly int[] speedNotes,speedCcs;
         readonly int speedChannel;
         readonly bool speedButtons;
         readonly TextBox profileName;
-        readonly TrackBar preview;
+        readonly ValueSlider preview;
         readonly CheckBox live;
         DateTime lastLiveRead=DateTime.MinValue,lastLiveRequest=DateTime.MinValue;
         readonly Button pickSource,defaults,save;
@@ -240,7 +240,7 @@ namespace ApcBridge {
             header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,210));header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,150));header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,150));
             header.RowStyles.Add(new RowStyle(SizeType.Absolute,36));header.RowStyles.Add(new RowStyle(SizeType.Absolute,26));
             header.Controls.Add(Theme.Label("Controller Studio",24,Theme.Text),0,0);
-            header.Controls.Add(Theme.Label("Your controller. Your lighting. No code required.",10,Theme.Muted),0,1);
+            header.Controls.Add(Theme.Label(Backend.LastSession(home),10,Theme.Muted),0,1);
             profileName=Theme.Input(config.ContainsKey("controller_profile_name")?Convert.ToString(config["controller_profile_name"]):"My APC40");profileName.MaxLength=60;profileName.AccessibleName="Profile name";profileName.Margin=new Padding(0,0,12,0);header.Controls.Add(profileName,1,0);
             var import=Theme.Button("Import profile",false);var export=Theme.Button("Export profile",false);import.Font=export.Font=new Font("Segoe UI",9);
             header.Controls.Add(import,2,0);header.Controls.Add(export,3,0);root.Controls.Add(header,0,0);
@@ -252,7 +252,7 @@ namespace ApcBridge {
             previewPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,175));previewPanel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));previewPanel.RowStyles.Add(new RowStyle(SizeType.Absolute,24));previewPanel.RowStyles.Add(new RowStyle(SizeType.Absolute,32));
             previewCaption=Theme.Label("PREVIEW  ·  50%",9,Theme.Accent);previewPanel.Controls.Add(previewCaption,0,0);live=new CheckBox{Text="Live bridge feedback",ForeColor=Theme.Muted,Dock=DockStyle.Fill,AccessibleName="Live bridge feedback"};
             previewPanel.Controls.Add(live,1,0);
-            preview=new TrackBar{Minimum=0,Maximum=127,Value=64,TickStyle=TickStyle.None,Dock=DockStyle.Fill,BackColor=Theme.Card,AccessibleName="Simulated input value"};previewPanel.Controls.Add(preview,0,1);previewPanel.SetColumnSpan(preview,2);left.Controls.Add(previewPanel,0,1);
+            preview=new ValueSlider(0,127,64,0){AccessibleName="Simulated input value"};previewPanel.Controls.Add(preview,0,1);previewPanel.SetColumnSpan(preview,2);left.Controls.Add(previewPanel,0,1);
             var inspector=new Panel{Dock=DockStyle.Fill,BackColor=Theme.Card,Padding=new Padding(18),AutoScroll=true};body.Controls.Add(inspector,1,0);
             fields=new TableLayoutPanel{Dock=DockStyle.Top,ColumnCount=1,RowCount=21,AutoSize=true,Margin=Padding.Empty};
             inspector.Controls.Add(fields);
@@ -270,7 +270,7 @@ namespace ApcBridge {
             fast=new FrequencySlider(.2m,5,3);Add(fast,56);
             Add(Theme.Label("BUTTON PRESS",8,Theme.Accent),30);
             press=Combo(new object[]{"Keep current button action","Reset source value"});Add(press,34);
-            Add(Theme.Label("Reset position  ·  0 left / 127 right",9,Theme.Muted),28);reset=Number(0,127,0);reset.DecimalPlaces=0;Add(reset,32);
+            Add(Theme.Label("Reset position  ·  0 left / 127 right",9,Theme.Muted),28);reset=Number(0,127,0);Add(reset,32);
             summary=Theme.Label("",9,Theme.Muted);Add(summary,58);
             defaults=Theme.Button("Use default behavior",false);defaults.Font=new Font("Segoe UI",9);Add(defaults,36);
             var footer=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=3,RowCount=1,Padding=new Padding(0,14,0,0),Margin=Padding.Empty};footer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));footer.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,180));footer.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,110));
@@ -279,7 +279,7 @@ namespace ApcBridge {
             loading=true;ReadRules(config);profileName.TextChanged+=(s,e)=>Changed();loading=false;
             canvas.Picked+=SelectControl;
             live.CheckedChanged+=(s,e)=>{preview.Enabled=!live.Checked;lastLiveRead=DateTime.MinValue;UpdateLive();canvas.Invalidate();};
-            preview.ValueChanged+=(s,e)=>{canvas.PreviewValue=preview.Value;if(!live.Checked)previewCaption.Text="PREVIEW  ·  "+Math.Round(preview.Value/127.0*100)+"%";canvas.Invalidate();};
+            preview.ValueChanged+=(s,e)=>{canvas.PreviewValue=(int)preview.Value;if(!live.Checked)previewCaption.Text="PREVIEW  ·  "+Math.Round((double)preview.Value/127.0*100)+"%";canvas.Invalidate();};
             behavior.SelectedIndexChanged+=(s,e)=>Edit();source.SelectedIndexChanged+=(s,e)=>Edit();color.SelectedIndexChanged+=(s,e)=>Edit();press.SelectedIndexChanged+=(s,e)=>Edit();
             slow.ValueChanged+=(s,e)=>{if(!loading&&slow.Value>fast.Value)fast.Value=slow.Value;Edit();};fast.ValueChanged+=(s,e)=>{if(!loading&&fast.Value<slow.Value)slow.Value=fast.Value;Edit();};reset.ValueChanged+=(s,e)=>Edit();
             pickSource.Click+=(s,e)=>{picking=true;notice.Text="Click a knob or fader on the controller to link it.";};
@@ -296,7 +296,7 @@ namespace ApcBridge {
             if(live.Checked&&(DateTime.UtcNow-lastLiveRequest).TotalSeconds>=2){
                 try{double expiry=(DateTime.UtcNow-new DateTime(1970,1,1)).TotalSeconds+5;File.WriteAllText(Path.Combine(home,"controller-live-request.json"),Backend.Json.Serialize(new Dictionary<string,object>{{"expires",expiry}}));lastLiveRequest=DateTime.UtcNow;}catch{}
             }
-            if(!live.Checked){canvas.LiveMode=false;previewCaption.Text="PREVIEW  ·  "+Math.Round(preview.Value/127.0*100)+"%";return;}
+            if(!live.Checked){canvas.LiveMode=false;previewCaption.Text="PREVIEW  ·  "+Math.Round((double)preview.Value/127.0*100)+"%";return;}
             try {
                 string path=Path.Combine(home,"controller-live.json");
                 if(!File.Exists(path)){canvas.LiveMode=false;canvas.Invalidate();previewCaption.Text="LIVE  ·  Bridge offline";return;}
@@ -335,7 +335,7 @@ namespace ApcBridge {
             };
             return c;
         }
-        static NumericUpDown Number(decimal min,decimal max,decimal value){return new NumericUpDown{Minimum=min,Maximum=max,Value=value,DecimalPlaces=1,Increment=.1m,BackColor=Theme.Bg,ForeColor=Theme.Text,Dock=DockStyle.Fill,BorderStyle=BorderStyle.FixedSingle};}
+        static ValueSlider Number(decimal min,decimal max,decimal value){return new ValueSlider(min,max,value,0); }
         void Changed(){if(loading)return;dirty=true;notice.Text="Applying changes…";save.Text="Save now";applyAt=DateTime.UtcNow.AddMilliseconds(400);canvas.Invalidate();}
         void SelectControl(SurfaceControl c){
             if(picking&&c.Source){picking=false;source.SelectedItem=c;notice.Text="Linked to "+c.Name+". Save and restart to apply.";return;}
