@@ -239,29 +239,50 @@ namespace ApcBridge {
             for(int row=0;row<4;row++)for(int col=0;col<8;col++)using(var brush=new SolidBrush(row==0?colors[col]:Color.FromArgb(46,57,70)))e.Graphics.FillRectangle(brush,left+col*(size+gap),10+row*(size+gap),size,size);
         }
     }
+    sealed class FrequencySlider : UserControl {
+        readonly TrackBar slider;
+        readonly Label caption;
+        public event EventHandler ValueChanged;
+        public decimal Value {
+            get { return slider.Value / 10m; }
+            set { slider.Value=Math.Max(slider.Minimum,Math.Min(slider.Maximum,(int)Math.Round(value*10))); }
+        }
+        public FrequencySlider(decimal minimum,decimal maximum,decimal value) {
+            Dock=DockStyle.Fill;Margin=new Padding(0,2,0,2);
+            var layout=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=1,RowCount=2,Margin=Padding.Empty};
+            layout.RowStyles.Add(new RowStyle(SizeType.Percent,100));layout.RowStyles.Add(new RowStyle(SizeType.Absolute,19));Controls.Add(layout);
+            slider=new TrackBar{Minimum=(int)(minimum*10),Maximum=(int)(maximum*10),Value=(int)(value*10),SmallChange=1,LargeChange=5,TickStyle=TickStyle.None,AutoSize=false,Dock=DockStyle.Fill,Margin=Padding.Empty,BackColor=Theme.Card,AccessibleName="Blink speed in Hz"};
+            caption=Theme.Label("",9,Theme.Muted);caption.TextAlign=ContentAlignment.MiddleCenter;
+            layout.Controls.Add(slider,0,0);layout.Controls.Add(caption,0,1);
+            slider.ValueChanged+=(sender,e)=>{UpdateCaption();if(ValueChanged!=null)ValueChanged(this,EventArgs.Empty);};
+            UpdateCaption();
+        }
+        void UpdateCaption(){caption.Text="Slow   "+Value.ToString("0.0",System.Globalization.CultureInfo.InvariantCulture)+" Hz   Fast";}
+    }
     sealed class Settings : Form {
         readonly string file;
         readonly Dictionary<string,object> cfg;
         readonly TextBox apc,to,from;
-        readonly NumericUpDown hue,blink;
+        readonly NumericUpDown hue;
+        readonly FrequencySlider blink;
         readonly CheckBox feedback,lit,speedRings;
         public Settings(string home) {
             file=Path.Combine(home,"config.json");
             cfg=Backend.Json.Deserialize<Dictionary<string,object>>(File.ReadAllText(file,Encoding.UTF8));
-            Theme.Form(this,"Bridge settings",new Size(650,540));FormBorderStyle=FormBorderStyle.FixedDialog;MaximizeBox=false;MinimizeBox=false;
+            Theme.Form(this,"Bridge settings",new Size(650,566));FormBorderStyle=FormBorderStyle.FixedDialog;MaximizeBox=false;MinimizeBox=false;
             var root=new TableLayoutPanel{Dock=DockStyle.Fill,Padding=new Padding(24),ColumnCount=2,RowCount=11};
             root.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,190));root.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));Controls.Add(root);
-            for(int i=0;i<10;i++)root.RowStyles.Add(new RowStyle(SizeType.Absolute,38));
+            for(int i=0;i<10;i++)root.RowStyles.Add(new RowStyle(SizeType.Absolute,i==4?64:38));
             apc=Theme.Input(Get("apc_port_match","APC40"));to=Theme.Input(Get("to_resolume_port","APC VIRT A"));from=Theme.Input(Get("from_resolume_port","APC VIRT B"));
-            hue=Number(Get("hue_max","0.63871"),0.001m,1m,5);blink=Number(Get("blink_hz","3"),0.5m,10m,1);
+            hue=Number(Get("hue_max","0.63871"),0.001m,1m,5);blink=new FrequencySlider(.5m,10m,Math.Max(.5m,Math.Min(10m,decimal.Parse(Get("blink_hz","3"),System.Globalization.CultureInfo.InvariantCulture))));
             feedback=new CheckBox{Text="Sync changes from Arena",Checked=GetBool("sync_resolume_feedback"),Dock=DockStyle.Fill,ForeColor=Theme.Text};
             lit=new CheckBox{Text="Keep utility buttons lit",Checked=GetBool("always_lit"),Dock=DockStyle.Fill,ForeColor=Theme.Text};
             speedRings=new CheckBox{Text="Blink speed buttons; press to reset to 1x",Checked=GetBool("speed_button_pulse"),Dock=DockStyle.Fill,ForeColor=Theme.Text};
-            string[] labels={"Controller name","Port to Arena","Port from Arena","Hue upper limit","Blink rate / s","Feedback","Lighting","Speed buttons"};
+            string[] labels={"Controller name","Port to Arena","Port from Arena","Hue upper limit","Utility blink speed","Feedback","Lighting","Speed buttons"};
             Control[] inputs={apc,to,from,hue,blink,feedback,lit,speedRings};
             for(int i=0;i<labels.Length;i++){root.Controls.Add(Theme.Label(labels[i],10,Theme.Muted),0,i);root.Controls.Add(inputs[i],1,i);}
             var note=Theme.Label("The Hue limit must match the MIDI preset in Arena.",9,Theme.Muted);root.Controls.Add(note,0,8);root.SetColumnSpan(note,2);
-            var speedNote=Theme.Label("Knob rings keep normal feedback. Reset buttons replace their preset actions.",9,Theme.Muted);root.Controls.Add(speedNote,0,9);root.SetColumnSpan(speedNote,2);
+            var speedNote=Theme.Label("Speed buttons follow their knob; customize them in Controller Studio.",9,Theme.Muted);root.Controls.Add(speedNote,0,9);root.SetColumnSpan(speedNote,2);
             var save=Theme.Button("Save settings",true);root.Controls.Add(save,1,10);AcceptButton=save;
             save.Click+=(s,e)=>{
                 if(string.IsNullOrWhiteSpace(apc.Text)||string.IsNullOrWhiteSpace(to.Text)||string.IsNullOrWhiteSpace(from.Text)||to.Text.Trim().Equals(from.Text.Trim(),StringComparison.OrdinalIgnoreCase)){

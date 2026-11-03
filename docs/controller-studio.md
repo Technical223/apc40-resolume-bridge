@@ -1,19 +1,19 @@
 # Controller Studio
 
-[Home](../README.md) · [Setup guide](navod.md)
+[Home](../README.md) Â· [Setup guide](navod.md)
 
 Controller Studio is the Windows app's visual editor for bridge lighting and button resets. It has an offline simulation and a read-only live view. Editing and the preview slider never open MIDI ports or send MIDI messages.
 
 ## Build a lighting profile
 
-1. Open **APC40 Bridge → Controller Studio**.
+1. Open **APC40 Bridge â†’ Controller Studio**.
 2. Click a grid pad or utility button in the controller diagram.
 3. Choose its **Lighting** behavior.
 4. Choose an **Input source**, or click **Pick source on controller** and then click a knob or fader in the diagram.
-5. Set its color or blink rate. RGB pads support palette colors; utility buttons retain their hardware's single-color LED.
-6. Keep **Button press → Keep original Arena action**, or explicitly choose **Reset source value**.
+5. Set its color or drag the Slow → Fast speed sliders. Blink uses one fixed rate; Speed indicator follows its source between the minimum and maximum rates. RGB pads support palette colors; utility buttons retain their hardware's single-color LED.
+6. Keep **Button press â†’ Keep original Arena action**, or explicitly choose **Reset source value**.
 7. Move the **Preview** slider to simulate the source position.
-8. Name your profile and click **Save changes**. Restart the bridge from the dashboard to apply it. If you opened Studio directly from setup, close it and open **APC40 Bridge** from the desktop to reach the dashboard.
+8. Name your profile and click **Save & apply**. This restarts a running bridge; physical knob/fader positions may be resent to Arena. If you opened Studio directly from setup, close it and open **APC40 Bridge** from the desktop to reach the dashboard.
 
 ![Controller Studio](img/controller-studio.png)
 
@@ -39,23 +39,23 @@ Live view updates at up to 10 Hz while requested; it stops writing snapshots whe
 | Blink | Blink at the configured slow rate |
 | Speed indicator | Increase blink rate between Slow and Fast as the source moves from left to right |
 
-Blink rates are limited to 0.2–5 Hz, with a default 1–3 Hz range. Speed indication follows the MIDI shortcut position; it is not an exact measurement of Arena's nonlinear playback-speed curve.
+Blink rates are limited to 0.2â€“5 Hz, with a default 1â€“3 Hz range. Speed indication follows the MIDI shortcut position; it is not an exact measurement of Arena's nonlinear playback-speed curve.
 
-**Follow Hue** uses the bridge's existing Hue upper limit and palette. Mouse changes follow when **Settings → Sync changes from Arena** is on and Arena sends the matching source CC feedback to the bridge.
+**Follow Hue** uses the bridge's existing Hue upper limit and palette. Mouse changes follow when **Settings â†’ Sync changes from Arena** is on and Arena sends the matching source CC feedback to the bridge.
 
 Custom lighting takes ownership of only the selected LED. Incoming Arena colors and the older bridge blinkers cannot overwrite it. Unchanged LED frames are not resent. Lighting animation uses Note messages; it never writes animated values into knob CCs.
 
 ## Button resets
 
-**Reset source value** consumes the selected button's press and release and sends one absolute CC value to its linked source. Holding the button does not repeat the reset. The original Arena action is replaced only when this reset action is explicitly selected.
+**Reset source value** consumes the selected button's press and release and sends one absolute CC value to its linked source. Holding the button does not repeat the reset. The existing button action is replaced only when this reset action is explicitly selected. Lighting-only overrides keep the built-in speed-button reset when enabled.
 
 Reset position is the source's MIDI position: **0** is its left endpoint, **127** its right endpoint. With the supplied speed mapping, **0 selects 1x** and **127 selects 10x**. This is not universal: another mapping can use different endpoints. Physical faders are not motorized and do not move when reset.
 
 ## Save and share
 
-**Save changes** updates only the lighting rules and profile name, preserves unrelated configuration, and makes a timestamped backup. It disables legacy ring animation to prevent encoder interference. If another process changes the configuration while Studio is open, saving stops and asks you to reopen it.
+**Save & apply** updates only the lighting rules and profile name, preserves unrelated configuration, and makes a timestamped backup. It disables legacy ring animation to prevent encoder interference. If another process changes the configuration while Studio is open, saving stops and asks you to reopen it.
 
-**Export profile** saves a named, versioned JSON profile. **Import profile** loads it into the preview; it does not apply anything until you save and restart. Profiles contain custom lighting rules, not MIDI port settings, Arena shortcuts, or the global legacy bridge settings.
+**Export profile** saves a named, versioned JSON profile. **Import profile** loads it into the preview; it does not apply anything until you save and apply. Profiles contain custom lighting rules, not MIDI port settings, Arena shortcuts, or the global legacy bridge settings.
 
 Two examples are included in the app's **profiles** folder:
 
@@ -68,4 +68,4 @@ Choose **Use default behavior** to remove only the selected control's override. 
 
 Studio is Windows-only and uses the dashboard's native .NET UI. The photo is cached, minimized previews pause, and live snapshots stop when unused. Static rules need no animation worker. Test new mappings on your controller; performance in Arena depends on your composition and hardware.
 
-[Windows installation](windows-installation.md) · [Akai APC40 mkII MIDI protocol](https://cdn.inmusicbrands.com/akai/attachments/apc40II/APC40Mk2_Communications_Protocol_v1.2.pdf)
+[Windows installation](windows-installation.md) Â· [Akai APC40 mkII MIDI protocol](https://cdn.inmusicbrands.com/akai/attachments/apc40II/APC40Mk2_Communications_Protocol_v1.2.pdf)

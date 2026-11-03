@@ -7,6 +7,7 @@ using System.Drawing.Drawing2D;
 using System.Collections;
 using System.Collections.Generic;
 using System.Windows.Forms;
+using System.Threading.Tasks;
 
 namespace ApcBridge {
     sealed class SurfaceControl {
@@ -208,7 +209,11 @@ namespace ApcBridge {
         readonly ControllerCanvas canvas;
         readonly Label selectedName,detail,notice,previewCaption,summary;
         readonly ComboBox behavior,source,color,press;
-        readonly NumericUpDown slow,fast,reset;
+        readonly FrequencySlider slow,fast;
+        readonly NumericUpDown reset;
+        readonly int[] speedNotes,speedCcs;
+        readonly int speedChannel;
+        readonly bool speedButtons;
         readonly TextBox profileName;
         readonly TrackBar preview;
         readonly CheckBox live;
@@ -218,12 +223,16 @@ namespace ApcBridge {
         readonly TableLayoutPanel fields;
         readonly DateTime began=DateTime.UtcNow;
         SurfaceControl selected;
-        bool loading,dirty,picking;
+        bool loading,dirty,picking,applying;
         static readonly string[] ModeNames={"Default bridge","LED off","Solid light","Follow Hue","Follow level (on / off)","Blink","Speed indicator"};
         static readonly string[] ModeKeys={"inherit","off","solid","hue","level","blink","speed"};
         public ControllerEditor(string path) {
             home=path;file=Path.Combine(home,"config.json");original=File.ReadAllText(file,Encoding.UTF8);
             var config=Backend.Json.Deserialize<Dictionary<string,object>>(original);
+            speedButtons=config.ContainsKey("speed_button_pulse")&&Convert.ToBoolean(config["speed_button_pulse"]);
+            speedNotes=config.ContainsKey("speed_button_notes")?((IEnumerable)config["speed_button_notes"]).Cast<object>().Select(x=>Convert.ToInt32(x)).ToArray():new[]{58,59,60,61};
+            speedCcs=config.ContainsKey("speed_ring_ccs")?((IEnumerable)config["speed_ring_ccs"]).Cast<object>().Select(x=>Convert.ToInt32(x)).ToArray():new[]{20,21,22,23};
+            speedChannel=config.ContainsKey("speed_ring_channel")?Convert.ToInt32(config["speed_ring_channel"]):0;
             Theme.Form(this,"Controller Studio • APC40 Bridge",new Size(1360,850));MinimumSize=new Size(1100,760);
             var root=new TableLayoutPanel{Dock=DockStyle.Fill,Padding=new Padding(24),ColumnCount=1,RowCount=3,Margin=Padding.Empty};
             root.RowStyles.Add(new RowStyle(SizeType.Absolute,76));root.RowStyles.Add(new RowStyle(SizeType.Percent,100));root.RowStyles.Add(new RowStyle(SizeType.Absolute,64));Controls.Add(root);
@@ -255,30 +264,39 @@ namespace ApcBridge {
             source=Combo(canvas.Items.Where(c=>c.Source).Cast<object>().ToArray());Add(source,34);
             pickSource=Theme.Button("Pick source on controller",false);pickSource.Font=new Font("Segoe UI",9);Add(pickSource,35);
             Add(Theme.Label("LED color",9,Theme.Muted),25);color=Combo(Palette.Cast<object>().ToArray());Add(color,34);
-            var rates=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=2,RowCount=2,Margin=Padding.Empty};rates.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,50));rates.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,50));
-            rates.RowStyles.Add(new RowStyle(SizeType.Absolute,25));rates.RowStyles.Add(new RowStyle(SizeType.Absolute,32));
-            rates.Controls.Add(Theme.Label("Slow / Hz",9,Theme.Muted),0,0);rates.Controls.Add(Theme.Label("Fast / Hz",9,Theme.Muted),1,0);
-            slow=Number(.2m,5,1);fast=Number(.2m,5,3);rates.Controls.Add(slow,0,1);rates.Controls.Add(fast,1,1);Add(rates,62);
+            Add(Theme.Label("Blink speed / minimum",9,Theme.Muted),25);
+            slow=new FrequencySlider(.2m,5,1);Add(slow,56);
+            Add(Theme.Label("Maximum speed (Speed indicator only)",9,Theme.Muted),25);
+            fast=new FrequencySlider(.2m,5,3);Add(fast,56);
             Add(Theme.Label("BUTTON PRESS",8,Theme.Accent),30);
-            press=Combo(new object[]{"Keep original Arena action","Reset source value"});Add(press,34);
+            press=Combo(new object[]{"Keep current button action","Reset source value"});Add(press,34);
             Add(Theme.Label("Reset position  ·  0 left / 127 right",9,Theme.Muted),28);reset=Number(0,127,0);reset.DecimalPlaces=0;Add(reset,32);
             summary=Theme.Label("",9,Theme.Muted);Add(summary,58);
             defaults=Theme.Button("Use default behavior",false);defaults.Font=new Font("Segoe UI",9);Add(defaults,36);
             var footer=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=2,RowCount=1,Padding=new Padding(0,14,0,0),Margin=Padding.Empty};footer.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));footer.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,180));
-            notice=Theme.Label("Preview safely. Save changes, then restart the bridge to apply.",9,Theme.Muted);footer.Controls.Add(notice,0,0);
-            save=Theme.Button("Save changes",true);footer.Controls.Add(save,1,0);root.Controls.Add(footer,0,2);
+            notice=Theme.Label("Preview only. Save & apply restarts a running bridge and may resend knob/fader positions.",9,Theme.Muted);footer.Controls.Add(notice,0,0);
+            save=Theme.Button("Save & apply",true);footer.Controls.Add(save,1,0);root.Controls.Add(footer,0,2);
             loading=true;ReadRules(config);profileName.TextChanged+=(s,e)=>Changed();loading=false;
             canvas.Picked+=SelectControl;
             live.CheckedChanged+=(s,e)=>{preview.Enabled=!live.Checked;lastLiveRead=DateTime.MinValue;UpdateLive();canvas.Invalidate();};
             preview.ValueChanged+=(s,e)=>{canvas.PreviewValue=preview.Value;if(!live.Checked)previewCaption.Text="PREVIEW  ·  "+Math.Round(preview.Value/127.0*100)+"%";canvas.Invalidate();};
             behavior.SelectedIndexChanged+=(s,e)=>Edit();source.SelectedIndexChanged+=(s,e)=>Edit();color.SelectedIndexChanged+=(s,e)=>Edit();press.SelectedIndexChanged+=(s,e)=>Edit();
-            slow.ValueChanged+=(s,e)=>Edit();fast.ValueChanged+=(s,e)=>Edit();reset.ValueChanged+=(s,e)=>Edit();
+            slow.ValueChanged+=(s,e)=>{if(!loading&&slow.Value>fast.Value)fast.Value=slow.Value;Edit();};fast.ValueChanged+=(s,e)=>{if(!loading&&fast.Value<slow.Value)slow.Value=fast.Value;Edit();};reset.ValueChanged+=(s,e)=>Edit();
             pickSource.Click+=(s,e)=>{picking=true;notice.Text="Click a knob or fader on the controller to link it.";};
             defaults.Click+=(s,e)=>{if(selected!=null&&!selected.Source){rules.Remove(selected.Id);Changed();LoadSelection();canvas.Invalidate();}};
-            save.Click+=(s,e)=>Save();
+            save.Click+=async(s,e)=>{
+                if(applying||!Save())return;
+                applying=true;Enabled=false;UseWaitCursor=true;
+                try {
+                    bool running=await Task.Run(()=>Backend.Flag(Backend.Action(home,"status"),"bridge_running"));
+                    if(running){await Task.Run(()=>{Backend.Action(home,"stop");Backend.Action(home,"start");});notice.Text="Profile applied. Live feedback shows the running bridge.";}
+                    else notice.Text="Profile saved. Start bridge from the dashboard to use it.";
+                }catch(Exception ex){notice.Text="Profile saved, but not applied. "+ex.Message;}
+                finally {applying=false;Enabled=true;UseWaitCursor=false;}
+            };
             export.Click+=(s,e)=>Export();import.Click+=(s,e)=>Import();
             timer.Interval=100;timer.Tick+=(s,e)=>{if(WindowState==FormWindowState.Minimized)return;UpdateLive();canvas.Phase=(DateTime.UtcNow-began).TotalSeconds;if(canvas.LiveMode||canvas.DefaultSpeed||rules.Values.Any(x=>x.Mode=="blink"||x.Mode=="speed"))canvas.Invalidate();};timer.Start();
-            FormClosing+=(s,e)=>{if(dirty&&MessageBox.Show(this,"Close without saving the controller changes?","Unsaved profile",MessageBoxButtons.YesNo,MessageBoxIcon.Question)!=DialogResult.Yes)e.Cancel=true;};
+            FormClosing+=(s,e)=>{if(applying){e.Cancel=true;return;}if(dirty&&MessageBox.Show(this,"Close without saving the controller changes?","Unsaved profile",MessageBoxButtons.YesNo,MessageBoxIcon.Question)!=DialogResult.Yes)e.Cancel=true;};
             FormClosed+=(s,e)=>timer.Dispose();
             SelectControl(canvas.Items.First(c=>c.Id=="n:0:32"));
         }
@@ -327,7 +345,7 @@ namespace ApcBridge {
             return c;
         }
         static NumericUpDown Number(decimal min,decimal max,decimal value){return new NumericUpDown{Minimum=min,Maximum=max,Value=value,DecimalPlaces=1,Increment=.1m,BackColor=Theme.Bg,ForeColor=Theme.Text,Dock=DockStyle.Fill,BorderStyle=BorderStyle.FixedSingle};}
-        void Changed(){if(loading)return;dirty=true;notice.Text="Unsaved changes · preview only";save.Text="Save changes";canvas.Invalidate();}
+        void Changed(){if(loading)return;dirty=true;notice.Text="Unsaved changes · preview only";save.Text="Save & apply";canvas.Invalidate();}
         void SelectControl(SurfaceControl c){
             if(picking&&c.Source){picking=false;source.SelectedItem=c;notice.Text="Linked to "+c.Name+". Save and restart to apply.";return;}
             picking=false;selected=c;canvas.Selected=c;LoadSelection();canvas.Invalidate();
@@ -338,11 +356,18 @@ namespace ApcBridge {
             detail.Text=selected.Source?"Input source · use this control to drive a pad's color or blink rate. Ring feedback stays unchanged.":(selected.Rgb?"RGB pad · color and feedback":"Utility button · single-color LED");
             LightingRule rule;bool has=rules.TryGetValue(selected.Id,out rule);
             behavior.SelectedIndex=has?Array.IndexOf(ModeKeys,rule.Mode):0;
-            if(rule==null)rule=new LightingRule{SourceCc=48+selected.Number%8};
+            if(rule==null){
+                int i=DefaultSpeedIndex();
+                rule=new LightingRule{SourceChannel=i>=0?speedChannel:0,SourceCc=i>=0?speedCcs[i]:48+selected.Number%8};
+            }
             source.SelectedItem=canvas.Items.FirstOrDefault(c=>c.Source&&c.Channel==rule.SourceChannel&&c.Number==rule.SourceCc)??canvas.Items.First(c=>c.Source);
             color.SelectedItem=Palette.FirstOrDefault(c=>c.Value==rule.Color)??Palette[1];
             slow.Value=rule.Slow;fast.Value=rule.Fast;reset.Value=rule.Reset;press.SelectedIndex=rule.Press=="reset"?1:0;
             loading=false;Availability();
+        }
+        int DefaultSpeedIndex(){
+            int i=selected!=null&&selected.Channel==speedChannel?Array.IndexOf(speedNotes,selected.Number):-1;
+            return speedButtons&&i>=0&&i<speedCcs.Length?i:-1;
         }
         void Availability(){
             bool pad=selected!=null&&!selected.Source;string mode=behavior.SelectedIndex>=0?ModeKeys[behavior.SelectedIndex]:"inherit";
@@ -351,7 +376,7 @@ namespace ApcBridge {
             source.Enabled=pickSource.Enabled=custom&&needs;color.Enabled=custom&&selected.Rgb&&mode!="off"&&mode!="hue";
             slow.Enabled=custom&&(mode=="blink"||mode=="speed");fast.Enabled=custom&&mode=="speed";
             press.Enabled=custom;reset.Enabled=custom&&press.SelectedIndex==1;
-            summary.Text=!pad?"To create a link, select a target pad, choose a behavior, then use Pick source.":mode=="inherit"?"Uses the current bridge behavior, including existing Hue and speed settings.":press.SelectedIndex==1?"Reset replaces the original press and release. Position 0 is 1x for the supplied speed mapping.":"Lighting only. The original button action still reaches Arena.";
+            summary.Text=!pad?"Select a target pad to edit its lighting.":mode=="inherit"?"Choose Blink for a fixed speed, or Speed indicator to follow a knob.":press.SelectedIndex==1?"Reset replaces the current button action. Position 0 is 1x for the supplied mapping.":(mode=="blink"?"Fixed blink speed. ":"")+(DefaultSpeedIndex()>=0?"Press still resets speed to 1x.":"The current button action is kept.");
         }
         void Edit(){
             if(loading||selected==null||selected.Source)return;
@@ -369,7 +394,7 @@ namespace ApcBridge {
             if(string.IsNullOrWhiteSpace(profileName.Text))throw new Exception("Enter a profile name.");
         }
         object[] RuleArray(){return rules.Values.OrderBy(x=>x.Channel).ThenBy(x=>x.Note).Select(x=>(object)x.Json()).ToArray();}
-        void Save(){
+        bool Save(){
             try {
                 ValidateRules();
                 if(File.ReadAllText(file,Encoding.UTF8)!=original)throw new Exception("Bridge settings changed while this editor was open. Close and reopen Controller Studio before saving.");
@@ -378,8 +403,8 @@ namespace ApcBridge {
                 string temp=file+".studio-"+Guid.NewGuid().ToString("N")+".tmp";
                 try {File.WriteAllText(temp,Backend.Json.Serialize(cfg),new UTF8Encoding(false));File.Replace(temp,file,file+".before-studio-"+DateTime.Now.ToString("yyyyMMdd-HHmmss-fff")+".bak");}
                 finally {if(File.Exists(temp))File.Delete(temp);}
-                original=File.ReadAllText(file,Encoding.UTF8);dirty=false;notice.Text="Profile saved. Restart the bridge from the dashboard to apply.";save.Text="Saved";
-            }catch(Exception ex){MessageBox.Show(this,ex.Message,"Could not save profile",MessageBoxButtons.OK,MessageBoxIcon.Warning);}
+                original=File.ReadAllText(file,Encoding.UTF8);dirty=false;notice.Text="Profile saved.";save.Text="Saved";return true;
+            }catch(Exception ex){MessageBox.Show(this,ex.Message,"Could not save profile",MessageBoxButtons.OK,MessageBoxIcon.Warning);return false;}
         }
         void ReadRules(Dictionary<string,object> document){
             var result=new Dictionary<string,LightingRule>();object raw;

@@ -99,6 +99,32 @@ class ControllerProfileTests(unittest.TestCase):
         x._speed_tick(0)
         self.assertFalse(any(m.type=="note_on" and m.note==58 for m in x.apc_out.messages[before:]))
 
+    def test_lighting_keeps_speed_reset_and_updates_linked_led(self):
+        self.rule(note=58,mode="speed",source_cc=20)
+        self.cfg["speed_button_pulse"]=True
+        with patch.object(b.Bridge,"_speed_animator"):
+            x=self.make()
+        x.on_apc(Message("control_change",channel=0,control=20,value=127))
+        x.res_out.messages.clear()
+        x._profile_tick(.2)
+        for _ in range(2):
+            x.on_apc(Message("note_on",channel=0,note=58,velocity=127))
+        x.on_apc(Message("note_off",channel=0,note=58,velocity=0))
+        self.assertEqual(len(x.res_out.messages),1)
+        self.assertEqual((x.res_out.messages[0].control,x.res_out.messages[0].value),(20,0))
+        self.assertEqual(x.profile_values[(0,20)],0)
+        self.assertEqual(x.profile_phase[(0,58)],0)
+        self.assertNotIn(58,x.speed_reset_held)
+
+    def test_speed_profile_rate_tracks_knob_and_mouse_feedback(self):
+        self.rule(note=58,mode="speed",source_cc=20,rate_min=.5,rate_max=4)
+        x=self.make()
+        for source, value, phase in ((x.on_apc,0,.05),(x.on_apc,127,.4),(x.on_resolume,0,.05)):
+            source(Message("control_change",channel=0,control=20,value=value))
+            x.profile_phase[(0,58)]=0
+            x._profile_tick(.1)
+            self.assertAlmostEqual(x.profile_phase[(0,58)],phase)
+
     def test_profile_lighting_preserves_original_colorize_press(self):
         self.rule(mode="solid")
         x=self.make()

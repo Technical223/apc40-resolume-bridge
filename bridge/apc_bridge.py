@@ -592,6 +592,13 @@ class Bridge:
             self.speed_phase[i] = 0.0
             self.speed_last[i] = None
             self._speed_button_tick(0)
+        with self.profile_lock:
+            self.profile_values[(msg.channel, msg.control)] = msg.value
+            key = (self.speed_channel, note)
+            if key in self.profile_rules:
+                self.profile_phase[key] = 0
+                self.profile_last.pop(key, None)
+            self._profile_tick(0)
 
     def _speed_tick(self, elapsed):
         if self.speed_buttons_enabled:
@@ -672,14 +679,17 @@ class Bridge:
             self._profile_observe(msg)
             if self._profile_press(msg):
                 return
-            if self.speed_buttons_enabled and msg.type in ("note_on", "note_off") and msg.channel == self.speed_channel and msg.note in self.speed_button_notes and (msg.channel, msg.note) not in self.profile_rules:
+            if self.speed_buttons_enabled and msg.type in ("note_on", "note_off") and msg.channel == self.speed_channel and msg.note in self.speed_button_notes:
+                reset = False
                 with self.speed_lock:
                     if msg.type == "note_on" and msg.velocity > 0:
                         if msg.note not in self.speed_reset_held:
                             self.speed_reset_held.add(msg.note)
-                            self._reset_speed_button(msg.note)
+                            reset = True
                     else:
                         self.speed_reset_held.discard(msg.note)
+                if reset:
+                    self._reset_speed_button(msg.note)
                 return  # Consume press AND release; never trigger the preset's old action.
             if self.speed_buttons_enabled and msg.type == "control_change" and msg.channel == self.speed_channel and msg.control in self.speed_ccs:
                 self._store_speed(msg)
