@@ -122,14 +122,4 @@ Created and maintained by [Technical223](https://github.com/Technical223), with 
 
 [Windows build notes](docs/windows-app.md) · [Project context](CLAUDE.md) · [Media credits](docs/media/showcase/README.md)
 
-<<<<<<< HEAD
-[Setup and troubleshooting](docs/navod.md) · [Windows installation](docs/windows-installation.md) · [Controller Studio](docs/controller-studio.md)
-
-[Experimental macOS preview](macos/README.md): unsigned, requires Python and manual IAC setup; no Controller Studio. Hardware testing is still needed.
-
-For developers: [build notes](docs/windows-app.md) · [project context](CLAUDE.md). Source ZIP users can open **bridge/APC40 Bridge.vbs**; the setup EXE is recommended for normal use.
-
-MIT · [Technical223](https://github.com/Technical223)
-=======
 </details>
->>>>>>> d83f730 (Build visual README story from supplied app and stage recordings)
