@@ -17,7 +17,7 @@ DEFAULT_SPACE = {"id": "default", "name": "Room", "model": "room-current.glb", "
 
 def local_file(value):
     path = (HOME / value).resolve() if isinstance(value, str) and not Path(value).is_absolute() else None
-    if path is None or not path.is_relative_to(HOME) or not path.is_file():
+    if path is None or not path.is_relative_to(HOME.resolve()) or not path.is_file():
         raise ValueError("Space file must be an existing file inside the visualizer folder: " + str(value))
     return path
 
