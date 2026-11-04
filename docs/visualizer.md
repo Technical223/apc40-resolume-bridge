@@ -66,12 +66,12 @@ Fixture and pixel selections are saved per preset, so each space keeps its own.
 
 ## Video projection
 
-**Video projection** lights diffusers, screens and steel mesh with the current
+**Video projection** is off by default. When enabled, it lights diffusers, screens and steel mesh with the current
 composition source. The image is projected from the layout's audience camera with
 the composition's aspect ratio, so no extra UV planes are needed in the model.
 Surfaces are found by object or material name: `difuz`, `diffus`, `screen` or
 `projection` for **Diffusers and screens**; `pletiv`, `mesh` or `fence` for
-**Steel mesh**. Use **Input crop** to project only part of the composition.
+**Steel mesh**. It shows the whole composition source, which for an LED pixel map is not projector content; enable it only for content meant for those surfaces, and use **Input crop** to project only part of it.
 Projection is preview-only; with no source connected the input is black, so nothing is projected.
 
 ## Room and performance

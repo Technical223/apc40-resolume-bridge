@@ -4185,10 +4185,10 @@ if(spaceList.length>1){
  choice.onchange=()=>{try{localStorage.setItem("apc40-space",choice.value);}catch{}location.search="?space="+encodeURIComponent(choice.value);};
  box.append(choice);Ye("panel").querySelector(".body").prepend(box);
 }
-const projectionPanel=document.createElement("details");projectionPanel.className="sec";projectionPanel.open=true;
-projectionPanel.innerHTML='<summary>Video projection</summary><label class="chk"><input id="projDiffusers" type="checkbox" checked> Diffusers and screens</label><label class="chk"><input id="projMesh" type="checkbox" checked> Steel mesh</label><div class="row"><span>Projection brightness</span><input id="projGain" type="range" min="0" max="300" value="40" aria-label="Projection brightness"></div><p id="projStatus"></p>';
+const projectionPanel=document.createElement("details");projectionPanel.className="sec";
+projectionPanel.innerHTML='<summary>Video projection</summary><label class="chk"><input id="projDiffusers" type="checkbox"> Diffusers and screens</label><label class="chk"><input id="projMesh" type="checkbox"> Steel mesh</label><div class="row"><span>Projection brightness</span><input id="projGain" type="range" min="0" max="300" value="40" aria-label="Projection brightness"></div><p id="projStatus"></p>';
 const spaceBox=Ye("space")?.parentElement;if(spaceBox)spaceBox.after(projectionPanel);else Ye("panel").querySelector(".body").prepend(projectionPanel);
-const projectionKey="apc40-projection";
+const projectionKey="apc40-projection-v2";
 try{const saved=JSON.parse(localStorage.getItem(projectionKey)||"{}");for(const id of ["projDiffusers","projMesh"])if(typeof saved[id]==="boolean")Ye(id).checked=saved[id];if(Number.isFinite(+saved.projGain))Ye("projGain").value=saved.projGain;}catch{}
 const projectionTargets={projDiffusers:/difuz|diffus|projection|screen/i,projMesh:/pletiv|\bmesh|fence/i};
 const projectionUniforms={map:pi.map,crop:pi.crop,intensity:{value:1},projector:{value:R0.projectionMatrix.clone()}};
@@ -4200,7 +4200,7 @@ function setupProjection(){
  projectionMeshes.forEach(mesh=>mesh.parent?.remove(mesh));projectionMeshes=[];
  projectionUniforms.intensity.value=+Ye("projGain").value/100;
  const patterns=Object.entries(projectionTargets).filter(([id])=>Ye(id).checked).map(([,pattern])=>pattern);
- if(!ki||!patterns.length){Ye("projStatus").textContent="Projection off.";return;}
+ if(!ki||!patterns.length){Ye("projStatus").textContent="Projection off. It shows the whole composition, so enable it only for content meant for diffusers or mesh.";return;}
  // The projector sits at the layout's audience camera with the composition's aspect ratio.
  const projector=R0.clone(),view=wn.camera||{},[w,h]=wn.comp||[16,9];
  projector.fov=view.fovV||45;projector.aspect=w/h;projector.near=.05;projector.far=500;

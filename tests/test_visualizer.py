@@ -53,6 +53,11 @@ class MappingTest(unittest.TestCase):
                 (home/'spaces.json').write_text(json.dumps({'spaces':[bad]}))
                 with self.assertRaises(ValueError):module.prepare()
 
+    def test_video_projection_is_off_by_default(self):
+        html=(VIEWER/'preview.html').read_text(encoding='utf-8')
+        for name in ('projDiffusers','projMesh'):
+            self.assertIn('<input id="'+name+'" type="checkbox">',html)
+
     @unittest.skipUnless(shutil.which('node'),'Node is needed for selection geometry checks')
     def test_selection_and_pixel_geometry(self):
         script=r'''

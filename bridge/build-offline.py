@@ -12,7 +12,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 LOCK = json.loads((ROOT / "bridge/offline-dependencies.lock.json").read_text(encoding="utf-8"))
-VERSION = "1.5.0"
+VERSION = "1.5.1"
 
 def download(item, cache):
     path = cache / item["file"]
