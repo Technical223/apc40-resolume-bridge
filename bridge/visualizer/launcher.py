@@ -29,6 +29,15 @@ def served_files():
     from prepare import spaces
     return {**FILES, **{space["model"]: "model/gltf-binary" for space in spaces()}}
 
+def render_folder():
+    """Pictures/APC40 Bridge (the user's real Pictures folder on Windows)."""
+    pictures = Path.home() / "Pictures"
+    if os.name == "nt":
+        import winreg
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders") as key:
+            pictures = Path(os.path.expandvars(winreg.QueryValueEx(key, "My Pictures")[0]))
+    return pictures / "APC40 Bridge"
+
 def layout_version(query=""):
     return hashlib.sha256(space_layout(query).read_bytes()).hexdigest()
 
@@ -99,6 +108,22 @@ def serve(idle_timeout=90, token=None):
                         self.wfile.write(chunk)
             except (BrokenPipeError, ConnectionResetError):
                 pass
+
+        def do_POST(self):
+            # Only "Save render": a PNG from this page, written under a server-chosen name.
+            if self.path != "/" + token + "/render" or self.headers.get("Origin", "") not in ("", "http://127.0.0.1:" + str(self.server.server_port)):
+                self.send_error(403)
+                return
+            length = int(self.headers.get("Content-Length") or 0)
+            body = self.rfile.read(length) if 0 < length <= 60 * 1024 * 1024 else b""
+            if not body.startswith(b"\x89PNG\r\n\x1a\n"):
+                self.send_error(400)
+                return
+            folder = render_folder()
+            folder.mkdir(parents=True, exist_ok=True)
+            target = folder / ("APC40-render-" + time.strftime("%Y%m%d-%H%M%S") + ".png")
+            target.write_bytes(body)
+            self.reply(json.dumps({"path": str(target)}).encode(), "application/json")
 
         def reply(self, body, content_type):
             self.send_response(200)

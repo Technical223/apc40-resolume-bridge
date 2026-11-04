@@ -17,8 +17,8 @@ using Microsoft.Win32;
 [assembly: System.Reflection.AssemblyTitle("APC40 Bridge Setup")]
 [assembly: System.Reflection.AssemblyProduct("APC40 Bridge")]
 [assembly: System.Reflection.AssemblyCompany("Technical223")]
-[assembly: System.Reflection.AssemblyVersion("1.5.1.0")]
-[assembly: System.Reflection.AssemblyFileVersion("1.5.1.0")]
+[assembly: System.Reflection.AssemblyVersion("1.5.2.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.5.2.0")]
 
 namespace ApcSetup {
  static class Package {
