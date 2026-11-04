@@ -31,7 +31,7 @@ jobs:
           unzip -q dist/APC40-Bridge-macOS-Preview.zip -d preview-check
           test -x "preview-check/APC40-Bridge-macOS-Preview/APC40 Bridge macOS Preview.app/Contents/MacOS/launcher"
           test -x "preview-check/APC40-Bridge-macOS-Preview/APC40 Bridge macOS Preview.app/Contents/MacOS/BridgeWindow"
-          lipo -verify_arch arm64 x86_64 "preview-check/APC40-Bridge-macOS-Preview/APC40 Bridge macOS Preview.app/Contents/MacOS/BridgeWindow"
+          lipo "preview-check/APC40-Bridge-macOS-Preview/APC40 Bridge macOS Preview.app/Contents/MacOS/BridgeWindow" -verify_arch arm64 x86_64
           plutil -lint "preview-check/APC40-Bridge-macOS-Preview/APC40 Bridge macOS Preview.app/Contents/Info.plist"
       - uses: actions/upload-artifact@v4
         with:
