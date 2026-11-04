@@ -44,16 +44,14 @@ Click **Visualizer** on the dashboard to open the optional browser preview. Adju
 
 *The public app includes a small generic room. The custom show model pictured here is not bundled.*
 
-**New in 1.5: space presets and video projection.** Keep several rooms in one preview, each with its own model, LED layout and Advanced Output preset, and switch between them from the panel. Video projection lights diffusers, screens and mesh with your composition, seen from the audience camera.
-
-![Space preset picker and video projection controls](docs/media/showcase/09_space-presets-projection.jpg)
+**New in 1.5: space presets.** Keep several rooms or rig variants in one preview and switch between them from the panel. An **LED** space shows your fixtures; a **projection** space hides the LEDs and turns the room's mesh shells into flat projection boards that carry your composition.
 
 <table>
 <tr>
-<td width="50%"><img src="docs/media/showcase/10_space-20-11.jpg" alt="Space preset with LED bars, neon and projected diffusers"></td>
-<td width="50%"><img src="docs/media/showcase/11_space-final-neon.jpg" alt="Second space preset with neon tubes"></td>
+<td width="50%"><img src="docs/media/showcase/10_space-led.jpg" alt="LED space preset: neon tubes and LED bars in a red mix"></td>
+<td width="50%"><img src="docs/media/showcase/11_space-projection.jpg" alt="Projection space preset: flat boards showing the composition"></td>
 </tr>
-<tr><td align="center">Space 1: LED bars + neon</td><td align="center">Space 2: neon tubes, live output</td></tr>
+<tr><td align="center">LED space</td><td align="center">Projection space</td></tr>
 </table>
 
 <details>

@@ -42,16 +42,27 @@ class MappingTest(unittest.TestCase):
             module.arena_paths=lambda:(home/'live.xml',home/'live.xml','Live')
             (home/'spaces.json').write_text(json.dumps({'spaces':[
                 {'id':'main','name':'Main','model':'a.glb','layout':'a.json'},
-                {'id':'stage-2','name':'Stage 2','model':'stage/b.glb','layout':'stage/b.json','output':'stage/fixed.xml'}]}))
+                {'id':'stage-2','name':'Stage 2','model':'stage/b.glb','layout':'stage/b.json','output':'stage/fixed.xml'},
+                {'id':'boards','name':'Boards','model':'a.glb','layout':'a.json','mode':'projection'}]}))
             module.prepare()
             read=lambda name:json.loads((home/name).read_text()[len('window.APC40Layout='):-1])
             main,second=read('active-layout.js'),read('active-layout-stage-2.js')
             self.assertEqual((main['preset'],main['space']['model'],len(main['fixtures'][0]['uv'])),('Live','a.glb',4))
             self.assertEqual((second['preset'],second['space']['model'],second['fixtures'][0]['sliceUid']),('fixed','stage/b.glb','2'))
-            self.assertEqual([s['id'] for s in second['spaces']],['main','stage-2'])
-            for bad in ({'id':'x','name':'X','model':'../a.glb','layout':'a.json'},{'id':'Bad id','name':'X','model':'a.glb','layout':'a.json'}):
+            self.assertEqual([s['id'] for s in second['spaces']],['main','stage-2','boards'])
+            boards=read('active-layout-boards.js')
+            self.assertEqual((boards['space']['mode'],boards['fixtures'],main['space']['mode']),('projection',[],'led'))
+            self.assertTrue(boards['outputFixtures'])
+            for bad in ({'id':'x','name':'X','model':'../a.glb','layout':'a.json'},{'id':'Bad id','name':'X','model':'a.glb','layout':'a.json'},
+                        {'id':'x','name':'X','model':'a.glb','layout':'a.json','mode':'video'}):
                 (home/'spaces.json').write_text(json.dumps({'spaces':[bad]}))
                 with self.assertRaises(ValueError):module.prepare()
+
+    def test_projection_only_in_projection_spaces(self):
+        html=(VIEWER/'preview.html').read_text(encoding='utf-8')
+        self.assertIn('projectionMode=wn.space?.mode==="projection"',html)
+        self.assertIn('if(!projectionMode||!ki)return;',html)
+        self.assertNotIn('projDiffusers',html)
 
     @unittest.skipUnless(shutil.which('node'),'Node is needed for selection geometry checks')
     def test_selection_and_pixel_geometry(self):

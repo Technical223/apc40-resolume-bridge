@@ -1,6 +1,7 @@
 """Build preview UVs from the saved active Arena output, preserving physical LED positions.
 
-Optional spaces.json lists several rooms (model + physical layout + optional fixed output preset).
+Optional spaces.json lists several rooms (model + physical layout + optional fixed output preset,
+mode "led" or "projection").
 The first space is written to active-layout.js; the others to active-layout-<id>.js.
 """
 import json
@@ -35,6 +36,8 @@ def spaces():
             local_file(item[key])
         if not str(item.get("name", "")).strip():
             raise ValueError("Every space needs a name")
+        if item.get("mode", "led") not in ("led", "projection"):
+            raise ValueError("Space mode must be led or projection")
     if not items:
         raise ValueError("spaces.json lists no spaces")
     return items
@@ -142,7 +145,10 @@ def prepare():
     for space in items:
         _, preset, name = source_paths(space)
         layout = build(preset, name, json.loads(local_file(space["layout"]).read_text(encoding="utf-8")))
-        layout["space"] = {"id": space["id"], "name": space["name"], "model": space["model"]}
+        mode = space.get("mode", "led")
+        if mode == "projection":
+            layout["fixtures"] = []  # projection rigs show boards only, never LEDs
+        layout["space"] = {"id": space["id"], "name": space["name"], "model": space["model"], "mode": mode}
         layout["spaces"] = listing
         target = layout_file(space["id"], items)
         temp = target.with_suffix(".tmp")

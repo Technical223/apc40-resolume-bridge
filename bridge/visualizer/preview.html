@@ -4175,8 +4175,10 @@ selectionImport.onchange=async()=>{try{const file=selectionImport.files[0];if(!f
 saveFixtureSelection();
 
 mappingEditorReady=true;
-// Space presets and video projection are viewer-only; nothing is sent to Arena or DMX.
-const spaceList=wn.spaces||[];
+// Space presets are viewer-only; nothing is sent to Arena or DMX.
+// An LED space shows fixtures only. A projection space has no LEDs (prepare.py drops them) and
+// replaces each steel-mesh shell with a flat board of the same outline that carries the video.
+const spaceList=wn.spaces||[],projectionMode=wn.space?.mode==="projection";
 if(spaceList.length>1){
  const box=document.createElement("div");box.className="sec";box.innerHTML='<label class="t" for="space">Space preset</label>';
  const choice=document.createElement("select");choice.id="space";
@@ -4185,34 +4187,44 @@ if(spaceList.length>1){
  choice.onchange=()=>{try{localStorage.setItem("apc40-space",choice.value);}catch{}location.search="?space="+encodeURIComponent(choice.value);};
  box.append(choice);Ye("panel").querySelector(".body").prepend(box);
 }
-const projectionPanel=document.createElement("details");projectionPanel.className="sec";projectionPanel.open=true;
-projectionPanel.innerHTML='<summary>Video projection</summary><label class="chk"><input id="projDiffusers" type="checkbox" checked> Diffusers and screens</label><label class="chk"><input id="projMesh" type="checkbox" checked> Steel mesh</label><div class="row"><span>Projection brightness</span><input id="projGain" type="range" min="0" max="300" value="40" aria-label="Projection brightness"></div><p id="projStatus"></p>';
-const spaceBox=Ye("space")?.parentElement;if(spaceBox)spaceBox.after(projectionPanel);else Ye("panel").querySelector(".body").prepend(projectionPanel);
-const projectionKey="apc40-projection";
-try{const saved=JSON.parse(localStorage.getItem(projectionKey)||"{}");for(const id of ["projDiffusers","projMesh"])if(typeof saved[id]==="boolean")Ye(id).checked=saved[id];if(Number.isFinite(+saved.projGain))Ye("projGain").value=saved.projGain;}catch{}
-const projectionTargets={projDiffusers:/difuz|diffus|projection|screen/i,projMesh:/pletiv|\bmesh|fence/i};
-const projectionUniforms={map:pi.map,crop:pi.crop,intensity:{value:1},projector:{value:R0.projectionMatrix.clone()}};
-const projectionMaterial=new ht({uniforms:projectionUniforms,transparent:true,depthWrite:false,blending:2,side:Wt,toneMapped:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-1,
- vertexShader:'uniform mat4 projector;varying vec4 projected;void main(){vec4 world=modelMatrix*vec4(position,1.0);projected=projector*world;gl_Position=projectionMatrix*viewMatrix*world;}',
- fragmentShader:'uniform sampler2D map;uniform vec4 crop;uniform float intensity;varying vec4 projected;void main(){if(projected.w<=0.0)discard;vec2 uv=projected.xy/projected.w*0.5+0.5;if(any(lessThan(uv,vec2(0.0)))||any(greaterThan(uv,vec2(1.0))))discard;gl_FragColor=vec4(texture2D(map,crop.xy+uv*crop.zw).rgb*intensity,1.0);}'});
-let projectionMeshes=[];
+const boardUniforms={map:pi.map,crop:pi.crop,intensity:{value:1},perBoard:{value:0},projector:{value:R0.projectionMatrix.clone()}};
+const boardMaterial=new ht({uniforms:boardUniforms,side:Wt,toneMapped:false,
+ vertexShader:'attribute vec2 boardUv;uniform mat4 projector;varying vec4 projected;varying vec2 local;void main(){vec4 world=modelMatrix*vec4(position,1.0);projected=projector*world;local=boardUv;gl_Position=projectionMatrix*viewMatrix*world;}',
+ fragmentShader:'uniform sampler2D map;uniform vec4 crop;uniform float intensity;uniform float perBoard;varying vec4 projected;varying vec2 local;void main(){vec2 uv=perBoard>0.5?local:projected.xy/max(projected.w,1e-4)*0.5+0.5;bool outside=perBoard<0.5&&(projected.w<=0.0||any(lessThan(uv,vec2(0.0)))||any(greaterThan(uv,vec2(1.0))));vec3 color=outside?vec3(0.0):texture2D(map,crop.xy+uv*crop.zw).rgb*intensity;gl_FragColor=vec4(max(color,vec3(0.015)),1.0);}'});
+let boards=[];
+function flatBoard(node){
+ // A solid flat board: the shell's outline (2D convex hull) in the plane of its two largest local axes.
+ const source=node.geometry,position=source.getAttribute("position");source.computeBoundingBox();
+ const box=source.boundingBox,size=[0,1,2].map(i=>box.max.getComponent(i)-box.min.getComponent(i)),axis=size.indexOf(Math.min(...size)),[a,b]=[0,1,2].filter(i=>i!==axis),middle=(box.min.getComponent(axis)+box.max.getComponent(axis))/2,get=[i=>position.getX(i),i=>position.getY(i),i=>position.getZ(i)];
+ const points=[];for(let i=0;i<position.count;i++)points.push([get[a](i),get[b](i)]);points.sort((p,q)=>p[0]-q[0]||p[1]-q[1]);
+ const cross=(o,p,q)=>(p[0]-o[0])*(q[1]-o[1])-(p[1]-o[1])*(q[0]-o[0]),half=list=>{const out=[];for(const p of list){while(out.length>1&&cross(out[out.length-2],out[out.length-1],p)<=0)out.pop();out.push(p);}out.pop();return out;};
+ const hull=half(points).concat(half(points.slice().reverse())),vertices=new Float32Array(hull.length*3),uv=new Float32Array(hull.length*2),index=[];
+ hull.forEach((p,i)=>{vertices[i*3+a]=p[0];vertices[i*3+b]=p[1];vertices[i*3+axis]=middle;uv[i*2]=(p[0]-box.min.getComponent(a))/(size[a]||1);uv[i*2+1]=(p[1]-box.min.getComponent(b))/(size[b]||1);if(i>1)index.push(0,i-1,i);});
+ const geometry=new source.constructor(),Attribute=source.getAttribute("position").isInterleavedBufferAttribute?source.getAttribute("position").clone().constructor:position.constructor;
+ geometry.setAttribute("position",new Attribute(vertices,3));geometry.setAttribute("boardUv",new Attribute(uv,2));geometry.setIndex(index);return geometry;
+}
+let projectionPanel=null;
+if(projectionMode){
+ projectionPanel=document.createElement("details");projectionPanel.className="sec";projectionPanel.open=true;
+ projectionPanel.innerHTML='<summary>Projection boards</summary><label class="row"><span>Image</span><select id="boardMode" aria-label="Image on boards"><option value="0">Projector from audience</option><option value="1">Whole input on each board</option></select></label><div class="row"><span>Brightness</span><input id="boardGain" type="range" min="0" max="300" value="100" aria-label="Board brightness"></div><p id="projStatus"></p>';
+ const spaceBox=Ye("space")?.parentElement;if(spaceBox)spaceBox.after(projectionPanel);else Ye("panel").querySelector(".body").prepend(projectionPanel);
+ try{const saved=JSON.parse(localStorage.getItem("apc40-boards")||"{}");if(saved.mode==="1")Ye("boardMode").value="1";if(Number.isFinite(+saved.gain))Ye("boardGain").value=saved.gain;}catch{}
+ const apply=()=>{boardUniforms.perBoard.value=+Ye("boardMode").value;boardUniforms.intensity.value=+Ye("boardGain").value/100;try{localStorage.setItem("apc40-boards",JSON.stringify({mode:Ye("boardMode").value,gain:Ye("boardGain").value}));}catch{}};
+ Ye("boardMode").addEventListener("change",apply);Ye("boardGain").addEventListener("input",apply);apply();
+}
 function setupProjection(){
- projectionMeshes.forEach(mesh=>mesh.parent?.remove(mesh));projectionMeshes=[];
- projectionUniforms.intensity.value=+Ye("projGain").value/100;
- const patterns=Object.entries(projectionTargets).filter(([id])=>Ye(id).checked).map(([,pattern])=>pattern);
- if(!ki||!patterns.length){Ye("projStatus").textContent="Projection off.";return;}
- // The projector sits at the layout's audience camera with the composition's aspect ratio.
- const projector=R0.clone(),view=wn.camera||{},[w,h]=wn.comp||[16,9];
+ boards.forEach(board=>board.parent?.remove(board));boards=[];
+ if(!projectionMode||!ki)return;
+ const view=wn.camera||{},projector=R0.clone(),[w,h]=wn.comp||[16,9];
  projector.fov=view.fovV||45;projector.aspect=w/h;projector.near=.05;projector.far=500;
  projector.position.set(...(view.pos||[0,2,6]));projector.lookAt(...(view.target||[0,2,0]));projector.updateMatrixWorld(true);projector.updateProjectionMatrix();
- projectionUniforms.projector.value.multiplyMatrices(projector.projectionMatrix,projector.matrixWorldInverse);
- const targets=[];
- ki.traverse(node=>{if(!node.isMesh||!node.visible||node.userData.projection)return;const names=node.name+" "+(Array.isArray(node.material)?node.material:[node.material]).map(m=>m?.name||"").join(" ");if(patterns.some(p=>p.test(names)))targets.push(node);});
- for(const node of targets){const overlay=new node.constructor(node.geometry,projectionMaterial);overlay.userData.projection=true;overlay.renderOrder=2;node.add(overlay);projectionMeshes.push(overlay);}
- Ye("projStatus").textContent=targets.length?"Projecting the composition source onto "+targets.length+" surfaces from the audience view. Preview only.":"No diffuser, screen or mesh surfaces in this room model.";
+ boardUniforms.projector.value.multiplyMatrices(projector.projectionMatrix,projector.matrixWorldInverse);
+ const shells=[];
+ ki.traverse(node=>{if(!node.isMesh||node.userData.board)return;const names=(Array.isArray(node.material)?node.material:[node.material]).map(m=>m?.name||"").join(" ");
+  if(/pletiv|\bmesh\b|fence/i.test(names))shells.push(node);else if(/difuz|diffus/i.test(names))node.visible=false;});
+ for(const node of shells){const board=new node.constructor(flatBoard(node),boardMaterial);board.userData.board=true;board.position.copy(node.position);board.quaternion.copy(node.quaternion);board.scale.copy(node.scale);node.parent.add(board);node.visible=false;boards.push(board);}
+ Ye("projStatus").textContent=boards.length?boards.length+" flat boards replace the mesh shells. Preview only.":"No mesh shells in this room model to turn into boards.";
 }
-for(const id of ["projDiffusers","projMesh","projGain"])Ye(id).addEventListener("input",()=>{setupProjection();try{localStorage.setItem(projectionKey,JSON.stringify({projDiffusers:Ye("projDiffusers").checked,projMesh:Ye("projMesh").checked,projGain:Ye("projGain").value}));}catch{}});
-setupProjection();
 Ko();window.__preview={FIX:sn,scene:U0,camera:R0,setView:jo,frame:Ko};})();
 </script>
 </body>
