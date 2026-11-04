@@ -10,6 +10,7 @@ import urllib.request
 import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
+from urllib.parse import parse_qs
 
 HOME = Path(__file__).resolve().parent
 sys.path.insert(0, str(HOME))
@@ -17,8 +18,19 @@ STATE = HOME / "viewer-session.json"
 FILES = {"preview.html": "text/html; charset=utf-8", "active-layout.js": "text/javascript",
          "room-current.glb": "model/gltf-binary"}
 
-def layout_version():
-    return hashlib.sha256((HOME / "active-layout.js").read_bytes()).hexdigest()
+def space_layout(query):
+    """Generated layout file of the space named by ?space=, else the first space."""
+    from prepare import layout_file, spaces
+    items = spaces()
+    wanted = parse_qs(query).get("space", [""])[0]
+    return layout_file(next((s["id"] for s in items if s["id"] == wanted), items[0]["id"]), items)
+
+def served_files():
+    from prepare import spaces
+    return {**FILES, **{space["model"]: "model/gltf-binary" for space in spaces()}}
+
+def layout_version(query=""):
+    return hashlib.sha256(space_layout(query).read_bytes()).hexdigest()
 
 def serve(idle_timeout=90, token=None):
     from prepare import prepare
@@ -38,7 +50,7 @@ def serve(idle_timeout=90, token=None):
         def do_GET(self):
             nonlocal last_seen, last_check, signature
             prefix = "/" + token + "/"
-            path = self.path.split("?", 1)[0]
+            path, _, query = self.path.partition("?")
             if not path.startswith(prefix):
                 self.send_error(404)
                 return
@@ -56,26 +68,27 @@ def serve(idle_timeout=90, token=None):
                             prepare()
                             signature = updated
                         last_check = time.monotonic()
-                    payload = {"version": layout_version()}
+                    payload = {"version": layout_version(query)}
                 except Exception as error:
                     payload = {"error": str(error)}
                 self.reply(json.dumps(payload).encode(), "application/json")
                 return
             if name == "layout":
-                text = (HOME / "active-layout.js").read_text(encoding="utf-8")
+                text = space_layout(query).read_text(encoding="utf-8")
                 layout = json.loads(text[len("window.APC40Layout="):-1])
                 self.reply(json.dumps({key:layout[key] for key in ("comp","preset","outputFixtures")}).encode(), "application/json")
                 return
-            if name not in FILES:
+            files = served_files()
+            if name not in files:
                 self.send_error(404)
                 return
-            file = HOME / name
+            file = space_layout(query) if name == "active-layout.js" else HOME / name
             if not file.is_file():
                 self.send_error(404)
                 return
             last_seen = time.monotonic()
             self.send_response(200)
-            self.send_header("Content-Type", FILES[name])
+            self.send_header("Content-Type", files[name])
             self.send_header("Content-Length", str(file.stat().st_size))
             self.send_header("Cache-Control", "no-store")
             self.send_header("X-Content-Type-Options", "nosniff")

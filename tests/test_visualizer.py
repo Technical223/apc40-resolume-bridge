@@ -16,7 +16,7 @@ class MappingTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             home=Path(folder);module.HOME=home
             (home/'physical-layout.json').write_text(json.dumps({'fixtures':[],'camera':{}}))
-            source=home/'output.xml';module.source_paths=lambda:(source,source,'Test preset')
+            source=home/'output.xml';module.source_paths=lambda space=None:(source,source,'Test preset')
             for count in (0,1,3):
                 slices=''.join('<DmxSlice uniqueId="'+str(i)+'"><Params><Param name="Name" value="Fixture '+str(i)+'"/></Params><InputRect><v x="0" y="0"/><v x="200" y="0"/><v x="200" y="100"/><v x="0" y="100"/></InputRect></DmxSlice>' for i in range(count))
                 source.write_text('<XmlState><CurrentCompositionTextureSize width="200" height="100"/><screens><DmxScreen name="Old name" LumiverseId="7"><Params><Param name="Name" value="Renamed output"/></Params>'+slices+'</DmxScreen></screens></XmlState>')
@@ -27,6 +27,31 @@ class MappingTest(unittest.TestCase):
                     item=data['outputFixtures'][0]
                     self.assertEqual((item['screen'],item['slice'],item['lumiverse']),('Renamed output','Fixture 0','7'))
                     self.assertEqual(item['uv'],[[0,1],[1,1],[1,0],[0,0]])
+
+    def test_space_presets_use_their_own_model_layout_and_output(self):
+        spec=importlib.util.spec_from_file_location('viewer_prepare_spaces',VIEWER/'prepare.py')
+        module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
+        with tempfile.TemporaryDirectory() as folder:
+            home=Path(folder).resolve();module.HOME=home
+            def output(name,uid):
+                (home/name).write_text('<XmlState><CurrentCompositionTextureSize width="100" height="100"/><screens><DmxScreen name="S"><DmxSlice uniqueId="'+uid+'"><InputRect><v x="0" y="0"/><v x="10" y="0"/><v x="10" y="100"/><v x="0" y="100"/></InputRect><ParamFixturePixels><ParamRange name="Width" value="1"/><ParamRange name="Height" value="4"/></ParamFixturePixels></DmxSlice></DmxScreen></screens></XmlState>')
+            output('live.xml','1');(home/'stage').mkdir();output('stage/fixed.xml','2')
+            fixture=lambda uid:{'fixtures':[{'kind':'metrovka','object':'Bar','sliceUid':uid,'pos':[[0,0,0],[0,1,0]]}],'camera':{}}
+            (home/'a.json').write_text(json.dumps(fixture('1')));(home/'stage/b.json').write_text(json.dumps(fixture('2')))
+            for name in ('a.glb','stage/b.glb'):(home/name).write_bytes(b'glb')
+            module.arena_paths=lambda:(home/'live.xml',home/'live.xml','Live')
+            (home/'spaces.json').write_text(json.dumps({'spaces':[
+                {'id':'main','name':'Main','model':'a.glb','layout':'a.json'},
+                {'id':'stage-2','name':'Stage 2','model':'stage/b.glb','layout':'stage/b.json','output':'stage/fixed.xml'}]}))
+            module.prepare()
+            read=lambda name:json.loads((home/name).read_text()[len('window.APC40Layout='):-1])
+            main,second=read('active-layout.js'),read('active-layout-stage-2.js')
+            self.assertEqual((main['preset'],main['space']['model'],len(main['fixtures'][0]['uv'])),('Live','a.glb',4))
+            self.assertEqual((second['preset'],second['space']['model'],second['fixtures'][0]['sliceUid']),('fixed','stage/b.glb','2'))
+            self.assertEqual([s['id'] for s in second['spaces']],['main','stage-2'])
+            for bad in ({'id':'x','name':'X','model':'../a.glb','layout':'a.json'},{'id':'Bad id','name':'X','model':'a.glb','layout':'a.json'}):
+                (home/'spaces.json').write_text(json.dumps({'spaces':[bad]}))
+                with self.assertRaises(ValueError):module.prepare()
 
     @unittest.skipUnless(shutil.which('node'),'Node is needed for selection geometry checks')
     def test_selection_and_pixel_geometry(self):

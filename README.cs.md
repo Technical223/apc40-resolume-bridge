@@ -67,6 +67,12 @@ Pro vývojáře: [sestavení aplikace](docs/windows-app.cs.md) · [kontext proje
 
 MIT · [Technical223](https://github.com/Technical223), s AI asistencí **Anthropic Claude** a **OpenAI ChatGPT/Codex** · [Jak přispět (anglicky)](CONTRIBUTING.md) · [Bezpečnost](SECURITY.md)
 
+## Novinky ve verzi 1.5
+
+Vizualizér umí **presety prostoru**: v jednom náhledu přepínáš mezi několika místnostmi, každá má vlastní model, rozmístění LED a případně vlastní preset Advanced Outputu. **Projekce videa** promítne kompozici z pohledu publika na difuzory, plátna a pletivo. Obojí je jen náhled a nemění výstupy Areny. Nastavení přes `spaces.json` popisuje [návod k vizualizéru (anglicky)](docs/visualizer.md#space-presets).
+
+![Výběr prostoru a projekce videa](docs/media/showcase/09_space-presets-projection.jpg)
+
 ## Novinky ve verzi 1.4
 
 Přehled, Controller Studio, nastavení a logy jsou v jednom okně. Vizualizér nabízí editor výstupů, fixtures a jednotlivých pixelů podle uloženého Advanced Outputu. Výběr se ukládá pro každý preset zvlášť a nemění nastavení Areny. [Návod k vizualizéru (anglicky)](docs/visualizer.md).
