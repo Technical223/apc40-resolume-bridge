@@ -71,4 +71,8 @@ Overview, Controller Studio, Settings and Logs now share one window. Numeric con
 
 For developers: [build notes](docs/windows-app.md) · [project context](CLAUDE.md). Source ZIP users can open **bridge/APC40 Bridge.vbs**; the setup EXE is recommended for normal use.
 
+## Credits
+
+Created and maintained by [Technical223](https://github.com/Technical223), with AI-assisted development by OpenAI Codex. Technical223 reviews and publishes the project.
+
 MIT · [Technical223](https://github.com/Technical223)
