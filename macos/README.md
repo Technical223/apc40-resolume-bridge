@@ -1,67 +1,36 @@
-# APC40 Bridge — macOS preview
+# APC40 Bridge — macOS test build
 
-Experimental tester build, separate from Windows. It reuses the shared MIDI engine for Hue pads, Colorize feedback, utility lighting and reconnects. A native dialog menu provides preparation, a three-minute test, stop and diagnostic export. This is not yet a full macOS dashboard or production release.
+A native macOS window using the system WebKit, with the same main navigation as Windows: **Overview, Controller Studio, Settings, Logs & diagnostics**, plus the shared browser visualizer and output editor. It uses the same MIDI engine, profile format and 145 calibrated controller hotspots. This is an unsigned, unnotarized test build, not a production macOS release.
 
-[Tester instructions](TESTER.md) · [Main project](https://github.com/Technical223/apc40-resolume-bridge)
+## Start here
 
-## Requirements and launch
+1. Download the [macOS test ZIP](https://github.com/Technical223/apc40-resolume-bridge/releases/tag/macos-v0.2.0-preview), extract it and open **APC40 Bridge macOS Preview.app**. The compiled package supports Apple Silicon and Intel Macs on macOS 11 or newer.
+2. Install Python 3.12 from [python.org](https://www.python.org/downloads/macos/) if needed. Python is not bundled. No Homebrew or Xcode is required for the downloaded app. If macOS blocks the app, send the exact warning and keep system protections enabled.
+3. Click **Install / repair**. Pinned MIDI libraries are downloaded into the app's private environment. No sudo or global Python changes are used.
+4. Open **Audio MIDI Setup > Window > Show MIDI Studio > IAC Driver**. Enable Device is online and add **APC VIRT A** and **APC VIRT B**.
+5. In Arena, enable input on A and output on B; keep clock off. For this Mac test, disable the physical APC input/output in Arena so the bridge owns the route. Leave unrelated devices unchanged. Windows uses its own documented routing.
+6. Use a test composition, then click **Start bridge**. Starting initializes LEDs and may resend physical knob/fader positions. Keep MIDI learning off.
 
-A Mac, Arena 7, APC40 mkII over USB and Python 3.9+ are required. Python 3.11/3.12 from [python.org](https://www.python.org/downloads/macos/) is recommended. Python is not bundled. No Homebrew, Xcode or sudo is needed. **Prepare dependencies** downloads pinned MIDI wheels into a private environment. Missing compatible wheels produce an error report instead of compiling native code.
+Closing the window keeps the app running; click its Dock icon to reopen it. **Quit APC40 Bridge** stops the bridge and releases ports. Sign-in autostart is not enabled by this test build.
 
-1. Extract the ZIP into a permanent local folder.
-2. Open **APC40 Bridge macOS Preview.app**. This bundle is unsigned and unnotarized. If macOS blocks it, send the exact warning; keep system protections enabled. **Open Preview.command** is an optional Terminal launcher for debugging.
-3. Choose **Prepare dependencies** and wait for completion.
-4. Configure IAC and Arena below. Use a disposable test composition.
-5. Choose **Start 3-minute test**. It initializes LEDs and may resend physical fader/knob positions to Arena. The test can also run with Arena closed for hardware-only diagnostics; process detection is recorded, not used as a start gate.
-6. The test ends automatically and creates **APC40-macOS-debug-…zip** on the Desktop. **Stop test** ends it early. **Export diagnostics** stops an active test and creates another ZIP. **Quit** stops the test and releases ports.
+## Controller Studio and visualizer
 
-If Python is missing, the launcher still attempts a small ZIP with the macOS version, architecture and missing-Python error. It does not invoke the system Python/Xcode installer shim.
+Click a control on the APC image, choose its behavior, color, source or reset action. Source values can be simulated without sending MIDI. Lighting changes save automatically and update a running bridge. Live feedback reads the bridge's output snapshot; it does not open a second physical MIDI connection. Controller profiles import/export in the same format as Windows.
 
-## Native MIDI setup
+The **Visualizer** button opens the same preview and output editor in your browser. Save your Advanced Output preset in Arena first. On a Mac, select **Capture window / screen** or a compatible virtual camera and grant macOS/browser capture permission. **SpoutCam is Windows-only**; direct Syphon capture is not implemented. See the [short visualizer guide](../docs/visualizer.md).
 
-Open **Audio MIDI Setup → Window → Show MIDI Studio → IAC Driver**, enable **Device is online**, and add two buses:
+## Feedback and local diagnostics
 
-- **APC VIRT A**: bridge → Arena.
-- **APC VIRT B**: Arena → bridge.
+**Nothing is uploaded automatically.** There is no telemetry or automatic feedback submission. **Export diagnostics** creates a ZIP locally and reveals it in Finder. Review it, then share it manually with your feedback if you choose. The three-minute diagnostic test also creates a local ZIP when it ends.
 
-Full names may be prefixed, e.g. IAC Driver APC VIRT A. The adapter accepts one unique matching name and refuses missing or ambiguous matches; it never opens a default port. With multiple APC devices, set the exact physical port name through **Open settings file**.
+The ZIP includes installation/app errors, OS/CPU/Python and dependency versions, MIDI port names and route status, message counts, and at most 300 recent Hue/Colorize events. Home paths are redacted. It excludes compositions, media, screenshots, unrelated files, environment dumps, full process lists and SysEx payloads. Custom MIDI names can identify devices: review before sharing.
 
-In **Arena → Preferences → MIDI**, enable **input only** on A and **output only** on B. Disable physical APC40 input/output in Arena for this test. Keep clock off on both IAC buses. Do not route feedback into the same bus. Leave unrelated devices unchanged.
+Please report your Mac model/architecture, macOS and Arena versions, what worked, what failed and roughly when. Attach the diagnostic ZIP manually. [Tester checklist](TESTER.md) · [Send feedback](https://github.com/Technical223/apc40-resolume-bridge/issues/new?template=macos-preview.yml).
 
-The preview does not edit Arena preferences, create IAC buses, install login items or set autostart. Stop it before re-enabling physical APC input/output for direct use.
+Local data: `~/Library/Application Support/APC40 Bridge macOS Preview`. Reports fall back to its `reports` folder if Desktop access is unavailable.
 
-The example preset is inside the app at Contents/Resources/resolume/APC40 BRIDGE EXAMPLE.xml (Finder → Show Package Contents). Copy it manually into ~/Documents/Resolume Arena/Shortcuts/MIDI if needed; do not overwrite your own preset. Or use an existing compatible preset. Set **Any device**, Hue maximum **0.63871**, notes 32–39 and CCs 48–55 on channel 1 (zero-based 0). Colorize feedback is **5 = active, 3 = bypass**. Seven-bit feedback has the same limits as Windows.
+## Validation and building
 
-## Tester checklist
+The Mac CI compiles an Apple Silicon + Intel native window, checks app permissions/plist, tests a CoreMIDI virtual-port roundtrip and diagnostic export, and runs portable regression tests. Finder launch, macOS permissions and real APC/Arena feedback still require testers.
 
-1. Move each Hue knob and compare the pad and Arena layer.
-2. Toggle each Colorize pad; check white for bypass and restored Hue when active.
-3. Change Hue/Colorize with the mouse in Arena and check APC feedback.
-4. Try a fader, clip pad and utility button; note incorrect behavior.
-5. Optionally unplug/reconnect USB during the test; check recovery.
-6. Stop or wait for expiry. Check that another MIDI app can use the APC afterward.
-
-Send the ZIP with which steps worked, Arena version and approximate failure times. A completed timer does not prove MIDI works: check connections and traffic. **no_connection** means the bridge never opened all required ports.
-
-## Diagnostics and local data
-
-Data is separate from Windows: ~/Library/Application Support/APC40 Bridge macOS Preview.
-
-- config.json and state.json: local settings and state; edits apply on the next test.
-- venv: private MIDI dependencies.
-- app.log, test.log, setup.log, bootstrap.log: errors, setup and message counts.
-- last-test.json: latest test summary and up to 300 recent Hue/Colorize input events, retained in later exports.
-- reports: fallback export location if Desktop access fails.
-
-Exports include only known diagnostics, selected settings, versions, MIDI port names, counts and bounded Hue/Colorize events. Home directory paths are redacted. No compositions, screenshots, arbitrary files, SysEx payloads, serial numbers, environment dumps or full process lists are collected. Custom MIDI names may identify devices; review before sharing. There is no upload or telemetry.
-
-## Build and validation
-
-From the repository root:
-
-    python macos/package_macos.py --output dist/APC40-Bridge-macOS-Preview.zip
-    python -m unittest discover -s tests -v
-
-The packager copies the unchanged shared engine into the app and preserves Unix executable permissions in the ZIP. Windows scripts and local runtime data are excluded. The macOS CI workflow checks shell syntax, AppleScript compilation and a CoreMIDI virtual-port roundtrip. Finder launch, real IAC routing and physical APC/Arena operation still need a Mac tester.
-
-Sources: [Apple IAC setup](https://support.apple.com/en-ie/guide/audio-midi-setup/ams1013/mac), [Mido RtMidi](https://mido.readthedocs.io/en/stable/backends/rtmidi.html), [Resolume MIDI preferences](https://resolume.com/support/en/7/preferences).
+Build on a Mac with Xcode command-line tools: `python macos/package_macos.py --require-native`. Source packaging on Windows omits the compiled native window and is not the downloadable tester app. `--legacy-menu` retains the earlier diagnostic menu for troubleshooting.

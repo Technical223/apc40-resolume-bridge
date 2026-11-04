@@ -36,7 +36,8 @@ class MacTests(unittest.TestCase):
         self.assertEqual(self.cfg["arena_process"], "Arena")
         self.assertEqual(self.core.STATE_PATH, str(self.data / "state.json"))
         self.assertEqual(json.loads((ROOT / "bridge/config.json").read_text())["arena_process"], "Arena.exe")
-        self.assertNotEqual(str(self.data / "config.json"), self.core.CFG_PATH)
+        self.assertEqual(str(self.data / "config.json"), self.core.CFG_PATH)
+        self.assertEqual(str(self.data / "controller-live.json"), self.core.LIVE_PATH)
 
     def test_exact_port_preferred_and_ambiguous_ports_refused(self):
         self.assertEqual(mac.select_port(["APC VIRT A", "Other APC VIRT A"], "APC VIRT A"), "APC VIRT A")

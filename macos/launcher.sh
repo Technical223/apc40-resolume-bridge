@@ -29,4 +29,4 @@ end run
 APPLESCRIPT
     exit 1
 fi
-exec "$PYTHON" "$BASE/mac_bridge.py" >> "$DATA/bootstrap.log" 2>&1
+exec "$PYTHON" "$BASE/mac_bridge.py" "$@" >> "$DATA/bootstrap.log" 2>&1
