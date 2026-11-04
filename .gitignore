@@ -20,7 +20,7 @@ bridge/controller-live.json.tmp
 bridge/controller-live-request.json
 
 bridge/last-session.json*
-bridge/visualizer/active-layout.js
+bridge/visualizer/active-layout*.js
 bridge/visualizer/viewer-session.json
 bridge/visualizer/*.ax
 bridge/visualizer/*.download

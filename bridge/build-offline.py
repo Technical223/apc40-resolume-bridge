@@ -12,7 +12,7 @@ import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 LOCK = json.loads((ROOT / "bridge/offline-dependencies.lock.json").read_text(encoding="utf-8"))
-VERSION = "1.4.0"
+VERSION = "1.5.0"
 
 def download(item, cache):
     path = cache / item["file"]
@@ -80,7 +80,7 @@ def build(output, cache, visualizer=None):
             shutil.copy2(ROOT / name, stage / name)
         viewer = visualizer or ROOT / "bridge/visualizer"
         if viewer.is_dir():
-            excluded = ["__pycache__", "*.pyc", "active-layout.js", "viewer-session.json", "*.download"]
+            excluded = ["__pycache__", "*.pyc", "active-layout*.js", "viewer-session.json", "*.download"]
             if visualizer is None:
                 excluded.append("SpoutCam64.ax")
             shutil.copytree(viewer, stage / "visualizer", ignore=shutil.ignore_patterns(*excluded))

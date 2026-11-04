@@ -39,6 +39,41 @@ Click **Edit output mapping**. The inset expands into an editor in the same page
 Selection affects the preview only. It sends no MIDI, REST edits or DMX output.
 The composition image remains visible behind its selected slice outlines.
 
+## Space presets
+
+Switch between several rooms in the same preview with **Space preset**. Each
+space has its own room model, physical LED layout and, optionally, its own saved
+Advanced Output preset. A space with a fixed preset previews your composition on
+another rig without changing what Arena outputs. The choice is remembered in the
+browser and can also be opened directly with `preview.html?space=<id>`.
+
+Add `spaces.json` next to `preview.html`. The first space is the default; paths
+must stay inside the visualizer folder. Without `output`, a space follows the
+preset that is active in Arena.
+
+```json
+{
+  "spaces": [
+    {"id": "club", "name": "Club (live output)", "model": "room-current.glb", "layout": "physical-layout.json"},
+    {"id": "festival", "name": "Festival stage", "model": "spaces/festival/room.glb",
+     "layout": "spaces/festival/physical-layout.json", "output": "spaces/festival/Festival.xml"}
+  ]
+}
+```
+
+Without `spaces.json` the preview behaves as before, with one room and no picker.
+Fixture and pixel selections are saved per preset, so each space keeps its own.
+
+## Video projection
+
+**Video projection** lights diffusers, screens and steel mesh with the current
+composition source. The image is projected from the layout's audience camera with
+the composition's aspect ratio, so no extra UV planes are needed in the model.
+Surfaces are found by object or material name: `difuz`, `diffus`, `screen` or
+`projection` for **Diffusers and screens**; `pletiv`, `mesh` or `fence` for
+**Steel mesh**. Use **Input crop** to project only part of the composition.
+Projection is preview-only; with no source connected the input is black, so nothing is projected.
+
 ## Room and performance
 
 The public package includes a small generic open-front room. **Import room model**
