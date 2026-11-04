@@ -49,12 +49,14 @@ browser and can also be opened directly with `preview.html?space=<id>`.
 
 Add `spaces.json` next to `preview.html`. The first space is the default; paths
 must stay inside the visualizer folder. Without `output`, a space follows the
-preset that is active in Arena.
+preset that is active in Arena. `mode` is `led` (default) or `projection`.
 
 ```json
 {
   "spaces": [
-    {"id": "club", "name": "Club (live output)", "model": "room-current.glb", "layout": "physical-layout.json"},
+    {"id": "led", "name": "Stage - LED", "model": "room-current.glb", "layout": "physical-layout.json"},
+    {"id": "projection", "name": "Stage - projection", "model": "room-current.glb",
+     "layout": "physical-layout.json", "mode": "projection"},
     {"id": "festival", "name": "Festival stage", "model": "spaces/festival/room.glb",
      "layout": "spaces/festival/physical-layout.json", "output": "spaces/festival/Festival.xml"}
   ]
@@ -64,15 +66,15 @@ preset that is active in Arena.
 Without `spaces.json` the preview behaves as before, with one room and no picker.
 Fixture and pixel selections are saved per preset, so each space keeps its own.
 
-## Video projection
+## Projection spaces
 
-**Video projection** is off by default. When enabled, it lights diffusers, screens and steel mesh with the current
-composition source. The image is projected from the layout's audience camera with
-the composition's aspect ratio, so no extra UV planes are needed in the model.
-Surfaces are found by object or material name: `difuz`, `diffus`, `screen` or
-`projection` for **Diffusers and screens**; `pletiv`, `mesh` or `fence` for
-**Steel mesh**. It shows the whole composition source, which for an LED pixel map is not projector content; enable it only for content meant for those surfaces, and use **Input crop** to project only part of it.
-Projection is preview-only; with no source connected the input is black, so nothing is projected.
+An LED space shows LEDs only. A **projection** space shows no LEDs; instead each
+steel-mesh shell in the room (material name containing `pletiv`, `mesh` or
+`fence`) becomes a solid flat board with the same outline, and diffusers
+(`difuz`, `diffus`) are hidden. The boards carry the composition source. In
+**Projection boards** choose **Projector from audience** (one virtual projector at
+the layout camera) or **Whole input on each board**, and set the brightness. Use
+**Input crop** to show only part of the source. Projection is preview-only.
 
 ## Room and performance
 

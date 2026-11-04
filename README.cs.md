@@ -69,9 +69,9 @@ MIT · [Technical223](https://github.com/Technical223), s AI asistencí **Anthro
 
 ## Novinky ve verzi 1.5
 
-Vizualizér umí **presety prostoru**: v jednom náhledu přepínáš mezi několika místnostmi, každá má vlastní model, rozmístění LED a případně vlastní preset Advanced Outputu. **Projekce videa** promítne kompozici z pohledu publika na difuzory, plátna a pletivo. Obojí je jen náhled a nemění výstupy Areny. Nastavení přes `spaces.json` popisuje [návod k vizualizéru (anglicky)](docs/visualizer.md#space-presets).
+Vizualizér umí **presety prostoru**: v jednom náhledu přepínáš mezi několika místnostmi nebo variantami rigu. **LED** prostor ukazuje jen LED. **Projekční** prostor LED skryje a z pletiv v místnosti udělá ploché projekční desky se stejným obrysem, na kterých je kompozice. Obojí je jen náhled a nemění výstupy Areny. Nastavení přes `spaces.json` popisuje [návod k vizualizéru (anglicky)](docs/visualizer.md#space-presets). Ve verzi 1.5.1 se už nic nepromítá na pletivo.
 
-![Výběr prostoru a projekce videa](docs/media/showcase/09_space-presets-projection.jpg)
+![LED a projekční prostor](docs/media/showcase/10_space-led.jpg)
 
 ## Novinky ve verzi 1.4
 
