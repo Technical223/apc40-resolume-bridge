@@ -4212,6 +4212,22 @@ if(projectionMode){
  const apply=()=>{boardUniforms.perBoard.value=+Ye("boardMode").value;boardUniforms.intensity.value=+Ye("boardGain").value/100;try{localStorage.setItem("apc40-boards",JSON.stringify({mode:Ye("boardMode").value,gain:Ye("boardGain").value}));}catch{}};
  Ye("boardMode").addEventListener("change",apply);Ye("boardGain").addEventListener("input",apply);apply();
 }
+// Save render: one high-resolution frame of the 3D view (no panels) into Pictures\APC40 Bridge.
+const renderBox=document.createElement("div");renderBox.className="sec";
+renderBox.innerHTML='<button id="saveRender">Save render (PNG)</button><p id="renderStatus"></p>';
+const renderAnchor=projectionPanel||Ye("space")?.parentElement;if(renderAnchor)renderAnchor.after(renderBox);else Ye("panel").querySelector(".body").prepend(renderBox);
+Ye("saveRender").onclick=async()=>{
+ const button=Ye("saveRender"),ratio=c0.getPixelRatio(),target=Math.min(3,Math.max(ratio,2560/innerWidth));button.disabled=true;Ye("renderStatus").textContent="Rendering…";
+ try{
+  c0.setPixelRatio(target);Xi.setPixelRatio(target);Xi.render();
+  const image=await new Promise(resolve=>c0.domElement.toBlob(resolve,"image/png"));
+  c0.setPixelRatio(ratio);Xi.setPixelRatio(ratio);
+  const reply=await fetch("render",{method:"POST",headers:{"Content-Type":"image/png"},body:image});
+  if(!reply.ok)throw Error("Could not save the render ("+reply.status+"). Reopen Visualizer from Bridge.");
+  Ye("renderStatus").textContent="Saved: "+(await reply.json()).path;
+ }catch(error){c0.setPixelRatio(ratio);Xi.setPixelRatio(ratio);Ye("renderStatus").textContent=error.message;}
+ finally{button.disabled=false;}
+};
 function setupProjection(){
  boards.forEach(board=>board.parent?.remove(board));boards=[];
  if(!projectionMode||!ki)return;

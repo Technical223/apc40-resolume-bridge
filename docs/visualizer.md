@@ -76,6 +76,12 @@ steel-mesh shell in the room (material name containing `pletiv`, `mesh` or
 the layout camera) or **Whole input on each board**, and set the brightness. Use
 **Input crop** to show only part of the source. Projection is preview-only.
 
+## Save render
+
+**Save render (PNG)** saves the current 3D view without panels at about 2560 px wide
+to `Pictures\APC40 Bridge` (named by date and time), ready for a README or a post.
+The file is written by the local viewer helper; nothing is uploaded.
+
 ## Room and performance
 
 The public package includes a small generic open-front room. **Import room model**
