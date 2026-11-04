@@ -119,10 +119,15 @@ def serve(idle_timeout=90, token=None):
             if not body.startswith(b"\x89PNG\r\n\x1a\n"):
                 self.send_error(400)
                 return
-            folder = render_folder()
-            folder.mkdir(parents=True, exist_ok=True)
-            target = folder / ("APC40-render-" + time.strftime("%Y%m%d-%H%M%S") + ".png")
-            target.write_bytes(body)
+            try:
+                folder = render_folder()
+                folder.mkdir(parents=True, exist_ok=True)
+                target = folder / ("APC40-render-" + time.strftime("%Y%m%d-%H%M%S") + ".png")
+                target.write_bytes(body)
+            except OSError as error:
+                # e.g. Windows Controlled Folder Access blocks the bundled Python in Pictures; the page then downloads it.
+                self.send_error(507, "Could not write to " + str(render_folder()) + ": " + type(error).__name__)
+                return
             self.reply(json.dumps({"path": str(target)}).encode(), "application/json")
 
         def reply(self, body, content_type):

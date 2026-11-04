@@ -80,7 +80,9 @@ the layout camera) or **Whole input on each board**, and set the brightness. Use
 
 **Save render (PNG)** saves the current 3D view without panels at about 2560 px wide
 to `Pictures\APC40 Bridge` (named by date and time), ready for a README or a post.
-The file is written by the local viewer helper; nothing is uploaded.
+The file is written by the local viewer helper; nothing is uploaded. If that folder
+is not writable (for example Windows Controlled Folder Access blocks the bundled
+Python), the browser downloads the PNG to Downloads instead.
 
 ## Room and performance
 
