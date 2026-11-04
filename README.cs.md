@@ -71,7 +71,7 @@ MIT · [Technical223](https://github.com/Technical223), s AI asistencí **Anthro
 
 Vizualizér umí **presety prostoru**: v jednom náhledu přepínáš mezi několika místnostmi nebo variantami rigu. **LED** prostor ukazuje jen LED. **Projekční** prostor LED skryje a z pletiv v místnosti udělá ploché projekční desky se stejným obrysem, na kterých je kompozice. Obojí je jen náhled a nemění výstupy Areny. Nastavení přes `spaces.json` popisuje [návod k vizualizéru (anglicky)](docs/visualizer.md#space-presets). Ve verzi 1.5.1 se už nic nepromítá na pletivo.
 
-![LED a projekční prostor](docs/media/showcase/10_space-led.jpg)
+![LED stage ve vizualizéru](docs/media/showcase/12_stage-red-cyan.gif)
 
 ## Novinky ve verzi 1.4
 

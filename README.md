@@ -8,7 +8,7 @@ MIDI feedback, a visual controller editor and an optional LED preview for **Akai
 
 **[Download for Windows](https://github.com/Technical223/apc40-resolume-bridge/releases/latest)** · [Quick setup](#get-started) · [Česky](README.cs.md)
 
-![LED installation preview with white light and room geometry](docs/media/showcase/07_led-preview-white.jpg)
+![LED stage in the browser visualizer: red diffusers and cyan neon cables](docs/media/showcase/12_stage-red-cyan.gif)
 
 *An example installation using a custom room model. Your show can look different.*
 
@@ -32,28 +32,19 @@ Click a control in **Controller Studio**. Choose its color, blink speed, source 
 
 Click **Visualizer** on the dashboard to open the optional browser preview. Adjust the room, camera and lighting without changing Arena’s outputs.
 
-![Neon installation in the browser visualizer](docs/media/showcase/04_led-preview-neon-orange.jpg)
+![Red and blue LED content on the stage in the browser visualizer](docs/media/showcase/13_stage-red-blue.gif)
 
 <table>
 <tr>
-<td width="50%"><img src="docs/media/showcase/06_led-preview-room-render.jpg" alt="Custom room model with LED fixtures"></td>
-<td width="50%"><img src="docs/media/showcase/07_led-preview-white.jpg" alt="The same installation with white video content"></td>
+<td width="50%"><img src="docs/media/showcase/14_stage-closeup.gif" alt="Close-up of the LED fixtures and neon cables"></td>
+<td width="50%"><img src="docs/media/showcase/15_stage-white.gif" alt="The same stage with white content"></td>
 </tr>
-<tr><td align="center">See the room</td><td align="center">See your content</td></tr>
+<tr><td align="center">Fly in close</td><td align="center">See your content</td></tr>
 </table>
 
 *The public app includes a small generic room. The custom show model pictured here is not bundled.*
 
 **New in 1.5: space presets.** Keep several rooms or rig variants in one preview and switch between them from the panel. An **LED** space shows your fixtures; a **projection** space hides the LEDs and turns the room's mesh shells into flat projection boards that carry your composition.
-
-<table>
-<tr>
-<td width="50%"><img src="docs/media/showcase/10_space-led.jpg" alt="LED space preset: neon tubes and LED bars in a red mix"></td>
-<td width="50%"><img src="docs/media/showcase/11_space-projection.jpg" alt="Projection space preset: flat boards showing the composition"></td>
-</tr>
-<tr><td align="center">LED space</td><td align="center">Projection space</td></tr>
-</table>
-
 <details>
 <summary><strong>Connect Arena or bring your own room</strong></summary>
 
