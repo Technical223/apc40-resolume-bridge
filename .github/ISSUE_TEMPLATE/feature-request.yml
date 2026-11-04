@@ -1,0 +1,12 @@
+name: Feature request
+description: Suggest an improvement for the bridge, Controller Studio or the visualizer.
+title: "[Idea] "
+labels: [enhancement]
+body:
+  - type: textarea
+    id: idea
+    attributes:
+      label: What would you like to do?
+      description: Describe your show or workflow and what is missing today.
+    validations:
+      required: true
