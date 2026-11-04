@@ -65,7 +65,7 @@ Volitelná **Speed buttons** blikají pod knoby 5–8; stisk s přiloženým map
 
 Pro vývojáře: [sestavení aplikace](docs/windows-app.cs.md) · [kontext projektu](CLAUDE.md). Ze zdrojového ZIPu lze otevřít **bridge/APC40 Bridge.vbs**; pro běžné použití doporučujeme instalátor.
 
-MIT · [Technical223](https://github.com/Technical223)
+MIT · [Technical223](https://github.com/Technical223), s AI asistencí **Anthropic Claude** a **OpenAI ChatGPT/Codex** · [Jak přispět (anglicky)](CONTRIBUTING.md) · [Bezpečnost](SECURITY.md)
 
 ## Novinky ve verzi 1.4
 
