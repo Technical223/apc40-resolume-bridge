@@ -115,7 +115,9 @@ See [macOS test builds and setup](macos/README.md) for the available version, re
 
 ---
 
-Created and maintained by [Technical223](https://github.com/Technical223), with AI-assisted development by **OpenAI Codex**. MIT licensed.
+Created and maintained by [Technical223](https://github.com/Technical223), with AI-assisted development by **Anthropic Claude** and **OpenAI ChatGPT/Codex**. MIT licensed.
+
+[Contributing](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md) · [Security](SECURITY.md) · [Accessibility](ACCESSIBILITY.md)
 
 <details>
 <summary>Development and credits</summary>
