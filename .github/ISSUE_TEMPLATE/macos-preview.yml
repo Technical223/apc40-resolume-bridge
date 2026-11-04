@@ -1,0 +1,30 @@
+name: macOS test build feedback
+description: Help test and improve the macOS dashboard and MIDI feedback.
+title: "[macOS test] "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for testing. Nothing is uploaded automatically by the app.
+        Export diagnostics locally, review the ZIP, and attach it manually below if you choose.
+        Do not attach compositions or media. Custom MIDI names may identify devices.
+  - type: input
+    id: system
+    attributes:
+      label: Mac, macOS, Python and Arena versions
+      placeholder: Apple Silicon or Intel, macOS version, Python version, Arena version
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: What worked and what failed?
+      description: Include the steps, approximate failure times and any exact error message.
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostic ZIP (optional, attach manually)
+      description: Drag the reviewed ZIP here. Logs & diagnostics > Export diagnostics creates it locally.

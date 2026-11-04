@@ -19,7 +19,7 @@ import traceback
 import uuid
 import zipfile
 
-VERSION = "0.1.0-preview"
+VERSION = "0.2.0-preview"
 HERE = Path(__file__).resolve().parent
 DATA = Path.home() / "Library/Application Support/APC40 Bridge macOS Preview"
 BACKEND = "mido.backends.rtmidi/MACOSX_CORE"
@@ -40,6 +40,9 @@ def load_core():
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     module.STATE_PATH = str(DATA / "state.json")
+    module.CFG_PATH = str(DATA / "config.json")
+    module.LIVE_PATH = str(DATA / "controller-live.json")
+    module.LIVE_REQUEST_PATH = str(DATA / "controller-live-request.json")
     return module
 
 
@@ -159,7 +162,7 @@ def report(details, destination=None):
         handle = (root / filename).open("xb")
     with handle, zipfile.ZipFile(handle, "w", zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("report.json", redact(json.dumps(details, indent=2, default=str)))
-        for name in ("app.log", "test.log", "setup.log", "bootstrap.log", "last-test.json"):
+        for name in ("app.log", "test.log", "bridge.log", "setup.log", "bootstrap.log", "last-test.json"):
             path = DATA / name
             if path.is_file():
                 with path.open("rb") as stream:
@@ -201,7 +204,7 @@ def run_test(core, cfg, seconds, stop):
     totals = {"apc>res": 0, "res>apc": 0, "dropped": 0}
     connections = 0
     last = None
-    deadline = time.monotonic() + seconds
+    deadline = time.monotonic() + seconds if seconds is not None else float("inf")
     try:
         while not stop.is_set() and time.monotonic() < deadline:
             try:
@@ -346,36 +349,51 @@ def gui(core, cfg):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--test", action="store_true")
+    parser.add_argument("--run", action="store_true")
+    parser.add_argument("--prepare", action="store_true")
+    parser.add_argument("--status-json", action="store_true")
+    parser.add_argument("--legacy-menu", action="store_true")
     parser.add_argument("--collect", action="store_true")
     parser.add_argument("--seconds", type=int, default=180)
     args = parser.parse_args()
     if not 1 <= args.seconds <= 600:
         parser.error("Test duration must be between 1 and 600 seconds")
-    logging_setup("test.log" if args.test else "app.log")
+    logging_setup("test.log" if args.test else "bridge.log" if args.run else "app.log")
     core = cfg = None
     try:
         core = load_core()
         cfg = load_config(core)
+        if args.prepare:
+            prepare()
+            return 0
+        if args.status_json:
+            print(json.dumps(snapshot(core,cfg)))
+            return 0
         if args.collect:
             print(report(snapshot(core, cfg)))
             return 0
         if sys.platform != "darwin":
             raise RuntimeError("This preview runs on macOS only. The Windows build is separate.")
-        if args.test:
+        if args.test or args.run:
             import fcntl
             with (DATA / "test.lock").open("a") as lock:
                 fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
                 stop = threading.Event()
                 signal.signal(signal.SIGTERM, lambda *_: stop.set())
                 signal.signal(signal.SIGINT, lambda *_: stop.set())
-                test = run_test(core, cfg, args.seconds, stop)
+                test = run_test(core, cfg, args.seconds if args.test else None, stop)
                 details = {**snapshot(core, cfg), "test": test}
                 details["events"] = event_snapshot()
                 (DATA / "last-test.json").write_text(redact(json.dumps(details, indent=2)), encoding="utf-8")
-                exported = report(details)
-                logging.info("Report saved: %s", exported)
+                if args.test:
+                    exported = report(details)
+                    logging.info("Report saved: %s", exported)
                 return 0
-        gui(core, cfg)
+        if args.legacy_menu:
+            gui(core,cfg)
+        else:
+            from desktop import run
+            run(core,cfg)
         return 0
     except Exception:
         logging.exception("Preview error")
@@ -383,7 +401,7 @@ def main():
         if args.test:
             (DATA / "last-test.json").write_text(redact(json.dumps(details, indent=2)), encoding="utf-8")
         exported = report(details)
-        if not args.test and not args.collect and sys.platform == "darwin":
+        if not (args.test or args.run or args.prepare or args.status_json or args.collect) and sys.platform == "darwin":
             dialog("The preview could not start. Diagnostics saved to:\n" + str(exported))
         else:
             print(exported)

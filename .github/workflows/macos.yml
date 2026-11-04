@@ -1,6 +1,8 @@
 name: macOS preview
 on:
   workflow_dispatch:
+  push:
+    paths: ["macos/**", "bridge/visualizer/**", "bridge/apc_bridge.py", "tests/**", ".github/workflows/macos.yml"]
   pull_request:
     paths: ["macos/**", "bridge/apc_bridge.py", "bridge/config.json", "tests/**", ".github/workflows/macos.yml"]
 permissions:
@@ -23,11 +25,13 @@ jobs:
         timeout-minutes: 2
         run: python macos/smoke_macos.py
       - name: Package unsigned tester app
-        run: python macos/package_macos.py
+        run: python macos/package_macos.py --require-native
       - name: Verify executable permissions after unzip
         run: |
           unzip -q dist/APC40-Bridge-macOS-Preview.zip -d preview-check
           test -x "preview-check/APC40-Bridge-macOS-Preview/APC40 Bridge macOS Preview.app/Contents/MacOS/launcher"
+          test -x "preview-check/APC40-Bridge-macOS-Preview/APC40 Bridge macOS Preview.app/Contents/MacOS/BridgeWindow"
+          lipo "preview-check/APC40-Bridge-macOS-Preview/APC40 Bridge macOS Preview.app/Contents/MacOS/BridgeWindow" -verify_arch arm64 x86_64
           plutil -lint "preview-check/APC40-Bridge-macOS-Preview/APC40 Bridge macOS Preview.app/Contents/Info.plist"
       - uses: actions/upload-artifact@v4
         with:
