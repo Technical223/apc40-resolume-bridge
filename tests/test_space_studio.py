@@ -46,6 +46,13 @@ class ConversionTest(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError,'stopped'):convert.convert_model(b'BLENDER','.blend',executable='fake-blender')
 
 class EditorTest(unittest.TestCase):
+    def test_all_static_editor_controls_exist(self):
+        html=(VIEWER/'editor.html').read_text(encoding='utf-8')
+        js=(VIEWER/'editor.js').read_text(encoding='utf-8')
+        ids=set(re.findall(r'id="([\w-]+)"',html))
+        refs=set(re.findall(r"\$\([\"']([\w-]+)[\"']\)",js))
+        self.assertFalse(refs-ids,refs-ids)
+
     def test_vendor_imports_are_local_and_complete(self):
         for path in (VIEWER/'editor-vendor').glob('*.js'):
             for relative in re.findall(r"^}?[ \t]*from [\'\"]([^\'\"]+)|^import .* from [\'\"]([^\'\"]+)",path.read_text(),re.M):
