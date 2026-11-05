@@ -153,6 +153,23 @@ context._0='test';context.setPreviewPaused(true);context.setPreviewPaused(false)
         subprocess.run(['node','-e',script,str(VIEWER/'preview.html')],check=True,capture_output=True,text=True,timeout=20)
 
 class WiringTest(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('node'),'Node checks isolated chain display and restoration')
+    def test_chain_isolation_preserves_selection_and_original_room_visibility(self):
+        script=r"""
+const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
+const html=fs.readFileSync(process.argv[1],'utf8');let builds=0;
+const state={window:{},document:{body:{classList:{toggle(){}}}},ki:{visible:true},F4(){builds++;}};vm.createContext(state);
+vm.runInContext(html.slice(html.indexOf('var fixtureSelection='),html.indexOf('var Ye=s=>')),state);
+vm.runInContext(html.slice(html.indexOf('function applyChainRoom()'),html.indexOf('const wiringPositions=')),state);
+const a={sliceUid:'a'},b={sliceUid:'b'};state.fixtureSelection.pixels.a={1:true};const saved=JSON.stringify(state.fixtureSelection);
+state.setChainIsolation(['a']);assert.equal(state.ki.visible,false);assert.equal(state.previewEnabled(a,0),true);assert.equal(state.previewEnabled(a,1),false);assert.equal(state.previewEnabled(b,0),false);
+state.setChainIsolation(null);assert.equal(state.ki.visible,true);assert.equal(state.previewEnabled(b,0),true);assert.equal(JSON.stringify(state.fixtureSelection),saved);assert.equal(builds,2);
+state.ki.visible=false;state.setChainIsolation(['b']);state.setChainIsolation(null);assert.equal(state.ki.visible,false);
+// A room arriving after chain editing starts must also be hidden and restored correctly.
+state.ki=null;state.setChainIsolation(['a']);state.ki={visible:true};state.applyChainRoom();assert.equal(state.ki.visible,false);state.setChainIsolation(null);assert.equal(state.ki.visible,true);
+"""
+        subprocess.run(['node','-e',script,str(VIEWER/'preview.html')],check=True,capture_output=True,text=True,timeout=20)
+
     @unittest.skipUnless(shutil.which('node'), 'Node checks physical wiring validation')
     def test_profile_order_and_invalid_connections(self):
         script=r"""

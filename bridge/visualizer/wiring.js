@@ -57,7 +57,9 @@ function reconcile(value,fixtures){
 scope.APCWiring={outputs,validate,ordered,groupKey,groupsFor,reconcile,validateLinks,cableLinks,linkedNodes,install};
 function install(api){
  const el=tag=>document.createElement(tag),key=()=> 'apc40-wiring:'+(new URLSearchParams(location.search).get('space')||'default')+':'+api.layout().preset;
- let data={version:1,connections:[]},loadedKey=null,enabled=false,chains=[],focusUid=null,edges=[],linked=new Set(),graphOutput=null,graphDrag=null,graphNodes=[];
+ let data={version:1,connections:[]},loadedKey=null,enabled=false,editingChain=false,lastIsolation=undefined,chains=[],focusUid=null,edges=[],linked=new Set(),graphOutput=null,graphDrag=null,graphNodes=[];
+ const reducedMotion=!!window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+ const style=el('style');style.textContent='.apc-chain-edit #inset,.apc-chain-edit #outputInsetCaption{visibility:hidden}';document.head.append(style);
  const canvas=el('canvas'),ctx=canvas.getContext('2d');canvas.id='wiringOverlay';canvas.hidden=true;
  canvas.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:3;width:100%;height:100%;display:none';document.body.append(canvas);
  const controlsPanel=el('div'),toggle=el('button'),branchChoice=el('select'),graphStatus=el('small');
@@ -67,7 +69,7 @@ function install(api){
  branchChoice.id='wiringBranch';branchChoice.setAttribute('aria-label','Wiring output branch');branchChoice.hidden=true;graphStatus.style.cssText='display:none;flex-basis:100%;color:#afbfcc;font:11px/1.4 system-ui;background:#101820dc;padding:5px 8px;border-radius:5px';controlsPanel.append(toggle,branchChoice,graphStatus);document.body.append(controlsPanel);
  function placeControl(){const pause=document.getElementById('pausePreview');if(!pause)return;const r=pause.getBoundingClientRect();controlsPanel.style.left=r.left+'px';controlsPanel.style.top=(r.bottom+7)+'px';}
  toggle.onclick=()=>{if(enabled){closeGraph();clearFocus();}else openGraph(null);};
- branchChoice.onchange=()=>{graphOutput=branchChoice.value?Number(branchChoice.value):null;focusUid=null;showTool(false);};
+ branchChoice.onchange=()=>{graphOutput=branchChoice.value?Number(branchChoice.value):null;focusUid=null;showTool(false);graphHint();};
  const box=el('section');box.id='wiringSettings';box.style.cssText='padding:12px 16px;border-top:1px solid #303b4b';
  const title=el('strong'),hint=el('p'),status=el('p');title.textContent='Physical output group';status.id='wiringStatus';status.setAttribute('role','status');
  hint.textContent='The whole group owns one physical output. Use fixture checkboxes or bulk selection to choose pieces in use today. Order and direction stay editable per piece.';
@@ -91,7 +93,7 @@ function install(api){
   load();const group=groupsFor(items,data)[0];if(/^DMX\b/i.test(group.name||'')){const info=el('small');info.textContent='Separate DMX output - 512 channels';return info;}const select=el('select');select.className='physicalGroup';select.setAttribute('aria-label','Physical output for '+group.name);
   option(select,0,'Unassigned group');outputs.forEach(o=>option(select,o.id,'OUT '+o.id+' | '+o.pieces+' x '+o.meters+' m'));
   select.value=group.output;select.onclick=e=>e.stopPropagation();select.onchange=()=>save({...data,groups:[...data.groups.filter(g=>g.key!==group.key),{key:group.key,output:Number(select.value)}]});
-  const wrapper=el('div'),edit=el('button');edit.textContent='Edit chain';edit.disabled=!group.output;edit.onclick=()=>openGraph(group.output);wrapper.style.cssText='display:flex;gap:6px';wrapper.append(select,edit);return wrapper;
+  const wrapper=el('div'),edit=el('button');edit.textContent='Edit chain';edit.disabled=!group.output;edit.onclick=()=>openGraph(group.output,true);wrapper.style.cssText='display:flex;gap:6px';wrapper.append(select,edit);return wrapper;
  }
  function change(){
   const item=selected(),current=data.connections.find(c=>c.uid===item?.sliceUid);if(!current)return;
@@ -100,42 +102,49 @@ function install(api){
  }
  order.onchange=reverse.onchange=change;api.mapper.addEventListener('click',event=>{if(!box.contains(event.target))refresh();});
  const tool=el('div'),flip=el('button');tool.id='fixtureDirectionTool';tool.hidden=true;tool.style.cssText='position:fixed;z-index:4;padding:6px;background:#101820ee;border:1px solid #ff9b38;border-radius:8px;display:none';
- const editChain=el('button');editChain.textContent='Edit chain';editChain.onclick=()=>{const c=data.connections.find(c=>c.uid===focusUid);if(c)openGraph(c.output);};tool.append(editChain);flip.textContent='Reverse direction';flip.id='reverseFixture';tool.title='Double-click empty space or press Escape to dismiss';tool.append(flip);document.body.append(tool);
+ const editChain=el('button');editChain.textContent='Edit chain';editChain.onclick=()=>{const c=data.connections.find(c=>c.uid===focusUid);if(c)openGraph(c.output,true);};tool.append(editChain);flip.textContent='Reverse direction';flip.id='reverseFixture';tool.title='Double-click empty space or press Escape to dismiss';tool.append(flip);document.body.append(tool);
  function setOverlay(show){canvas.hidden=!show;canvas.style.display=show?'block':'none';}
  function showTool(show){tool.hidden=!show;tool.style.display=show?'flex':'none';}
  function clearFocus(){focusUid=null;showTool(false);setOverlay(enabled);ctx.clearRect(0,0,canvas.width,canvas.height);api.select?.(null);}
- document.addEventListener('keydown',event=>{if(event.key==='Escape'){if(graphDrag){save({...data,links:graphDrag.previous});graphDrag=null;}else clearFocus();}});
+ document.addEventListener('keydown',event=>{if(event.key==='Escape'){if(graphDrag){const drag=graphDrag;graphDrag=null;save(drag.previous);if(api.canvas.hasPointerCapture(drag.pointerId))api.canvas.releasePointerCapture(drag.pointerId);}else if(editingChain){closeGraph();clearFocus();}else clearFocus();}});
  flip.onclick=()=>{const current=data.connections.find(c=>c.uid===focusUid);if(current)save({...data,connections:data.connections.map(c=>c.uid===focusUid?{...c,reverse:!c.reverse}:c)});};
  api.canvas.addEventListener('dblclick',event=>{
   if(api.isMapping?.())return;let uid=null,best=14;
-  for(const fixture of api.layout().fixtures||[]){if(!api.visible(fixture.sliceUid))continue;const points=api.positions(fixture.sliceUid)||[],stride=Math.max(1,Math.ceil(points.length/100));
+  for(const fixture of api.layout().fixtures||[]){if(!api.visible(fixture.sliceUid)||(editingChain&&!chains.some(c=>c.uid===fixture.sliceUid&&c.output===graphOutput)))continue;const points=api.positions(fixture.sliceUid)||[],stride=Math.max(1,Math.ceil(points.length/100));
    for(let i=0;i<points.length;i+=stride){const point=api.project(points[i]);if(!point)continue;const d=Math.hypot(event.clientX-point[0],event.clientY-point[1]);if(d<best){best=d;uid=fixture.sliceUid;}}
   }
   if(!uid){clearFocus();return;}focusUid=uid;if(enabled){graphOutput=data.connections.find(c=>c.uid===uid)?.output??null;branchChoice.value=graphOutput||'';}api.select?.(uid);refresh();setOverlay(true);
  });
 
- function openGraph(output){
-  api.leaveMapping?.();if(output===null&&focusUid)output=data.connections.find(c=>c.uid===focusUid)?.output??null;enabled=true;graphOutput=output;graphDrag=null;toggle.setAttribute('aria-pressed','true');toggle.style.borderColor='#72c5af';
-  branchChoice.hidden=false;branchChoice.replaceChildren();option(branchChoice,'','All outputs');
+ function syncIsolation(){
+  const ids=enabled&&editingChain?chains.filter(c=>c.output===graphOutput).map(c=>c.uid):null,key=ids?JSON.stringify(ids):null;
+  if(key!==lastIsolation){api.setWiring(ids);lastIsolation=key;}
+ }
+ function graphHint(){
+  const members=chains.filter(c=>graphOutput===null||c.output===graphOutput),modeled=members.filter(c=>api.positions(c.uid)?.length>1).length;graphStatus.textContent=(editingChain?'OUT '+graphOutput+' · '+modeled+'/'+members.length+' pieces have 3D positions. ':'')+'Drag OUT to IN. Blue inputs can connect. Esc cancels a drag or finishes editing.';
+ }
+ function openGraph(output,isolate=false){
+  api.leaveMapping?.();if(output===null&&focusUid)output=data.connections.find(c=>c.uid===focusUid)?.output??null;enabled=true;editingChain=isolate;graphOutput=output;graphDrag=null;toggle.textContent=isolate?'Done editing chain':'Wiring view';toggle.setAttribute('aria-pressed','true');toggle.style.borderColor='#72c5af';
+  branchChoice.hidden=false;branchChoice.replaceChildren();if(!editingChain)option(branchChoice,'','All outputs');
   for(const id of [...new Set(data.connections.map(c=>c.output))].sort((a,b)=>a-b))option(branchChoice,id,'OUT '+id);
-  branchChoice.value=output||'';graphStatus.style.display='block';graphStatus.textContent='Drag OUT to IN. Grab connected IN to unplug. Esc cancels.';setOverlay(true);
+  branchChoice.value=output||'';graphStatus.style.display='block';graphHint();setOverlay(true);syncIsolation();
  }
  function closeGraph(){
-  if(graphDrag){save({...data,links:graphDrag.previous});graphDrag=null;}
-  enabled=false;graphOutput=null;toggle.setAttribute('aria-pressed','false');toggle.style.borderColor='#485b70';branchChoice.hidden=true;graphStatus.style.display='none';setOverlay(false);api.canvas.style.cursor='';
+  if(graphDrag){save(graphDrag.previous);graphDrag=null;}
+  enabled=false;editingChain=false;graphOutput=null;toggle.textContent='Wiring view';syncIsolation();toggle.setAttribute('aria-pressed','false');toggle.style.borderColor='#485b70';branchChoice.hidden=true;graphStatus.style.display='none';setOverlay(false);api.canvas.style.cursor='';
  }
- function hitPort(x,y,inputOnly=false){let hit=null,best=inputOnly?25:10;
+ function hitPort(x,y,inputOnly=false){let hit=null,best=inputOnly?25:editingChain?14:10;
   for(const n of graphNodes)for(const input of inputOnly?[true]:[true,false]){const p=input?n.input:n.outputPort;if(!p)continue;const d=Math.hypot(x-p[0],y-p[1]);if(d<best){best=d;hit={node:n,input,point:p};}}return hit;
  }
  function candidate(from,to){const next=edges.filter(e=>e.from!==from&&e.to!==to);next.push({from,to});try{validateLinks(data.connections,next);return{valid:true,links:next};}catch(error){return{valid:false,message:error.message};}}
  api.canvas.addEventListener('pointerdown',event=>{
   if(!enabled||api.isMapping?.()||event.button!==0)return;const hit=hitPort(event.clientX,event.clientY);if(!hit)return;
   event.preventDefault();event.stopImmediatePropagation();
-  const previous=edges.map(e=>({...e})),old=hit.input?edges.find(e=>e.to===hit.node.uid):edges.find(e=>e.from===hit.node.uid),from=hit.input?old?.from:hit.node.uid;
+  const previous=data,old=hit.input?edges.find(e=>e.to===hit.node.uid):edges.find(e=>e.from===hit.node.uid),from=hit.input?old?.from:hit.node.uid;
   if(!from){graphStatus.textContent=hit.node.order===1?'The first input belongs to the physical output.':'Start a cable from an OUT port.';return;}
   if(!graphNodes.some(n=>n.uid===from&&n.outputPort)){graphStatus.textContent='The previous piece has no known 3D position.';return;}
   if(old&&!save({...data,links:edges.filter(e=>e!==old)}))return;
-  graphOutput=hit.node.output;branchChoice.value=graphOutput;focusUid=hit.node.uid;api.select?.(hit.node.uid);graphDrag={from,x:event.clientX,y:event.clientY,target:null,valid:false,previous};api.canvas.setPointerCapture(event.pointerId);showTool(false);
+  graphOutput=hit.node.output;branchChoice.value=graphOutput;focusUid=hit.node.uid;api.select?.(hit.node.uid);graphDrag={from,pointerId:event.pointerId,x:event.clientX,y:event.clientY,target:null,valid:false,previous};api.canvas.setPointerCapture(event.pointerId);showTool(false);
  },true);
  api.canvas.addEventListener('pointermove',event=>{
   if(!enabled)return;
@@ -149,18 +158,28 @@ function install(api){
   if(!graphDrag)return;event.preventDefault();event.stopImmediatePropagation();const drag=graphDrag;graphDrag=null;if(drag.target&&drag.valid)save({...data,links:drag.links});
   graphStatus.textContent=drag.target&&drag.valid?'Connected. Saved locally.':'Cable unplugged. Saved locally.';if(api.canvas.hasPointerCapture(event.pointerId))api.canvas.releasePointerCapture(event.pointerId);
  },true);
- api.canvas.addEventListener('pointercancel',()=>{if(graphDrag)save({...data,links:graphDrag.previous});graphDrag=null;});
+ api.canvas.addEventListener('pointercancel',()=>{const drag=graphDrag;graphDrag=null;if(drag)save(drag.previous);});
  function portPosition(a,b){if(!a)return null;const dx=(b?.[0]??a[0]+1)-a[0],dy=(b?.[1]??a[1])-a[1],length=Math.hypot(dx,dy)||1;return[a[0]+dy/length*5,a[1]-dx/length*5];}
- function cable(a,b,color,dashed=false){if(!a||!b)return;const bend=Math.max(25,Math.min(100,Math.abs(b[0]-a[0])*.4));ctx.strokeStyle=color;ctx.lineWidth=1.8;ctx.setLineDash(dashed?[5,4]:[]);ctx.beginPath();ctx.moveTo(...a);ctx.bezierCurveTo(a[0]+bend,a[1],b[0]-bend,b[1],...b);ctx.stroke();ctx.setLineDash([]);}
+ function cable(a,b,color,dashed=false){
+  if(!a||!b)return;const bend=Math.max(25,Math.min(100,Math.abs(b[0]-a[0])*.4));
+  ctx.strokeStyle=color;ctx.lineWidth=2;ctx.setLineDash(dashed?[5,4]:[]);ctx.beginPath();ctx.moveTo(...a);ctx.bezierCurveTo(a[0]+bend,a[1],b[0]-bend,b[1],...b);ctx.stroke();ctx.setLineDash([]);
+  const point=t=>[(1-t)**3*a[0]+3*(1-t)**2*t*(a[0]+bend)+3*(1-t)*t*t*(b[0]-bend)+t**3*b[0],(1-t)**3*a[1]+3*(1-t)**2*t*a[1]+3*(1-t)*t*t*b[1]+t**3*b[1]];
+  // Follow the curve near its destination, leaving the draggable square uncovered.
+  arrowHead(point(.78),point(.89),color,7);
+ }
+ function arrowHead(a,b,color,size=9){
+  if(!a||!b||Math.hypot(b[0]-a[0],b[1]-a[1])<.1)return;
+  const angle=Math.atan2(b[1]-a[1],b[0]-a[0]);ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(...b);ctx.lineTo(b[0]-size*Math.cos(angle-.5),b[1]-size*Math.sin(angle-.5));ctx.lineTo(b[0]-size*Math.cos(angle+.5),b[1]-size*Math.sin(angle+.5));ctx.closePath();ctx.fill();
+ }
  function arrow(a,b,color,dashed=false,head=true){
   if(!a||!b)return;ctx.strokeStyle=ctx.fillStyle=color;ctx.lineWidth=dashed?1.5:3;ctx.setLineDash(dashed?[5,5]:[]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([]);if(!head||Math.hypot(b[0]-a[0],b[1]-a[1])<2)return;
-  const angle=Math.atan2(b[1]-a[1],b[0]-a[0]);ctx.beginPath();ctx.moveTo(...b);ctx.lineTo(b[0]-9*Math.cos(angle-.45),b[1]-9*Math.sin(angle-.45));ctx.lineTo(b[0]-9*Math.cos(angle+.45),b[1]-9*Math.sin(angle+.45));ctx.closePath();ctx.fill();
+  arrowHead(a,b,color);
  }
  function label(text,p,color){if(!p)return;ctx.font='12px system-ui';const w=ctx.measureText(text).width;ctx.fillStyle='#101820e8';ctx.fillRect(p[0]+5,p[1]-17,w+10,19);ctx.fillStyle=color;ctx.fillText(text,p[0]+10,p[1]-3);}
  function draw(){
   const mapping=api.isMapping?.();controlsPanel.hidden=!!mapping;controlsPanel.style.display=mapping?'none':'flex';
-  if(mapping){if(enabled)closeGraph();focusUid=null;setOverlay(false);showTool(false);api.canvas.style.filter='';api.setWiring(false);return;}
-  setOverlay(enabled||!!focusUid);api.canvas.style.filter='';api.setWiring(false);
+  if(mapping){if(enabled)closeGraph();focusUid=null;setOverlay(false);showTool(false);api.canvas.style.filter='';syncIsolation();return;}
+  setOverlay(enabled||!!focusUid);api.canvas.style.filter='';syncIsolation();
   if(!enabled&&!focusUid)return;
   const width=innerWidth,height=innerHeight;if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height;}ctx.clearRect(0,0,width,height);showTool(false);graphNodes=[];
   for(const c of chains){
@@ -168,11 +187,20 @@ function install(api){
    const positions=api.positions(c.uid);if(!c.fixture||!positions||positions.length<2||!api.visible(c.uid))continue;
    const points=[],stride=Math.max(1,Math.ceil((positions.length-1)/48));for(let n=0;n<positions.length;n+=stride)points.push(api.project(positions[n]));if((positions.length-1)%stride!==0)points.push(api.project(positions[positions.length-1]));if(c.reverse)points.reverse();
    const first=points[0],last=points.at(-1),input=portPosition(first,points[1]),outputPort=portPosition(last,points.at(-2));graphNodes.push({...c,input,outputPort});
+   if(editingChain&&c.uid!==focusUid){for(let n=1;n<points.length;n++)arrow(points[n-1],points[n],linked.has(c.uid)?'#639d92':'#657585',true,false);label(String(c.order),points[Math.floor(points.length/2)],'#b7d6d0');}
    if(c.uid===focusUid&&!graphDrag){for(let n=1;n<points.length;n++)arrow(points[n-1],points[n],'#ff9b38',false,n===points.length-1);label('IN',first,'#51f29b');label('OUT',last,'#ff6475');const middle=points[Math.floor(points.length/2)];if(middle){showTool(true);tool.style.left=Math.max(10,Math.min(width-290,middle[0]+10))+'px';tool.style.top=Math.max(65,Math.min(height-50,middle[1]+10))+'px';flip.textContent='Reverse direction'+(c.reverse?' (reversed)':'');}}
   }
   if(enabled){
    const nodes=new Map(graphNodes.map(n=>[n.uid,n]));for(const e of edges){const a=nodes.get(e.from),b=nodes.get(e.to);if(a&&b)cable(a.outputPort,b.input,linked.has(e.from)?'#72cdb2':'#7a8797');}
-   for(const n of graphNodes)for(const [input,p] of [[true,n.input],[false,n.outputPort]]){if(!p)continue;ctx.fillStyle=input?(linked.has(n.uid)?'#71d6b3':'#8b97a6'):'#df8e89';if(graphDrag?.target===n.uid&&input)ctx.fillStyle=graphDrag.valid?'#81f5bc':'#ff686f';ctx.strokeStyle='#101820';ctx.lineWidth=1;ctx.fillRect(p[0]-4,p[1]-4,8,8);ctx.strokeRect(p[0]-4,p[1]-4,8,8);}
+   const pulse=reducedMotion ? .5 : .5+.5*Math.sin(performance.now()/240);
+   for(const n of graphNodes)for(const [input,p] of [[true,n.input],[false,n.outputPort]]){
+    if(!p)continue;ctx.save();
+    const eligible=!!graphDrag&&input&&n.output===graphOutput&&candidate(graphDrag.from,n.uid).valid;
+    let color=input?(linked.has(n.uid)?'#71d6b3':'#8b97a6'):'#df8e89';
+    if(eligible){color='#79c6ff';ctx.strokeStyle=color;ctx.lineWidth=2;ctx.shadowColor=color;ctx.shadowBlur=8+8*pulse;ctx.globalAlpha=.45+.35*pulse;ctx.beginPath();ctx.arc(p[0],p[1],9+2*pulse,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;}
+    if(graphDrag?.target===n.uid&&input)color=graphDrag.valid?'#b2f9da':'#ff686f';
+    ctx.fillStyle=color;ctx.strokeStyle='#101820';ctx.lineWidth=1;const radius=editingChain?5:4;ctx.fillRect(p[0]-radius,p[1]-radius,radius*2,radius*2);ctx.strokeRect(p[0]-radius,p[1]-radius,radius*2,radius*2);ctx.restore();
+   }
    if(graphDrag){const from=nodes.get(graphDrag.from),target=nodes.get(graphDrag.target);if(from)cable(from.outputPort,target?.input||[graphDrag.x,graphDrag.y],graphDrag.target?(graphDrag.valid?'#81f5bc':'#ff686f'):'#d4ba83',true);}
   }
  }
