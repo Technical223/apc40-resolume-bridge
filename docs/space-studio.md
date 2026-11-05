@@ -24,7 +24,7 @@ The optional converter runs Blender in the background only after consent, with e
 
 Rendering is capped at 30 FPS and pauses in hidden tabs. A static editor redraws only when needed. Undo stores object states rather than serializing full geometry on every edit and retains up to 30 actions. Large imports and video still consume GPU/RAM; close the preview when Arena needs those resources.
 
-This branch is experimental. Basic browser editing and GLB export have been checked; OBJ/FBX import and GLB roundtrips have automated checks. Live Arena capture, optional Blender conversion on a clean computer, Mac hardware, compressed GLB extensions and arbitrary production models still need validation. The stable installed application is not changed by checking out this branch.
+This branch is experimental. Browser checks cover exact dimensions, row duplication, slice assignment, automatic recovery, and switching Preview ↔ 3D Editor with selection, orthographic view, snap and a local video loop preserved. OBJ/FBX import and GLB roundtrips have automated checks. Live Arena capture, optional Blender conversion on a clean computer, Mac hardware, compressed GLB extensions and arbitrary production models still need validation. The stable installed application is not changed by checking out this branch.
 
 ## Dimensions and arrays
 
@@ -44,4 +44,4 @@ The slice diagram highlights the selected object's source. Click an outline to s
 
 The input readout distinguishes decoded **source FPS** from **render FPS**, displays source dimensions and reports a static scene instead of pretending to render continuously. Browser support determines whether source-frame counts are available. Rendering pauses in hidden tabs.
 
-These changes have automated coverage; a real browser session with production models, camera permissions and storage pressure still needs manual validation before a public release.
+The browser workflow was checked with a small model and a local H.264 loop. Missing slices show a warning; Stop returns the input to black. Large production models, live camera permissions and storage pressure still need validation before a public release.
