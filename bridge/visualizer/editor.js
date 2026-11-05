@@ -5,7 +5,7 @@ import { GLTFLoader } from "./editor-vendor/GLTFLoader.js";
 import { GLTFExporter } from "./editor-vendor/GLTFExporter.js";
 import { OBJLoader } from "./editor-vendor/OBJLoader.js";
 import { FBXLoader } from "./editor-vendor/FBXLoader.js";
-import { validateObject, effective, COMPOSITION } from "./editor-model.js";
+import { validateObject, effective, COMPOSITION, advanceFrame, centerPivot } from "./editor-model.js";
 const $ = (id) => document.getElementById(id),
   viewport = $("viewport");
 const scene = new T.Scene();
@@ -52,6 +52,8 @@ blackContext.fillRect(0, 0, 2, 2);
 const videoTexture = new T.VideoTexture(video),
   blackTexture = new T.CanvasTexture(black),
   sourceUniform = { value: blackTexture };
+let videoFileUrl = null;
+video.loop = true;
 let media = null,
   testPattern = false;
 const previewMaterials = new Map();
@@ -473,6 +475,11 @@ $("addRoom").onclick = () => add("room");
 $("addProjection").onclick = () => add("projection");
 $("addPanel").onclick = () => add("panel");
 $("addStrip").onclick = () => add("strip");
+$('centerPivot').onclick = () => {
+  if (!selected || preview) return;
+  try { remember(); select(centerPivot(selected, T)); refresh(); changed(); }
+  catch (error) { message(error.message); }
+};
 $("duplicate").onclick = () => {
   if (!selected) return;
   remember();
@@ -747,11 +754,35 @@ $("save").onclick = async () => {
     button.disabled = false;
   }
 };
+async function openVideoFile(file) {
+  stopMedia();
+  const url = URL.createObjectURL(file);
+  videoFileUrl = url;
+  video.src = url;
+  try {
+    await video.play();
+    if (videoFileUrl !== url) return;
+    sourceUniform.value = videoTexture;
+    renderNeeded = true;
+    message('Local video loop connected. No upload; audio is muted.');
+  } catch (error) {
+    if (videoFileUrl !== url) return;
+    stopMedia();
+    message('This video cannot play in the browser. Use H.264 MP4 or WebM; DXV needs conversion first.');
+  }
+}
 function stopMedia() {
   media?.getTracks().forEach((track) => track.stop());
   media = null;
   video.pause();
   video.srcObject = null;
+  video.removeAttribute('src');
+  video.load();
+  if (videoFileUrl) URL.revokeObjectURL(videoFileUrl);
+  videoFileUrl = null;
+  blackContext.fillStyle = '#000';
+  blackContext.fillRect(0, 0, black.width, black.height);
+  blackTexture.needsUpdate = true;
   testPattern = false;
   sourceUniform.value = blackTexture;
   renderNeeded = true;
@@ -805,6 +836,12 @@ $("test").onclick = () => {
 };
 $("camera").onclick = () => startMedia(false);
 $("capture").onclick = () => startMedia(true);
+$('openVideo').onclick = () => $('videoFile').click();
+$('videoFile').onchange = async () => {
+  const file = $('videoFile').files[0];
+  $('videoFile').value = '';
+  if (file) await openVideoFile(file);
+};
 $("stop").onclick = stopMedia;
 $("back").onclick = () => {
   if (!dirty || confirm("Leave without saving the project?"))
@@ -914,7 +951,9 @@ async function loadInitial() {
 loadInitial();
 function animate(time) {
   requestAnimationFrame(animate);
-  if (document.hidden || time - lastFrame < 1000 / 30) return;
+  if (document.hidden) return;
+  const nextFrame = advanceFrame(time, lastFrame);
+  if (nextFrame === null) return;
   if (testPattern) {
     const g = blackContext.createLinearGradient(0, 0, 256, 256);
     g.addColorStop(0, "hsl(" + ((time / 40) % 360) + ",90%,55%)");
@@ -923,10 +962,10 @@ function animate(time) {
     blackContext.fillRect(0, 0, 256, 256);
     blackTexture.needsUpdate = true;
   }
-  if (renderNeeded || media || testPattern) {
+  if (renderNeeded || media || testPattern || videoFileUrl) {
     renderer.render(scene, camera);
     renderNeeded = false;
-    lastFrame = time;
+    lastFrame = nextFrame;
   }
 }
 requestAnimationFrame(animate);

@@ -73,6 +73,38 @@ assert.ok(mesh);assert.equal(mesh.userData.apcEditor.type,'panel');assert.equal(
         result=subprocess.run(['node','--input-type=module','-e',script],cwd=ROOT,capture_output=True,text=True,encoding='utf-8',timeout=20)
         self.assertEqual(result.returncode,0,result.stderr)
 
+    @unittest.skipUnless(shutil.which('node'),'Node checks timing and pivot transforms')
+    def test_frame_phase_and_centered_pivot_preserve_world_geometry(self):
+        script=r"""
+import fs from 'node:fs';import assert from 'node:assert/strict';import {pathToFileURL} from 'node:url';
+const src=fs.readFileSync('bridge/visualizer/editor-model.js');const {advanceFrame,centerPivot}=await import('data:text/javascript;base64,'+src.toString('base64'));
+for(const hz of [60,120,144]){let last=0,count=0;for(let i=1;i<=hz*4;i++){const next=advanceFrame(i*1000/hz,last);if(next!==null){last=next;count++;}}assert.equal(count,120);}
+const T=await import(pathToFileURL(process.cwd()+'/bridge/visualizer/editor-vendor/three.module.js'));
+const root=new T.Group();root.position.set(3,4,5);root.rotation.y=.6;root.scale.set(2,.8,1.5);
+const mesh=new T.Mesh(new T.BoxGeometry(2,1,3).translate(4,1,0));mesh.position.set(1,2,3);mesh.rotation.z=.4;root.add(mesh);root.updateMatrixWorld(true);
+function points(){root.updateMatrixWorld(true);const p=mesh.geometry.getAttribute('position');return Array.from({length:p.count},(_,i)=>new T.Vector3().fromBufferAttribute(p,i).applyMatrix4(mesh.matrixWorld));}
+const before=points(),center=new T.Box3().setFromObject(mesh).getCenter(new T.Vector3());const pivot=centerPivot(mesh,T);
+assert.ok(pivot.getWorldPosition(new T.Vector3()).distanceTo(center)<1e-6);
+points().forEach((p,i)=>assert.ok(p.distanceTo(before[i])<1e-6));
+assert.equal(centerPivot(pivot,T),pivot);points().forEach((p,i)=>assert.ok(p.distanceTo(before[i])<1e-6));
+"""
+        result=subprocess.run(['node','--input-type=module','-e',script],cwd=ROOT,capture_output=True,text=True,encoding='utf-8',timeout=20)
+        self.assertEqual(result.returncode,0,result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'),'Node checks local video cleanup')
+    def test_local_video_releases_urls_and_returns_to_black(self):
+        script=r"""
+import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';
+const src=fs.readFileSync('bridge/visualizer/editor.js','utf8');let revoked=0,cleared=0,fail=false;
+const context={URL:{createObjectURL:()=> 'blob:local',revokeObjectURL:()=>revoked++},video:{pause(){},load(){},removeAttribute(){},play(){return fail?Promise.reject(Error('codec')):Promise.resolve();}},videoFileUrl:null,media:null,testPattern:false,sourceUniform:{value:null},videoTexture:{},blackTexture:{},black:{width:256,height:256},blackContext:{fillRect(){cleared++;}},renderNeeded:false,message(){}};
+vm.createContext(context);vm.runInContext(src.slice(src.indexOf('async function openVideoFile('),src.indexOf('async function startMedia(')),context);
+await vm.runInContext('openVideoFile({})',context);assert.equal(context.sourceUniform.value,context.videoTexture);
+vm.runInContext('stopMedia()',context);assert.equal(revoked,1);assert.equal(context.sourceUniform.value,context.blackTexture);assert.ok(cleared>0);
+fail=true;await vm.runInContext('openVideoFile({})',context);assert.equal(revoked,2);assert.equal(context.videoFileUrl,null);
+"""
+        result=subprocess.run(['node','--input-type=module','-e',script],cwd=ROOT,capture_output=True,text=True,encoding='utf-8',timeout=20)
+        self.assertEqual(result.returncode,0,result.stderr)
+
     @unittest.skipUnless(shutil.which('node'),'Node checks editor math and GLB project extras')
     def test_editor_validation_and_project_preview(self):
         script=r"""

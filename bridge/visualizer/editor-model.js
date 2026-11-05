@@ -38,3 +38,34 @@ export const COMPOSITION = [
   [1, 0],
   [0, 0],
 ];
+
+// Preserve the frame clock phase instead of discarding fractional monitor ticks.
+export function advanceFrame(now, last) {
+  const step = 1000 / 30;
+  const ticks = Math.floor((now - last + 0.001) / step);
+  return ticks > 0 ? last + ticks * step : null;
+}
+// A translation-only pivot parent preserves geometry, UVs, skinning and world transforms.
+export function centerPivot(node, T) {
+  if (!node.parent) throw Error('Select a scene object first.');
+  node.updateWorldMatrix(true, true);
+  const box = new T.Box3().setFromObject(node);
+  if (box.isEmpty()) throw Error('This object has no geometry to center.');
+  const center = box.getCenter(new T.Vector3());
+  if (node.userData.apcPivot) {
+    const offset = node.worldToLocal(center.clone());
+    const next = node.parent.worldToLocal(center.clone());
+    node.position.copy(next);
+    for (const child of node.children) child.position.sub(offset);
+    node.updateWorldMatrix(true, true);
+    return node;
+  }
+  const parent = node.parent, pivot = new T.Group();
+  pivot.name = (node.name || 'Object') + ' · pivot';
+  pivot.userData.apcPivot = true;
+  pivot.position.copy(parent.worldToLocal(center));
+  parent.add(pivot);
+  pivot.updateWorldMatrix(true, false);
+  pivot.attach(node);
+  return pivot;
+}
