@@ -383,6 +383,7 @@ function resize() {
   renderNeeded = true;
 }
 new ResizeObserver(resize).observe(viewport);
+window.apcPanelLayout?.(() => { renderNeeded = true; });
 function setView(name) {
   const distance = Math.max(3, camera.position.distanceTo(target));
   const directions = {
@@ -1448,7 +1449,7 @@ let statsAt = 0,
   sourceFrames = 0;
 function animate(time) {
   requestAnimationFrame(animate);
-  if (document.hidden) return;
+  if (document.hidden || document.body.classList.contains("apc-panel-focused")) return;
   if (time - statsAt >= 1000) {
     const duration = (time - statsAt) / 1000,
       total = video.getVideoPlaybackQuality?.().totalVideoFrames || 0;

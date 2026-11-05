@@ -46,6 +46,21 @@ class ConversionTest(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError,'stopped'):convert.convert_model(b'BLENDER','.blend',executable='fake-blender')
 
 class EditorTest(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('node'),'Node checks local panel settings')
+    def test_panel_preferences_accept_only_known_finite_numeric_fields(self):
+        script=r"""
+import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';
+let saved='{"editorWidth":540,"treeRatio":70,"viewerWidth":"700px","mapperHeight":-1,"mapperWidth":1e309,"active":false}';
+const context={window:{},localStorage:{getItem(key){assert.equal(key,'apc40-panel-layout:v1');return saved;}}};
+vm.createContext(context);vm.runInContext(fs.readFileSync('bridge/visualizer/editor-project.js','utf8'),context);
+const read=()=>JSON.parse(JSON.stringify(context.readPanelLayout()));
+assert.deepEqual(read(),{editorWidth:540,treeRatio:70});
+for(const value of ['null','[]','"text"','not json','{"editorWidth":0}']){saved=value;assert.deepEqual(read(),{});}
+context.localStorage.getItem=()=>{throw Error('Storage blocked');};assert.deepEqual(read(),{});
+"""
+        result=subprocess.run(['node','--input-type=module','-e',script],cwd=ROOT,capture_output=True,text=True,encoding='utf-8',timeout=20)
+        self.assertEqual(result.returncode,0,result.stderr)
+
     @unittest.skipUnless(shutil.which('node'),'Node checks room front geometry')
     def test_front_cut_clones_geometry_and_keeps_sides(self):
         script=r"""

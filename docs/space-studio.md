@@ -103,3 +103,12 @@ Visualizer, Output mapping and 3D Editor share dark controls, typography, focus 
 ## Light spill
 
 Light spill approximates reflected light on the room. It averages every modeled strip pixel using a small, high-quality 384×216 sampling image, then smooths reflected-light colors over about 100 ms to reduce false flashes from moving patterns. LED pixels and video keep their original timing. Disabled pixels, fixtures and disconnected branches do not contribute. Black/no input and a zero spill setting switch spill off; Pause holds an exact snapshot.
+
+
+## Resize your workspace
+
+Drag the panel edges to change their width or height. In the 3D Editor, drag the left edge of the right sidebar to change its width, or the divider between Scene collections and Object properties to give either section more room. The 3D canvas resizes automatically.
+
+**Expand** fills the current workspace with that panel; **Restore** or **Escape** returns to the scene. Expanded Output mapping gives the list more height and places wiring settings beside it on wider screens. The 3D render pauses while a panel covers it, without changing video playback, the camera or mapping. Everything stays in the same browser tab.
+
+Panel sizes are remembered locally, independently of scene projects and collapsed groups. Double-click a resize edge to reset that dimension. Focus a resize edge and use arrow keys for small adjustments, or **Home** to reset it. If browser storage is unavailable, resizing still works for the current session.
