@@ -67,3 +67,9 @@ Above the viewport, **Select → LEDs** prevents room geometry from intercepting
 **Solid** is the default editing view: neutral double-sided shading without imported textures or emission. **Materials** shows the model's original materials; Scene preview shows the mapped video. Solid shading does not rewrite UVs, materials or mesh geometry in the exported project. For dense meshes, selection uses an orange bounds box instead of generating expensive edges.
 
 In Output mapping, thin fixtures have a small screen-space hit tolerance, and selecting an outline never disables it. Enable/disable uses the fixture checkbox. For exact pixels, select a fixture and choose **Edit selected fixture pixels**: the magnified numbered grid makes pixel 1 and the last pixel individually clickable. Use the range selector for long strips. Orange marks the selected fixture/pixel; changes save automatically.
+
+## Pause the visualizer input
+
+Use **Pause / Resume** beside the settings panel to hold the current input image while inspecting fixtures or editing the mapping. Camera movement, selection and mapping controls remain available. The output inset and LED/projection sampling use the same frozen frame; Arena and hardware output continue unchanged. Resume returns to live input, or continues the local video. Changing the input while paused keeps the frozen image until Resume.
+
+A single snapshot is limited to 1280×720 to bound memory use. Its canvas and GPU texture are released on Resume. The pause is local to the current Visualizer page; opening the 3D Editor does not pause its separate preview input.

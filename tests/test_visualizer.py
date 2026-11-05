@@ -95,6 +95,25 @@ console.log('Selection checks passed');
         subprocess.run(['node','-e',script,str(VIEWER/'preview.html')],check=True,capture_output=True,text=True)
 
 
+class PauseTest(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('node'), 'Node checks pause snapshot lifecycle')
+    def test_snapshot_stops_video_and_releases_texture_on_resume(self):
+        script=r"""
+const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
+const html=fs.readFileSync(process.argv[1],'utf8'),code=html.slice(html.indexOf('var previewPaused=false'),html.indexOf('const pausePreviewButton='));
+let time=4,paused=0,played=0,disposed=0;
+const context={document:{createElement(){return {width:0,height:0,getContext(){return {fillRect(){},drawImage(){}}}};}},
+ _0:'video',Cn:1920,Bn:1080,ui:{},At:{videoWidth:1920,videoHeight:1080,pause(){paused++;},play(){played++;return Promise.resolve();}},
+ Xs:class{dispose(){disposed++;}},tt:'srgb',pi:{map:{value:'live'}},Yo:'video texture',Tr:'test texture',R4:{getElapsedTime(){return time;}},pausePreviewButton:{setAttribute(){}},di(message){throw Error(message);}};
+vm.createContext(context);vm.runInContext(code,context);context.setPreviewPaused(true);
+assert.equal(context.previewPaused,true);assert.equal(context.pausePreviewButton.textContent,'Resume');assert.equal(paused,1);
+assert.equal(vm.runInContext('pausedFrame.width',context),1280);assert.equal(vm.runInContext('pausedFrame.height',context),720);
+const frozen=context.pi.map.value;context.setPreviewPaused(true);assert.equal(context.pi.map.value,frozen);
+time=9;context.setPreviewPaused(false);assert.equal(context.previewPaused,false);assert.equal(context.previewPauseOffset,5);assert.equal(context.pi.map.value,'video texture');assert.equal(played,1);assert.equal(disposed,1);assert.equal(context.pausePreviewButton.textContent,'Pause');assert.equal(vm.runInContext('pausedFrame.width',context),1);
+context._0='test';context.setPreviewPaused(true);context.setPreviewPaused(false);assert.equal(context.pi.map.value,'test texture');assert.equal(played,1);
+"""
+        subprocess.run(['node','-e',script,str(VIEWER/'preview.html')],check=True,capture_output=True,text=True,timeout=20)
+
 class WiringTest(unittest.TestCase):
     @unittest.skipUnless(shutil.which('node'), 'Node checks physical wiring validation')
     def test_profile_order_and_invalid_connections(self):
