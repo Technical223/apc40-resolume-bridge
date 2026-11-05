@@ -10,6 +10,44 @@ ROOT=Path(__file__).resolve().parents[1]
 VIEWER=ROOT/'bridge/visualizer'
 
 class MappingTest(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('node'),'Node checks light-spill sampling')
+    def test_light_spill_averages_all_pixels_and_smooths_only_reflected_light(self):
+        script=r"""
+import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';import {pathToFileURL} from 'node:url';import path from 'node:path';
+const T=await import(pathToFileURL(path.resolve('bridge/visualizer/editor-vendor/three.module.js')));
+const html=fs.readFileSync('bridge/visualizer/preview.html','utf8');
+const sample=html.slice(html.indexOf('function D4()'),html.indexOf('var Yi=',html.indexOf('function D4()')));
+let clock=0,linked=true,reads=0;const data=new Uint8ClampedArray(64*4);
+const fixture={sliceUid:'a',uv:Array.from({length:64},(_,i)=>[(i+.5)/64,.5])};
+const light={color:new T.Color(0,0,0),intensity:0};
+const context={previewPaused:false,_0:'test',testPatternEnabled:true,ui:{},At:{videoWidth:0,videoHeight:0},Cn:64,Bn:1,hi:64,Vi:1,
+ yt:{x:0,y:0,w:1,h:1},performance:{now:()=>clock},lastSpillTime:null,ko:2,
+ fixtureSelection:{disabled:{},pixels:{}},window:{apcWiring:{hasSignal:()=>linked}},
+ M4:[{L:light,fixture,w:1.6,px:64}],Vo:{color:new T.Color(0,0,0),intensity:0},Tc:new T.Color(),spillTarget:new T.Color(),tt:T.SRGBColorSpace,
+ xc:{clearRect(){},drawImage(){},getImageData(){reads++;return {data};}}};
+vm.createContext(context);vm.runInContext(sample,context);
+const update=()=>vm.runInContext('D4()',context);
+// A traveling lit pixel has constant total energy; skipping every fifth pixel caused false flashes.
+let expected;
+for(let i=0;i<64;i++){data.fill(0);data[i*4]=255;clock+=1000/30;update();expected??=light.color.r;assert(Math.abs(light.color.r-expected)<1e-10);}
+assert(expected>0);assert.equal(light.color.g,0);assert.equal(light.intensity,3.2);
+const filtered=(fps)=>{data.fill(0);context.lastSpillTime=null;update();data.fill(255);for(let i=1;i<=fps/5;i++){clock+=1000/fps;update();}return light.color.r;};
+const at30=filtered(30),at60=filtered(60);assert(Math.abs(at30-at60)<1e-10);assert(Math.abs(at30-(1-Math.exp(-2)))<1e-10);
+// Pause is an exact snapshot, not a continuing fade of reflected light.
+context.previewPaused=true;context.pausedFrame={width:64,height:1};data.fill(128);update();const frozen=light.color.r;clock+=30;update();assert.equal(light.color.r,frozen);context.previewPaused=false;data.fill(255);
+// Masked pixels, a disabled fixture, or a disconnected cable cannot keep spilling light.
+context.fixtureSelection.pixels.a=Object.fromEntries(fixture.uv.map((_,i)=>[i,true]));update();assert.equal(light.intensity,0);assert.equal(context.Vo.intensity,0);
+context.fixtureSelection.pixels={};context.fixtureSelection.disabled.a=true;update();assert.equal(light.intensity,0);
+context.fixtureSelection.disabled={};linked=false;update();assert.equal(light.intensity,0);linked=true;
+// UVs outside the source clamp to its edges instead of producing NaN colors.
+fixture.uv=[[-1,-1],[2,2]];context.lastSpillTime=null;update();assert(Number.isFinite(light.color.r));assert.equal(light.color.r,1);
+context.testPatternEnabled=false;update();assert.equal(light.intensity,0);assert.equal(context.Vo.intensity,0);
+context.testPatternEnabled=true;update();context._0='video';update();assert.equal(light.intensity,0);assert.equal(context.Vo.intensity,0);
+context._0='test';context.ko=0;const before=reads;update();assert.equal(reads,before);assert.equal(light.intensity,0);
+"""
+        result=subprocess.run(['node','--input-type=module','-e',script],cwd=ROOT,capture_output=True,text=True,encoding='utf-8',timeout=20)
+        self.assertEqual(result.returncode,0,result.stderr)
+
     def test_output_names_lumiverse_and_changed_counts(self):
         spec=importlib.util.spec_from_file_location('viewer_prepare',VIEWER/'prepare.py')
         module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)

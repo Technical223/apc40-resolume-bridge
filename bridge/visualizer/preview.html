@@ -4023,7 +4023,42 @@ material.emissive?.setRGB(0,0,0);material.emissiveIntensity=0;material.emissiveM
       vec2 uv = crop.xy + vUv * crop.zw;
       vec3 c = texture2D(map, uv).rgb * gain;
       c = mix(c, c*1.5, vSel*0.55);
-      gl_FragColor = vec4(c, 1.0); }`}),vr=[],ji=[],qi={metrovka:1,neon:1};function Oc(){let s={metrovka:[],neon:[]};sn.forEach((l,f)=>l.pos.forEach((h,u)=>s[l.kind].push({fi:f,k:u})));let e={metrovka:new Zs(.006,8,6),neon:new Ks(.011,.011,1,10,1,!0)},t=new Oe,n=new Mt,i=new v(0,1,0),r=new v,a=new v,o=new v,c=new v;Object.entries(s).forEach(([l,f])=>{let h=e[l].clone(),u=new si(h,v4,f.length),p=new Float32Array(f.length*2),$=new Float32Array(f.length),g=[];f.forEach(({fi:m,k:d},_)=>{let b=sn[m],A=b.pos;if(r.fromArray(A[d]),l==="neon"){let T=Math.max(0,d-1),y=Math.min(A.length-1,d+1);o.fromArray(A[y]).sub(a.fromArray(A[T]));let B=o.length()/(y-T);n.setFromUnitVectors(i,o.normalize()),c.set(qi.neon,B*(+document.getElementById("neonFill")?.value||.97),qi.neon)}else n.identity(),c.setScalar(qi.metrovka);let sourcePixel=window.apcWiring?.pixelIndex(b.sliceUid,d,b.uv.length)??d;previewEnabled(b,sourcePixel)||c.set(0,0,0),t.compose(r,n,c),u.setMatrixAt(_,t),p[_*2]=b.uv[sourcePixel][0],p[_*2+1]=b.uv[sourcePixel][1],g.push(m)}),h.setAttribute("aUv",new b0(p,2)),h.setAttribute("aSel",new b0($,1)),u.userData.kind=l,u.frustumCulled=!1,U0.add(u),ji.push(u),vr.push(g)})}Oc();function F4(){ji.forEach(s=>{U0.remove(s),s.geometry.dispose()}),ji.length=0,vr.length=0,Oc(),Qc(Ji)}var hi=192,Vi=108,Xo=document.createElement("canvas");Xo.width=hi;Xo.height=Vi;var xc=Xo.getContext("2d",{willReadFrequently:!0}),M4=sn.map(s=>{let e=new v;s.pos.forEach(r=>e.add(new v().fromArray(r))),e.divideScalar(s.pos.length);let t=new J0(0,0,6,2);t.position.copy(e),(!qo||location.hash.includes("lights"))&&U0.add(t);let n=Math.max(1,Math.floor(s.uv.length/12)),i=s.uv.filter((r,a)=>a%n===0);return{L:t,samples:i,w:s.kind==="neon"?5:1.6,px:s.pixels}}),Vo=new or(0,0);U0.add(Vo);var Tc=new be,ko=1.5;function D4(){if(!M4.length)return null;let s=previewPaused?pausedFrame:_0==="test"?ui:At,e=previewPaused?pausedFrame.width:_0==="test"?Cn:At.videoWidth,t=previewPaused?pausedFrame.height:_0==="test"?Bn:At.videoHeight;if(!e||!t)return null;xc.drawImage(s,yt.x*e,yt.y*t,yt.w*e,yt.h*t,0,0,hi,Vi);let n=xc.getImageData(0,0,hi,Vi).data,i=0,r=0,a=0,o=0;return M4.forEach(({L:c,samples:l,w:f,px:h})=>{if(!l.length){c.intensity=0;return;}let u=0,p=0,$=0;l.forEach(([m,d])=>{let _=Math.min(hi-1,Math.floor(m*hi)),A=(Math.min(Vi-1,Math.floor((1-d)*Vi))*hi+_)*4;u+=n[A],p+=n[A+1],$+=n[A+2]});let g=l.length*255;c.color.setRGB(u/g,p/g,$/g,tt),c.intensity=ko*f,i+=c.color.r*h,r+=c.color.g*h,a+=c.color.b*h,o+=h}),Tc.setRGB(o?i/o:0,o?r/o:0,o?a/o:0),Vo.color.copy(Tc),Vo.intensity=ko*.45,!0}var Yi=Ye("inset"),i0=Yi.getContext("2d");function P4(){
+      gl_FragColor = vec4(c, 1.0); }`}),vr=[],ji=[],qi={metrovka:1,neon:1};function Oc(){let s={metrovka:[],neon:[]};sn.forEach((l,f)=>l.pos.forEach((h,u)=>s[l.kind].push({fi:f,k:u})));let e={metrovka:new Zs(.006,8,6),neon:new Ks(.011,.011,1,10,1,!0)},t=new Oe,n=new Mt,i=new v(0,1,0),r=new v,a=new v,o=new v,c=new v;Object.entries(s).forEach(([l,f])=>{let h=e[l].clone(),u=new si(h,v4,f.length),p=new Float32Array(f.length*2),$=new Float32Array(f.length),g=[];f.forEach(({fi:m,k:d},_)=>{let b=sn[m],A=b.pos;if(r.fromArray(A[d]),l==="neon"){let T=Math.max(0,d-1),y=Math.min(A.length-1,d+1);o.fromArray(A[y]).sub(a.fromArray(A[T]));let B=o.length()/(y-T);n.setFromUnitVectors(i,o.normalize()),c.set(qi.neon,B*(+document.getElementById("neonFill")?.value||.97),qi.neon)}else n.identity(),c.setScalar(qi.metrovka);let sourcePixel=window.apcWiring?.pixelIndex(b.sliceUid,d,b.uv.length)??d;previewEnabled(b,sourcePixel)||c.set(0,0,0),t.compose(r,n,c),u.setMatrixAt(_,t),p[_*2]=b.uv[sourcePixel][0],p[_*2+1]=b.uv[sourcePixel][1],g.push(m)}),h.setAttribute("aUv",new b0(p,2)),h.setAttribute("aSel",new b0($,1)),u.userData.kind=l,u.frustumCulled=!1,U0.add(u),ji.push(u),vr.push(g)})}Oc();function F4(){ji.forEach(s=>{U0.remove(s),s.geometry.dispose()}),ji.length=0,vr.length=0,Oc(),Qc(Ji)}var hi=384,Vi=216,Xo=document.createElement("canvas");Xo.width=hi;Xo.height=Vi;
+var xc=Xo.getContext("2d",{willReadFrequently:true});xc.imageSmoothingEnabled=true;xc.imageSmoothingQuality="high";
+var M4=sn.map(fixture=>{
+ const center=new v;fixture.pos.forEach(point=>center.add(new v().fromArray(point)));center.divideScalar(fixture.pos.length);
+ const light=new J0(0,0,6,2);light.position.copy(center);if(!qo||location.hash.includes("lights"))U0.add(light);
+ return {L:light,fixture,w:fixture.kind==="neon"?5:1.6,px:fixture.pixels};
+}),Vo=new or(0,0);U0.add(Vo);
+var Tc=new be,spillTarget=new be,ko=1.5,lastSpillTime=null;
+function D4(){
+ const source=previewPaused?pausedFrame:_0==="test"?ui:At;
+ const width=previewPaused?pausedFrame.width:_0==="test"?Cn:At.videoWidth;
+ const height=previewPaused?pausedFrame.height:_0==="test"?Bn:At.videoHeight;
+ if(!M4.length||ko<=0||!width||!height||(!previewPaused&&_0==="test"&&!testPatternEnabled)){
+  M4.forEach(({L})=>{L.intensity=0;L.color.setRGB(0,0,0);});Vo.intensity=0;Vo.color.setRGB(0,0,0);lastSpillTime=null;return false;
+ }
+ xc.clearRect(0,0,hi,Vi);xc.drawImage(source,yt.x*width,yt.y*height,yt.w*width,yt.h*height,0,0,hi,Vi);
+ const data=xc.getImageData(0,0,hi,Vi).data,now=performance.now();
+ // Only reflected light is filtered; LED pixels and video keep their original timing.
+ const blend=previewPaused||lastSpillTime===null?1:-Math.expm1(-Math.max(0,now-lastSpillTime)/100);lastSpillTime=now;
+ let red=0,green=0,blue=0,total=0;
+ for(const {L,fixture,w,px} of M4){
+  const id=fixture.sliceUid,uv=fixture.uv;
+  if(!uv.length||fixtureSelection.disabled[id]===true||window.apcWiring?.hasSignal(id)===false){L.intensity=0;L.color.setRGB(0,0,0);continue;}
+  let r=0,g=0,b=0,active=0;const disabled=fixtureSelection.pixels[id]||{};
+  uv.forEach(([u,v],pixel)=>{
+   if(disabled[pixel]===true)return;active++;
+   const x=Math.max(0,Math.min(hi-1,Math.floor(u*hi))),y=Math.max(0,Math.min(Vi-1,Math.floor((1-v)*Vi))),offset=(y*hi+x)*4;
+   r+=data[offset];g+=data[offset+1];b+=data[offset+2];
+  });
+  if(!active){L.intensity=0;L.color.setRGB(0,0,0);continue;}
+  const divisor=uv.length*255;spillTarget.setRGB(r/divisor,g/divisor,b/divisor,tt);if(blend===1)L.color.copy(spillTarget);else L.color.lerp(spillTarget,blend);L.intensity=ko*w;
+  red+=L.color.r*px;green+=L.color.g*px;blue+=L.color.b*px;total+=px;
+ }
+ Tc.setRGB(total?red/total:0,total?green/total:0,total?blue/total:0);Vo.color.copy(Tc);Vo.intensity=total?ko*.45:0;return true;
+}
+var Yi=Ye("inset"),i0=Yi.getContext("2d");function P4(){
 let w=Yi.width,h=Yi.height,source=previewPaused?pausedFrame:_0==="test"?ui:At,sw=previewPaused?pausedFrame.width:_0==="test"?Cn:At.videoWidth,sh=previewPaused?pausedFrame.height:_0==="test"?Bn:At.videoHeight;
 i0.fillStyle="#000";i0.fillRect(0,0,w,h);
 if(sw&&sh)i0.drawImage(source,yt.x*sw,yt.y*sh,yt.w*sw,yt.h*sh,0,0,w,h);
@@ -4209,7 +4244,7 @@ Ye('mappingClearSelected').onclick=()=>selectMapping(null);
 function saveFixtureSelection(){
  try{localStorage.setItem("apc40-fixtures:"+wn.preset,JSON.stringify(fixtureSelection));}
  catch(error){di("Could not save preview selection: "+error.message);}
- F4();M4.forEach((item,index)=>{let step=Math.max(1,Math.floor(sn[index].uv.length/12));item.samples=sn[index].uv.filter((uv,pixel)=>pixel%step===0&&previewEnabled(sn[index],pixel));});
+ F4();
  renderMappingList();window.apcWiring?.refresh();
 }
 function fixtureTitle(item){return item.slice||"Fixture "+item.sliceUid;}

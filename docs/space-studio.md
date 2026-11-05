@@ -98,3 +98,8 @@ Links save with the wiring profile and selection export/import. They do not rewr
 Runtime fog volumes stay hidden when saved project flags are applied. A space can optionally set `frontCut` in its physical layout (`axis` and a world-coordinate `min`) to open only front-facing wall triangles beyond that boundary. Viewer and editor use the same treatment, preserving side walls and the source model file.
 
 Visualizer, Output mapping and 3D Editor share dark controls, typography, focus indicators and a mint accent matching the Bridge dashboard. Panel transitions respect reduced-motion preferences. Camera orbit and pan use damping and redraw while moving; video updates retain the 30 FPS scheduler. Idle scenes stop redrawing and hidden tabs stop rendering. This is not a measured performance guarantee for every GPU or model.
+
+
+## Light spill
+
+Light spill approximates reflected light on the room. It averages every modeled strip pixel using a small, high-quality 384×216 sampling image, then smooths reflected-light colors over about 100 ms to reduce false flashes from moving patterns. LED pixels and video keep their original timing. Disabled pixels, fixtures and disconnected branches do not contribute. Black/no input and a zero spill setting switch spill off; Pause holds an exact snapshot.
