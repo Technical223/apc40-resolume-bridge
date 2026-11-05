@@ -82,4 +82,29 @@ console.log('Selection checks passed');
 '''
         subprocess.run(['node','-e',script,str(VIEWER/'preview.html')],check=True,capture_output=True,text=True)
 
+
+class WiringTest(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('node'), 'Node checks physical wiring validation')
+    def test_profile_order_and_invalid_connections(self):
+        script=r"""
+const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
+const scope={};vm.createContext(scope);vm.runInContext(fs.readFileSync(process.argv[1],'utf8'),scope);
+const api=scope.APCWiring;
+assert.equal(api.outputs.length,16);
+assert.equal(api.outputs.slice(0,5).reduce((s,o)=>s+o.pieces,0),50);
+assert.equal(api.outputs[5].pieces,5);assert.equal(api.outputs[5].nominalPixels,120);
+assert.equal(api.outputs[11].pieces,4);assert.equal(api.outputs[11].meters,5);assert.equal(api.outputs[11].nominalPixels,1250);
+const a={uid:'a',output:1,order:1,reverse:false},b={uid:'b',output:1,order:2,reverse:true};
+const original={version:1,connections:[b,a]},fixtures=[{sliceUid:'a',pixels:59}];
+const result=api.ordered(original,fixtures);
+assert.equal(result[0].uid,'a');assert.equal(result[0].fixture.pixels,59);assert.equal(result[1].reverse,true);assert.equal(result[1].fixture,null);
+assert.equal(original.connections[0].uid,'b');
+for(const bad of [null,{}, {version:1,connections:[null]}, {version:1,connections:[a,a]},
+ {version:1,connections:[a,{...b,order:1}]}, {version:1,connections:[{...a,output:17}]},
+ {version:1,connections:[{...a,order:0}]}, {version:1,connections:[{...a,output:12,order:5}]},
+ {version:1,connections:[{...a,reverse:'false'}]}, {version:1,connections:[{...a,uid:''}]}])assert.throws(()=>api.validate(bad));
+assert.equal(api.validate({version:1,connections:[]}).connections.length,0);
+"""
+        subprocess.run(['node','-e',script,str(VIEWER/'wiring.js')],check=True,capture_output=True,text=True,timeout=20)
+
 if __name__=='__main__':unittest.main()

@@ -774,7 +774,7 @@ function setPreview(value) {
   grid.visible = !preview;
   $("views").hidden = preview;
   $("previewBadge").hidden = !preview;
-  $("mode").textContent = preview ? "Edit scene" : "Preview";
+  $("mode").textContent = preview ? "Edit scene" : "Scene preview";
   for (const id of [
     "import",
     "addRoom",
@@ -951,7 +951,8 @@ async function exportGLB() {
     includeCustomExtensions: false,
   });
 }
-$("apply").onclick = async () => {
+$("apply").onclick = async (event) => {
+  const returnToMapping = event?.currentTarget?.id === "outputMapping";
   const button = $("apply");
   button.disabled = true;
   const wasPreview = preview;
@@ -990,7 +991,7 @@ $("apply").onclick = async () => {
       );
     } catch {}
     dirty = false;
-    location.href = "preview.html" + location.search;
+    location.href = "preview.html" + location.search + (returnToMapping ? "#mapping" : "");
   } catch (error) {
     message(
       "Could not store project locally: " +
@@ -1134,6 +1135,7 @@ $("stop").onclick = () => {
   storeView();
 };
 $("back").onclick = () => $("apply").click();
+$("outputMapping").onclick = $("apply").onclick;
 window.addEventListener("beforeunload", (event) => {
   if (dirty) {
     event.preventDefault();

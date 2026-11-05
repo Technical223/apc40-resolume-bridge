@@ -45,3 +45,11 @@ The slice diagram highlights the selected object's source. Click an outline to s
 The input readout distinguishes decoded **source FPS** from **render FPS**, displays source dimensions and reports a static scene instead of pretending to render continuously. Browser support determines whether source-frame counts are available. Rendering pauses in hidden tabs.
 
 The browser workflow was checked with a small model and a local H.264 loop. Missing slices show a warning; Stop returns the input to black. Large production models, live camera permissions and storage pressure still need validation before a public release.
+
+## Wiring view
+
+In **Visualizer**, turn on **Wiring view** for a gray room with colored cable chains, direction arrows and IN / OUT labels. In **Output mapping**, select a fixture by its name, choose its **Physical output**, its **Piece in chain**, and optionally **Reverse IN / OUT**. Changes save automatically. Selecting an occupied piece position swaps the two pieces; the checkbox beside a fixture separately enables/disables it in the preview.
+
+The included 16-output LED profile has outputs 1–5 with ten 1 m strips each (nominally 60 pixels per piece), 6–11 with five 2 m strips (120), and 12–16 with four 5 m neons (1,250). Actual pixel counts remain those from the saved mapping, including 59/118/119-pixel pieces. Four 512-channel DMX outputs are separate from these pixel sockets.
+
+A Lumiverse ID does not prove the physical socket or cable order. Assignments start empty. The overlay connects consecutive assigned pieces only; it never invents missing 3D positions or sends a hardware test signal. Fixtures without known positions remain assignable in the mapper; the status reports how many assigned fixtures can be shown in 3D. Export/import selection includes wiring, per preset and space. Browser cleanup can remove local data: keep an export to transfer or back it up.

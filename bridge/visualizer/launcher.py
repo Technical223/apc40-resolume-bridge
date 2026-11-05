@@ -19,7 +19,7 @@ STATE = HOME / "viewer-session.json"
 FILES = {"preview.html": "text/html; charset=utf-8", "active-layout.js": "text/javascript",
          "room-current.glb": "model/gltf-binary",
          "editor.html": "text/html; charset=utf-8", "editor.js": "text/javascript",
-         "editor-project.js": "text/javascript", "editor-model.js": "text/javascript"}
+         "wiring.js": "text/javascript", "editor-project.js": "text/javascript", "editor-model.js": "text/javascript"}
 for _file in (HOME / "editor-vendor").glob("*.js"):
     FILES["editor-vendor/" + _file.name] = "text/javascript"
 CONVERT_LOCK = threading.Lock()
