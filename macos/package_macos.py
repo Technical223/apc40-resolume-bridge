@@ -32,6 +32,13 @@ def build(destination, require_native=False):
         "TESTER.md": ROOT / "macos/TESTER.md",
         "LICENSE": ROOT / "LICENSE",
     }
+    for file in (ROOT / "bridge/visualizer").glob("editor*"):
+        if file.is_file():
+            files[APP + "Resources/visualizer/" + file.name] = file
+    files[APP + "Resources/visualizer/model_convert.py"] = ROOT / "bridge/visualizer/model_convert.py"
+    for file in (ROOT / "bridge/visualizer/editor-vendor").iterdir():
+        if file.is_file():
+            files[APP + "Resources/visualizer/editor-vendor/" + file.name] = file
     revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT,
                               capture_output=True, text=True, check=True).stdout.strip()
     plist = dict(CFBundleName="APC40 Bridge macOS Preview", CFBundleDisplayName="APC40 Bridge macOS Preview",

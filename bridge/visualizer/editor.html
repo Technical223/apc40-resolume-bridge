@@ -1,0 +1,364 @@
+<!doctype html>
+<html lang="en">
+  <meta charset="utf-8" /><meta
+    name="viewport"
+    content="width=device-width,initial-scale=1"
+  />
+  <title>APC40 Space Studio</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #10141b;
+      --panel: #181f29;
+      --line: #303b4b;
+      --muted: #9bacbf;
+      --accent: #74e6c1;
+    }
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: #edf2f7;
+      font:
+        13px/1.5 system-ui,
+        -apple-system,
+        "Segoe UI",
+        sans-serif;
+      height: 100vh;
+      display: grid;
+      grid-template-rows: 62px 1fr 30px;
+      overflow: hidden;
+    }
+    button,
+    select,
+    input {
+      font: inherit;
+      color: inherit;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #212b38;
+      padding: 7px 9px;
+      min-width: 0;
+    }
+    button {
+      cursor: pointer;
+    }
+    button:hover,
+    button[aria-pressed="true"] {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    button:focus-visible,
+    input:focus-visible,
+    select:focus-visible {
+      outline: 2px solid var(--accent);
+    }
+    button:disabled {
+      opacity: 0.45;
+    }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+    header strong {
+      font-size: 17px;
+      margin-right: auto;
+    }
+    header small {
+      font-size: 11px;
+      color: var(--muted);
+    }
+    main {
+      display: grid;
+      grid-template-columns: 220px 1fr 270px;
+      min-height: 0;
+    }
+    aside {
+      padding: 14px;
+      overflow: auto;
+      background: var(--panel);
+    }
+    h2 {
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin: 8px 0 12px;
+    }
+    .tools {
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .tools button {
+      flex: 1 1 45%;
+    }
+    input::-webkit-inner-spin-button {
+      appearance: none;
+    }
+    input[type="number"] {
+      appearance: textfield;
+    }
+    .tree-row {
+      display: grid;
+      grid-template-columns: 1fr 28px 28px;
+      gap: 3px;
+      margin: 3px 0;
+    }
+    .tree-row > button {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: left;
+      white-space: nowrap;
+      padding: 5px;
+    }
+    .tree-row.selected > button:first-child {
+      color: var(--accent);
+      background: #293d40;
+    }
+    .tree-row button:not(:first-child) {
+      text-align: center;
+      padding: 4px;
+    }
+    .tree-row small {
+      color: var(--muted);
+    }
+    #viewport {
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+    #views {
+      position: absolute;
+      left: 14px;
+      top: 14px;
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      right: 14px;
+    }
+    #viewLabel {
+      position: absolute;
+      bottom: 12px;
+      left: 14px;
+      color: #a2b4cb;
+      pointer-events: none;
+    }
+    label {
+      display: block;
+      margin: 10px 0 4px;
+      color: var(--muted);
+    }
+    label input[type="checkbox"] {
+      margin-right: 8px;
+    }
+    #properties input:not([type="checkbox"]),
+    #properties select {
+      width: 100%;
+    }
+    .xyz {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+    }
+    .xyz label {
+      font-size: 11px;
+    }
+    .note {
+      color: var(--muted);
+      font-size: 12px;
+    }
+    hr {
+      border: 0;
+      border-top: 1px solid var(--line);
+      margin: 16px 0;
+    }
+    footer {
+      padding: 5px 16px;
+      font-size: 11px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    #previewBadge {
+      position: absolute;
+      right: 15px;
+      bottom: 14px;
+      background: #182b28;
+      padding: 6px 12px;
+      border-radius: 20px;
+      color: var(--accent);
+    }
+    [hidden] {
+      display: none !important;
+    }
+    #properties .danger {
+      color: #ff9c9c;
+    }
+    a {
+      color: var(--accent);
+    }
+    @media (max-width: 1000px) {
+      main {
+        grid-template-columns: 180px 1fr 230px;
+      }
+      header small {
+        display: none;
+      }
+    }
+    @media (prefers-reduced-motion: no-preference) {
+      button {
+        transition:
+          border-color 0.12s,
+          color 0.12s;
+      }
+    }
+  </style>
+  <header>
+    <strong>Space Studio <small>EXPERIMENTAL · local project</small></strong
+    ><button id="back">Back to visualizer</button
+    ><button id="import">Import model</button
+    ><button id="save">Save project · GLB</button
+    ><button id="apply">Apply to visualizer</button
+    ><button id="mode">Preview</button
+    ><input id="file" type="file" accept=".glb,.blend,.obj,.fbx" hidden />
+  </header>
+  <main>
+    <aside>
+      <h2>Collection</h2>
+      <div class="tools">
+        <button id="addRoom">Box</button
+        ><button id="addProjection">Projection</button
+        ><button id="addPanel">LED panel</button
+        ><button id="addStrip">LED strip</button>
+      </div>
+      <div id="tree" role="tree" aria-label="Scene objects"></div>
+      <hr />
+      <div class="tools">
+        <button id="undo">Undo</button><button id="redo">Redo</button>
+      </div>
+      <p class="note">Eye: editor visibility<br />Power: include in preview</p>
+      <p class="note">
+        Orbit: middle drag<br />Pan: Shift + middle drag<br />Zoom: wheel<br />G
+        / R / S: move / rotate / scale<br />1 / 3 / 7: front / right / top<br />5:
+        perspective / orthographic<br />F: frame selection · Esc: cancel
+      </p>
+    </aside>
+    <section id="viewport" aria-label="3D scene">
+      <div id="views">
+        <button data-view="perspective">Perspective</button
+        ><button data-view="front">Front</button
+        ><button data-view="back">Back</button
+        ><button data-view="left">Left</button
+        ><button data-view="right">Right</button
+        ><button data-view="top">Top</button
+        ><button data-view="bottom">Bottom</button
+        ><button id="frame">Frame</button
+        ><button data-tool="translate">Move</button
+        ><button data-tool="rotate">Rotate</button
+        ><button data-tool="scale">Scale</button>
+      </div>
+      <div id="viewLabel">Perspective · meters</div>
+      <div id="previewBadge" hidden>PREVIEW · no output sent to Arena</div>
+    </section>
+    <aside id="properties">
+      <h2>Object properties</h2>
+      <p id="empty" class="note">
+        Select an object in the viewport or collection.
+      </p>
+      <div id="fields" hidden>
+        <label for="name">Name</label><input id="name" maxlength="120" /><label
+          for="kind"
+          >Role</label
+        ><select id="kind">
+          <option value="room">Room geometry</option>
+          <option value="projection">Projection surface</option>
+          <option value="panel">LED panel</option>
+          <option value="strip">LED strip</option></select
+        ><label><input id="visible" type="checkbox" />Visible in editor</label
+        ><label><input id="active" type="checkbox" />Include in preview</label>
+        <div id="transforms"></div>
+        <label for="source">Video source slice</label
+        ><select id="source"></select>
+        <div class="xyz">
+          <div>
+            <label for="pixels">Columns / pixels</label
+            ><input id="pixels" type="number" min="1" max="4096" />
+          </div>
+          <div>
+            <label for="rows">Rows</label
+            ><input id="rows" type="number" min="1" max="4096" />
+          </div>
+        </div>
+        <p class="note">
+          Scale uses local axes. Surface proportions should match the input
+          slice. Strips run along local X.
+        </p>
+        <div class="tools">
+          <button id="duplicate">Duplicate</button
+          ><button id="delete" class="danger">Delete</button>
+        </div>
+      </div>
+      <hr />
+      <h2>Input</h2>
+      <div class="tools">
+        <button id="capture">Capture screen</button
+        ><button id="camera">Camera</button><button id="stop">Stop</button
+        ><button id="test">Test pattern</button>
+      </div>
+      <label for="cameraChoice">Camera</label
+      ><select id="cameraChoice">
+        <option value="">Choose after permission</option>
+      </select>
+      <p class="note">
+        Input is black until you connect a source. Camera selection is local. No
+        image or project is uploaded.
+      </p>
+      <p id="message" role="status" class="note"></p>
+    </aside>
+  </main>
+  <dialog id="blenderHelp">
+    <h2>Optional BLEND import</h2>
+    <p>
+      Space Studio works without Blender. Only native .blend files need a local
+      converter.
+    </p>
+    <p>
+      1. Download Blender from its official website.<br />2. Install it using
+      the standard installer, then return here.<br />3. Click Convert locally.
+      Embedded Python scripts are disabled.<br />Alternatively, export GLB from
+      your modeling app and import it directly.
+    </p>
+    <p>
+      Blender is a separate, large download. Nothing installs automatically.
+    </p>
+    <p>
+      <a
+        href="https://www.blender.org/download/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Open official Blender download</a
+      >
+    </p>
+    <button id="convertBlend">Convert locally</button>
+    <button id="cancelBlend">Continue without Blender</button>
+  </dialog>
+  <footer id="status">
+    Ready · projects are local · save a GLB to keep your work
+  </footer>
+  <script src="editor-project.js"></script>
+  <script type="module" src="editor.js"></script>
+</html>

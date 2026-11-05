@@ -1,0 +1,106 @@
+import importlib.util
+import json
+from pathlib import Path
+import re
+import shutil
+import subprocess
+import tempfile
+import unittest
+from unittest.mock import patch
+
+ROOT=Path(__file__).resolve().parents[1]
+VIEWER=ROOT/'bridge/visualizer'
+spec=importlib.util.spec_from_file_location('model_convert',VIEWER/'model_convert.py')
+convert=importlib.util.module_from_spec(spec);spec.loader.exec_module(convert)
+
+class ConversionTest(unittest.TestCase):
+    def test_missing_converter_is_actionable_without_running_anything(self):
+        with patch.object(convert,'blender_path',return_value=None),patch.object(convert.subprocess,'run') as run:
+            with self.assertRaisesRegex(RuntimeError,'blender.org'):convert.convert_model(b'BLENDER', '.blend')
+            run.assert_not_called()
+
+    def test_unsupported_and_empty_files_do_not_start_converter(self):
+        with patch.object(convert.subprocess,'run') as run:
+            for data,ext in [(b'x','.exe'),(b'','.blend')]:
+                with self.assertRaises(ValueError):convert.convert_model(data,ext,executable='unused')
+            run.assert_not_called()
+
+    def test_conversion_disables_scripts_and_removes_temporary_files(self):
+        visited=[]
+        def fake_run(command,**kwargs):
+            self.assertIn('--disable-autoexec',command)
+            self.assertIn('--factory-startup',command)
+            self.assertEqual(kwargs['timeout'],180)
+            folder=Path(command[-1]).parent;visited.append(folder)
+            script=(folder/'convert.py').read_text()
+            self.assertIn('use_scripts=False',script)
+            self.assertIn('export_extras=True',script)
+            Path(command[-1]).write_bytes(b'glTF'+bytes(20))
+            return subprocess.CompletedProcess(command,0)
+        with patch.object(convert.subprocess,'run',side_effect=fake_run):
+            self.assertTrue(convert.convert_model(b'BLENDER','.blend',executable='fake-blender').startswith(b'glTF'))
+        self.assertFalse(visited[0].exists())
+
+    def test_timeout_returns_clear_message(self):
+        with patch.object(convert.subprocess,'run',side_effect=subprocess.TimeoutExpired('blender',180)):
+            with self.assertRaisesRegex(RuntimeError,'stopped'):convert.convert_model(b'BLENDER','.blend',executable='fake-blender')
+
+class EditorTest(unittest.TestCase):
+    def test_vendor_imports_are_local_and_complete(self):
+        for path in (VIEWER/'editor-vendor').glob('*.js'):
+            for relative in re.findall(r"^}?[ \t]*from [\'\"]([^\'\"]+)|^import .* from [\'\"]([^\'\"]+)",path.read_text(),re.M):
+                name=next(x for x in relative if x)
+                self.assertTrue(name.startswith('./'),(path,name))
+                self.assertTrue((path.parent/name).is_file(),(path,name))
+
+    @unittest.skipUnless(shutil.which('node'),'Node checks direct OBJ and GLB roundtrip')
+    def test_obj_to_glb_preserves_project_metadata_and_hidden_objects(self):
+        script = r"""
+import {pathToFileURL} from 'node:url';import assert from 'node:assert/strict';
+const base=process.cwd().replaceAll('\\','/')+'/bridge/visualizer/editor-vendor/';
+const {OBJLoader}=await import(pathToFileURL(base+'OBJLoader.js'));
+const {GLTFLoader}=await import(pathToFileURL(base+'GLTFLoader.js'));
+const {GLTFExporter}=await import(pathToFileURL(base+'GLTFExporter.js'));
+globalThis.FileReader=class{readAsArrayBuffer(blob){blob.arrayBuffer().then(data=>{this.result=data;this.onloadend?.();});}};
+globalThis.ProgressEvent=class{constructor(type,props){Object.assign(this,props);}};
+const object=new OBJLoader().parse('v 0 0 0\nv 1 0 0\nv 0 1 0\nvt 0 0\nvt 1 0\nvt 0 1\nf 1/1 2/2 3/3\n');
+object.children[0].visible=false;
+object.children[0].userData.apcEditor={type:'panel',active:true,editorVisible:false,pixels:8,rows:4};
+const glb=await new GLTFExporter().parseAsync(object,{binary:true,onlyVisible:false});
+const result=await new GLTFLoader().parseAsync(glb,'');let mesh;result.scene.traverse(n=>{if(n.isMesh)mesh=n;});
+assert.ok(mesh);assert.equal(mesh.userData.apcEditor.type,'panel');assert.equal(mesh.userData.apcEditor.editorVisible,false);assert.equal(mesh.userData.apcEditor.active,true);
+"""
+        result=subprocess.run(['node','--input-type=module','-e',script],cwd=ROOT,capture_output=True,text=True,encoding='utf-8',timeout=20)
+        self.assertEqual(result.returncode,0,result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'),'Node checks editor math and GLB project extras')
+    def test_editor_validation_and_project_preview(self):
+        script=r"""
+import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';
+const text=fs.readFileSync('bridge/visualizer/editor-model.js','utf8');
+const {validateObject,effective,sampleUV,COMPOSITION}=await import('data:text/javascript;base64,'+Buffer.from(text).toString('base64'));
+assert.throws(()=>validateObject({type:'panel',pixels:4096,rows:2}));
+assert.throws(()=>validateObject({type:'panel',pixels:NaN,rows:1}));
+validateObject({type:'strip',pixels:60,rows:1});
+const parent={userData:{apcEditor:{editorVisible:false,active:true}}};
+const node={parent,userData:{apcEditor:{type:'panel',active:true,editorVisible:true,pixels:8,rows:4,source:'composition'}}};
+assert.equal(effective(node,'editorVisible'),false);assert.equal(effective(node,'active'),true);
+assert.deepEqual(sampleUV(COMPOSITION,0,0,1,1),[.5,.5]);
+let material;const context={window:{},console};vm.createContext(context);
+vm.runInContext(fs.readFileSync('bridge/visualizer/editor-project.js','utf8'),context);
+node.isMesh=true;node.material={old:true};
+const root={traverse:callback=>callback(node)};
+class Material{constructor(options){Object.assign(this,options);material=this;}}
+class Vector2{constructor(x,y){this.x=x;this.y=y;}}
+context.window.applyAPCEditorProject(root,{Material,Vector2,map:{value:'input'},crop:{},fixtures:[]});
+assert.equal(node.visible,true);assert.equal(material.uniforms.columns.value,8);
+assert.equal(material.uniforms.map.value,'input');
+parent.userData.apcEditor.active=false;
+context.window.applyAPCEditorProject(root,{Material,Vector2,map:{value:'input'},crop:{},fixtures:[]});
+assert.equal(node.visible,false);
+console.log('Editor validation, UV sampling and preview inclusion passed');
+"""
+        result=subprocess.run(['node','--input-type=module','-e',script],cwd=ROOT,capture_output=True,text=True,encoding='utf-8',timeout=20)
+        self.assertEqual(result.returncode,0,result.stderr)
+
+if __name__=='__main__':unittest.main()

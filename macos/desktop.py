@@ -110,6 +110,7 @@ class Session:
         import shutil
         for file in source.iterdir():
             if file.is_file() and file.name not in ('active-layout.js','viewer-session.json','physical-layout.json'):shutil.copy2(file,target/file.name)
+        if (source/'editor-vendor').is_dir():shutil.copytree(source/'editor-vendor',target/'editor-vendor',dirs_exist_ok=True)
         if not (target/'physical-layout.json').exists():shutil.copy2(source/'physical-layout.json',target/'physical-layout.json')
         spec=importlib.util.spec_from_file_location('mac_preview_launcher',target/'launcher.py');launcher=importlib.util.module_from_spec(spec);spec.loader.exec_module(launcher)
         launcher.open_preview()

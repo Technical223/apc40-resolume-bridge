@@ -84,6 +84,10 @@ The file is written by the local viewer helper; nothing is uploaded. If that fol
 is not writable (for example Windows Controlled Folder Access blocks the bundled
 Python), the browser downloads the PNG to Downloads instead.
 
+## Experimental space editing
+
+The development branch adds **Open Space Studio** for model import, orthographic views and object editing. See the [short editor guide](space-studio.md) for supported formats, optional BLEND conversion and current limitations.
+
 ## Room and performance
 
 The public package includes a small generic open-front room. **Import room model**

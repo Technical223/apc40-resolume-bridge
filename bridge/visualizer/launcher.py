@@ -3,12 +3,13 @@ import hashlib
 import json
 import os
 import secrets
+import threading
 import subprocess
 import sys
 import time
 import urllib.request
 import webbrowser
-from http.server import BaseHTTPRequestHandler, HTTPServer
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs
 
@@ -16,7 +17,12 @@ HOME = Path(__file__).resolve().parent
 sys.path.insert(0, str(HOME))
 STATE = HOME / "viewer-session.json"
 FILES = {"preview.html": "text/html; charset=utf-8", "active-layout.js": "text/javascript",
-         "room-current.glb": "model/gltf-binary"}
+         "room-current.glb": "model/gltf-binary",
+         "editor.html": "text/html; charset=utf-8", "editor.js": "text/javascript",
+         "editor-project.js": "text/javascript", "editor-model.js": "text/javascript"}
+for _file in (HOME / "editor-vendor").glob("*.js"):
+    FILES["editor-vendor/" + _file.name] = "text/javascript"
+CONVERT_LOCK = threading.Lock()
 
 def space_layout(query):
     """Generated layout file of the space named by ?space=, else the first space."""
@@ -41,7 +47,7 @@ def render_folder():
 def layout_version(query=""):
     return hashlib.sha256(space_layout(query).read_bytes()).hexdigest()
 
-def serve(idle_timeout=90, token=None):
+def serve(idle_timeout=90, token=None, port=18741):
     from prepare import prepare
     prepare()
     token = token or secrets.token_urlsafe(24)
@@ -110,7 +116,32 @@ def serve(idle_timeout=90, token=None):
                 pass
 
         def do_POST(self):
-            # Only "Save render": a PNG from this page, written under a server-chosen name.
+            if self.path == "/" + token + "/convert-model":
+                origin = "http://127.0.0.1:" + str(self.server.server_port)
+                if self.headers.get("Origin") != origin or self.headers.get("X-Conversion-Consent") != "yes":
+                    self.send_error(403)
+                    return
+                from model_convert import convert_model, MAX_MODEL
+                try:
+                    length = int(self.headers.get("Content-Length", "0"))
+                    if not 0 < length <= MAX_MODEL:
+                        self.send_error(413)
+                        return
+                    if not CONVERT_LOCK.acquire(blocking=False):
+                        self.send_error(409, "A model is already converting")
+                        return
+                    try:
+                        body = self.rfile.read(length)
+                        if len(body) != length:
+                            raise ValueError("Incomplete model upload")
+                        result = convert_model(body, self.headers.get("X-Model-Extension", ""))
+                    finally:
+                        CONVERT_LOCK.release()
+                    self.reply(result, "model/gltf-binary")
+                except (ValueError, RuntimeError, OSError) as error:
+                    self.reply(json.dumps({"error": str(error)}).encode(), "application/json")
+                return
+            # Save render: a PNG from this page, written under a server-chosen name.
             if self.path != "/" + token + "/render" or self.headers.get("Origin", "") not in ("", "http://127.0.0.1:" + str(self.server.server_port)):
                 self.send_error(403)
                 return
@@ -138,14 +169,14 @@ def serve(idle_timeout=90, token=None):
             self.end_headers()
             self.wfile.write(body)
 
-    server = HTTPServer(("127.0.0.1", 18741), Handler)
+    server = ThreadingHTTPServer(("127.0.0.1", port), Handler)
     server.timeout = 2
     url = "http://127.0.0.1:" + str(server.server_port) + "/" + token + "/"
     session = {"url": url, "pid": os.getpid()}
     STATE.write_text(json.dumps(session), encoding="utf-8")
     try:
         # shortcut: background tabs may be suspended; reopen from Bridge if the viewer expires.
-        while time.monotonic() - last_seen < idle_timeout:
+        while time.monotonic() - last_seen < idle_timeout or CONVERT_LOCK.locked():
             server.handle_request()
     finally:
         server.server_close()

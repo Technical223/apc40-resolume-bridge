@@ -1,0 +1,932 @@
+import * as T from "./editor-vendor/three.module.js";
+import { OrbitControls } from "./editor-vendor/OrbitControls.js";
+import { TransformControls } from "./editor-vendor/TransformControls.js";
+import { GLTFLoader } from "./editor-vendor/GLTFLoader.js";
+import { GLTFExporter } from "./editor-vendor/GLTFExporter.js";
+import { OBJLoader } from "./editor-vendor/OBJLoader.js";
+import { FBXLoader } from "./editor-vendor/FBXLoader.js";
+import { validateObject, effective, COMPOSITION } from "./editor-model.js";
+const $ = (id) => document.getElementById(id),
+  viewport = $("viewport");
+const scene = new T.Scene();
+scene.background = new T.Color("#10141b");
+const renderer = new T.WebGLRenderer({
+  antialias: true,
+  powerPreference: "low-power",
+});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 1));
+viewport.prepend(renderer.domElement);
+const ownedNodes = new Set();
+const root = new T.Group();
+root.name = "Space";
+scene.add(root);
+const grid = new T.GridHelper(20, 40, 0x52677f, 0x283443);
+scene.add(grid);
+scene.add(new T.HemisphereLight(0xe2efff, 0x68717c, 2));
+const key = new T.DirectionalLight(0xffffff, 2);
+key.position.set(4, 8, 5);
+scene.add(key);
+const perspective = new T.PerspectiveCamera(45, 1, 0.01, 2000),
+  ortho = new T.OrthographicCamera(-6, 6, 6, -6, 0.01, 2000);
+let camera = perspective;
+camera.position.set(6, 4, 8);
+let orbit, transform;
+const target = new T.Vector3();
+let selected = null,
+  preview = false,
+  dirty = false,
+  renderNeeded = true;
+let history = [],
+  future = [],
+  transaction = null,
+  viewName = "Perspective",
+  fixtures = [];
+const video = document.createElement("video");
+video.muted = true;
+video.playsInline = true;
+const black = document.createElement("canvas");
+black.width = black.height = 2;
+const blackContext = black.getContext("2d");
+blackContext.fillStyle = "#000";
+blackContext.fillRect(0, 0, 2, 2);
+const videoTexture = new T.VideoTexture(video),
+  blackTexture = new T.CanvasTexture(black),
+  sourceUniform = { value: blackTexture };
+let media = null,
+  testPattern = false;
+const previewMaterials = new Map();
+let lastFrame = 0;
+function message(text) {
+  $("message").textContent = text;
+}
+function pruneResources() {
+  const keep = new Set();
+  root.traverse((node) => keep.add(node));
+  for (const state of [...history, ...future])
+    for (const record of state) keep.add(record.node);
+  const retained = new Set(),
+    unused = new Set();
+  for (const node of ownedNodes) {
+    const resources = keep.has(node) ? retained : unused;
+    if (node.geometry) resources.add(node.geometry);
+    for (const material of node.material
+      ? Array.isArray(node.material)
+        ? node.material
+        : [node.material]
+      : []) {
+      resources.add(material);
+      for (const value of Object.values(material))
+        if (value?.isTexture) resources.add(value);
+    }
+  }
+  for (const resource of unused)
+    if (
+      !retained.has(resource) &&
+      resource !== videoTexture &&
+      resource !== blackTexture
+    )
+      resource.dispose();
+  for (const node of ownedNodes) if (!keep.has(node)) ownedNodes.delete(node);
+}
+function changed() {
+  pruneResources();
+  dirty = true;
+  renderNeeded = true;
+  $("status").textContent =
+    "Unsaved changes · save a GLB project to keep your work";
+}
+function meta(node) {
+  if (node.isMesh || node.isLine) ownedNodes.add(node);
+  const defaults = {
+    type: "room",
+    editorVisible: node.visible,
+    active: true,
+    source: "composition",
+    pixels: 32,
+    rows: 1,
+  };
+  let data = node.userData.apcEditor;
+  if (!data || typeof data !== "object" || Array.isArray(data)) data = defaults;
+  try {
+    validateObject(data);
+  } catch {
+    data = defaults;
+  }
+  node.userData.apcEditor = data;
+  return data;
+}
+
+function snapshot() {
+  const records = [];
+  root.traverse((node) => {
+    if (node === root) return;
+    records.push({
+      node,
+      parent: node.parent,
+      position: node.position.toArray(),
+      rotation: node.rotation.toArray(),
+      scale: node.scale.toArray(),
+      name: node.name,
+      data: { ...meta(node) },
+    });
+  });
+  return records;
+}
+function remember() {
+  history.push(snapshot());
+  if (history.length > 30) history.shift();
+  future = [];
+}
+function restore(records) {
+  select(null);
+  clearPreviewMaterials();
+  const current = [];
+  root.traverse((node) => {
+    if (node !== root) current.push(node);
+  });
+  for (const node of current) node.removeFromParent();
+  for (const record of records) {
+    const node = record.node;
+    node.position.fromArray(record.position);
+    node.rotation.fromArray(record.rotation);
+    node.scale.fromArray(record.scale);
+    node.name = record.name;
+    node.userData.apcEditor = { ...record.data };
+    record.parent.add(node);
+  }
+  refresh();
+  changed();
+}
+function setupControls() {
+  orbit?.dispose();
+  if (transform) {
+    transform.detach();
+    scene.remove(transform);
+    transform.dispose();
+  }
+  orbit = new OrbitControls(camera, renderer.domElement);
+  orbit.target.copy(target);
+  orbit.enableDamping = false;
+  orbit.mouseButtons = {
+    LEFT: null,
+    MIDDLE: T.MOUSE.ROTATE,
+    RIGHT: T.MOUSE.PAN,
+  };
+  orbit.addEventListener("change", () => {
+    target.copy(orbit.target);
+    renderNeeded = true;
+  });
+  transform = new TransformControls(camera, renderer.domElement);
+  transform.setSpace("local");
+  scene.add(transform);
+  transform.addEventListener(
+    "dragging-changed",
+    (e) => (orbit.enabled = !e.value),
+  );
+  transform.addEventListener("mouseDown", () => (transaction = snapshot()));
+  transform.addEventListener("mouseUp", () => {
+    if (transaction) {
+      history.push(transaction);
+      if (history.length > 30) history.shift();
+      future = [];
+      transaction = null;
+      changed();
+      fillProperties();
+    }
+  });
+  transform.addEventListener("change", () => (renderNeeded = true));
+  if (selected && !preview) transform.attach(selected);
+}
+setupControls();
+function resize() {
+  const w = viewport.clientWidth,
+    h = viewport.clientHeight;
+  renderer.setSize(w, h);
+  perspective.aspect = w / h;
+  perspective.updateProjectionMatrix();
+  const span = (ortho.top - ortho.bottom) / 2 / ortho.zoom;
+  ortho.left = (-span * w) / h;
+  ortho.right = (span * w) / h;
+  ortho.top = span;
+  ortho.bottom = -span;
+  ortho.zoom = 1;
+  ortho.updateProjectionMatrix();
+  renderNeeded = true;
+}
+new ResizeObserver(resize).observe(viewport);
+function setView(name) {
+  const distance = Math.max(3, camera.position.distanceTo(target));
+  const directions = {
+    front: [0, 0, 1],
+    back: [0, 0, -1],
+    left: [-1, 0, 0],
+    right: [1, 0, 0],
+    top: [0, 1, 0],
+    bottom: [0, -1, 0],
+  };
+  camera = name === "perspective" ? perspective : ortho;
+  camera.up.set(0, 1, 0);
+  if (name === "top") camera.up.set(0, 0, -1);
+  if (name === "bottom") camera.up.set(0, 0, 1);
+  camera.position
+    .copy(target)
+    .add(
+      new T.Vector3(...(directions[name] || [0.7, 0.5, 1]))
+        .normalize()
+        .multiplyScalar(distance),
+    );
+  camera.lookAt(target);
+  viewName = name[0].toUpperCase() + name.slice(1);
+  $("viewLabel").textContent = viewName + " · meters";
+  grid.rotation.set(0, 0, 0);
+  if (name === "front" || name === "back") grid.rotation.x = Math.PI / 2;
+  if (name === "left" || name === "right") grid.rotation.z = Math.PI / 2;
+  setupControls();
+  resize();
+}
+document
+  .querySelectorAll("[data-view]")
+  .forEach((b) => (b.onclick = () => setView(b.dataset.view)));
+document.querySelectorAll("[data-tool]").forEach(
+  (button) =>
+    (button.onclick = () => {
+      transform.setMode(button.dataset.tool);
+      document
+        .querySelectorAll("[data-tool]")
+        .forEach((item) =>
+          item.setAttribute("aria-pressed", String(item === button)),
+        );
+    }),
+);
+function frame() {
+  const box = new T.Box3().setFromObject(selected || root);
+  if (box.isEmpty()) return;
+  box.getCenter(target);
+  const radius = Math.max(0.2, box.getSize(new T.Vector3()).length() / 2);
+  const direction = camera.position.clone().sub(orbit.target).normalize();
+  camera.position.copy(target).addScaledVector(direction, radius * 3);
+  ortho.top = radius * 1.4;
+  ortho.bottom = -ortho.top;
+  ortho.left = (-ortho.top * viewport.clientWidth) / viewport.clientHeight;
+  ortho.right = -ortho.left;
+  ortho.zoom = 1;
+  ortho.updateProjectionMatrix();
+  orbit.target.copy(target);
+  orbit.update();
+  renderNeeded = true;
+}
+$("frame").onclick = frame;
+function select(node) {
+  selected = node;
+  transform.detach();
+  if (node && !preview) transform.attach(node);
+  fillProperties();
+  renderTree();
+  renderNeeded = true;
+}
+function renderTree() {
+  const tree = $("tree");
+  tree.replaceChildren();
+  function visit(parent, depth) {
+    for (const node of parent.children) {
+      if (!node.isMesh && !node.isGroup && !node.isObject3D) continue;
+      const data = meta(node),
+        row = document.createElement("div");
+      row.className = "tree-row" + (selected === node ? " selected" : "");
+      row.setAttribute("role", "treeitem");
+      row.setAttribute("aria-level", depth + 1);
+      const label = document.createElement("button");
+      label.textContent = node.name || "Object";
+      label.style.paddingLeft = depth * 10 + 5 + "px";
+      label.title = label.textContent;
+      label.onclick = () => select(node);
+      row.append(label);
+      for (const [property, symbol, title] of [
+        ["editorVisible", "◉", "Visible in editor"],
+        ["active", "⏻", "Include in preview"],
+      ]) {
+        const button = document.createElement("button");
+        button.textContent = symbol;
+        button.title = title;
+        button.setAttribute("aria-label", title + " — " + label.textContent);
+        button.setAttribute("aria-pressed", String(data[property] !== false));
+        button.onclick = () => {
+          remember();
+          data[property] = data[property] === false;
+          refresh();
+          changed();
+        };
+        row.append(button);
+      }
+      tree.append(row);
+      visit(node, depth + 1);
+    }
+  }
+  visit(root, 0);
+}
+for (const property of ["position", "rotation", "scale"]) {
+  const label = document.createElement("label");
+  label.textContent =
+    property === "rotation"
+      ? "Rotation · degrees"
+      : property === "position"
+        ? "Position · meters"
+        : "Scale";
+  $("transforms").append(label);
+  const group = document.createElement("div");
+  group.className = "xyz";
+  for (const axis of ["x", "y", "z"]) {
+    const l = document.createElement("label");
+    l.textContent = axis.toUpperCase();
+    const input = document.createElement("input");
+    input.type = "number";
+    input.step = property === "rotation" ? "1" : ".1";
+    input.id = property + "-" + axis;
+    input.onchange = () => {
+      if (!selected) return;
+      const value = Number(input.value);
+      if (
+        !Number.isFinite(value) ||
+        Math.abs(value) > 100000 ||
+        (property === "scale" && Math.abs(value) < 0.0001)
+      ) {
+        fillProperties();
+        return;
+      }
+      remember();
+      selected[property][axis] =
+        property === "rotation" ? T.MathUtils.degToRad(value) : value;
+      changed();
+    };
+    l.append(input);
+    group.append(l);
+  }
+  $("transforms").append(group);
+}
+function fillProperties() {
+  $("empty").hidden = !!selected;
+  $("fields").hidden = !selected;
+  if (!selected) return;
+  const data = meta(selected);
+  $("name").value = selected.name;
+  $("kind").value = data.type;
+  $("kind").disabled = !selected.isMesh;
+  $("visible").checked = data.editorVisible !== false;
+  $("active").checked = data.active !== false;
+  $("source").value = data.source || "composition";
+  $("pixels").value = data.pixels;
+  $("rows").value = data.rows;
+  for (const property of ["position", "rotation", "scale"])
+    for (const axis of ["x", "y", "z"])
+      $(property + "-" + axis).value = (
+        property === "rotation"
+          ? T.MathUtils.radToDeg(selected[property][axis])
+          : selected[property][axis]
+      ).toFixed(3);
+}
+$("name").onchange = () => {
+  if (selected) {
+    remember();
+    selected.name = $("name").value.trim() || "Object";
+    renderTree();
+    changed();
+  }
+};
+for (const [id, key] of [
+  ["visible", "editorVisible"],
+  ["active", "active"],
+  ["kind", "type"],
+  ["source", "source"],
+  ["pixels", "pixels"],
+  ["rows", "rows"],
+])
+  $(id).onchange = () => {
+    if (!selected) return;
+    try {
+      const before = { ...meta(selected) },
+        value = ["visible", "active"].includes(id)
+          ? $(id).checked
+          : ["pixels", "rows"].includes(id)
+            ? Number($(id).value)
+            : $(id).value;
+      if (
+        id === "kind" &&
+        value !== "room" &&
+        !selected.geometry?.getAttribute("uv")
+      )
+        throw Error(
+          "This mesh has no UV coordinates. Add a new projection surface or panel instead.",
+        );
+      validateObject({ ...before, [key]: value });
+      remember();
+      meta(selected)[key] = value;
+      refresh();
+      changed();
+    } catch (error) {
+      message(error.message);
+      fillProperties();
+    }
+  };
+function refresh() {
+  root.traverse((node) => {
+    node.visible = effective(node, preview ? "active" : "editorVisible");
+  });
+  renderTree();
+  fillProperties();
+  renderNeeded = true;
+}
+function add(type) {
+  remember();
+  const object = new T.Mesh(
+    type === "room"
+      ? new T.BoxGeometry(1, 1, 1)
+      : new T.PlaneGeometry(
+          type === "strip" ? 2 : 2,
+          type === "strip" ? 0.03 : 1.125,
+        ),
+    new T.MeshStandardMaterial({
+      color: type === "room" ? 0x66788b : 0x72d9bc,
+      side: T.DoubleSide,
+      roughness: 0.8,
+    }),
+  );
+  object.name = {
+    room: "Box",
+    projection: "Projection surface",
+    panel: "LED panel",
+    strip: "LED strip",
+  }[type];
+  object.userData.apcEditor = {
+    type,
+    active: true,
+    editorVisible: true,
+    source: "composition",
+    pixels: type === "panel" ? 32 : type === "strip" ? 60 : 1,
+    rows: type === "panel" ? 18 : 1,
+  };
+  object.position.copy(target);
+  root.add(object);
+  select(object);
+  changed();
+}
+$("addRoom").onclick = () => add("room");
+$("addProjection").onclick = () => add("projection");
+$("addPanel").onclick = () => add("panel");
+$("addStrip").onclick = () => add("strip");
+$("duplicate").onclick = () => {
+  if (!selected) return;
+  remember();
+  const copy = selected.clone(true);
+  copy.traverse((n) => {
+    if (n.geometry) n.geometry = n.geometry.clone();
+    if (n.material)
+      n.material = Array.isArray(n.material)
+        ? n.material.map((m) => m.clone())
+        : n.material.clone();
+  });
+  copy.name += " copy";
+  copy.position.x += 0.3;
+  selected.parent.add(copy);
+  select(copy);
+  changed();
+};
+$("delete").onclick = () => {
+  if (!selected) return;
+  remember();
+  const old = selected;
+  select(null);
+  old.removeFromParent();
+  renderTree();
+  changed();
+};
+$("undo").onclick = () => {
+  if (!history.length) return;
+  future.push(snapshot());
+  restore(history.pop());
+};
+$("redo").onclick = () => {
+  if (!future.length) return;
+  history.push(snapshot());
+  restore(future.pop());
+};
+function sourceQuad(id) {
+  if (!id || id === "composition") return COMPOSITION;
+  const fixture = fixtures.find((f) => f.sliceUid === id);
+  return fixture?.uv || null;
+}
+function clearPreviewMaterials() {
+  for (const [node, old] of previewMaterials) {
+    node.material.dispose();
+    node.material = old;
+  }
+  previewMaterials.clear();
+}
+function setPreview(value) {
+  clearPreviewMaterials();
+  preview = value;
+  transform.detach();
+  grid.visible = !preview;
+  $("views").hidden = preview;
+  $("previewBadge").hidden = !preview;
+  $("mode").textContent = preview ? "Edit scene" : "Preview";
+  for (const id of [
+    "import",
+    "addRoom",
+    "addProjection",
+    "addPanel",
+    "addStrip",
+    "undo",
+    "redo",
+    "duplicate",
+    "delete",
+  ])
+    $(id).disabled = preview;
+  $("fields").inert = preview;
+  if (preview) {
+    root.traverse((node) => {
+      const data = meta(node);
+      if (!node.isMesh || data.type === "room") return;
+      const quad = sourceQuad(data.source);
+      if (!quad) {
+        message(
+          "A saved source slice is missing. Choose a replacement in Edit scene.",
+        );
+        return;
+      }
+      const uniforms = {
+        map: sourceUniform,
+        columns: { value: data.type === "projection" ? 0 : data.pixels },
+        rows: { value: data.rows },
+      };
+      quad.forEach(
+        (v, i) => (uniforms["q" + i] = { value: new T.Vector2(...v) }),
+      );
+      previewMaterials.set(node, node.material);
+      node.material = new T.ShaderMaterial({
+        side: T.DoubleSide,
+        uniforms,
+        vertexShader:
+          "varying vec2 v;void main(){v=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}",
+        fragmentShader:
+          "uniform sampler2D map;uniform vec2 q0,q1,q2,q3;uniform float columns,rows;varying vec2 v;void main(){vec2 p=vec2(v.x,1.-v.y);if(columns>0.){vec2 count=vec2(columns,rows);vec2 cell=fract(p*count);if(any(lessThan(cell,vec2(.08)))||any(greaterThan(cell,vec2(.92))))discard;p=(floor(p*count)+.5)/count;}vec2 uv=mix(mix(q0,q1,p.x),mix(q3,q2,p.x),p.y);gl_FragColor=texture2D(map,uv);}",
+        toneMapped: false,
+      });
+    });
+  } else if (selected) transform.attach(selected);
+  refresh();
+}
+$("mode").onclick = () => setPreview(!preview);
+const manager = new T.LoadingManager();
+manager.setURLModifier((url) => {
+  if (
+    /^(data:|blob:)/.test(url) ||
+    url.startsWith(
+      location.origin +
+        location.pathname.slice(0, location.pathname.lastIndexOf("/") + 1),
+    ) ||
+    (!/^[a-z]+:|^\//i.test(url) && !url.split("/").includes(".."))
+  )
+    return url;
+  throw Error(
+    "External model resources are blocked. Use a GLB with embedded textures.",
+  );
+});
+const loader = new GLTFLoader(manager);
+async function parseGLB(data) {
+  if (new DataView(data).getUint32(0, true) !== 0x46546c67)
+    throw Error("Not a GLB file.");
+  const gltf = await loader.parseAsync(data, "");
+  return gltf.scene;
+}
+async function loadFile(file, consent = false) {
+  if (file.size > 256 * 1024 * 1024)
+    throw Error("Choose a model under 256 MiB.");
+  const ext = file.name.split(".").pop().toLowerCase();
+  if (ext === "blend" && !consent) {
+    pendingBlend = file;
+    $("blenderHelp").showModal();
+    return;
+  }
+  message("Importing " + file.name + "…");
+  let object;
+  if (ext === "glb") object = await parseGLB(await file.arrayBuffer());
+  else if (ext === "obj")
+    object = new OBJLoader(manager).parse(await file.text());
+  else if (ext === "fbx")
+    object = new FBXLoader(manager).parse(await file.arrayBuffer(), "");
+  else if (ext === "blend") {
+    const reply = await fetch("convert-model", {
+      method: "POST",
+      headers: {
+        "X-Model-Extension": ".blend",
+        "X-Conversion-Consent": "yes",
+        "Content-Type": "application/octet-stream",
+      },
+      body: file,
+    });
+    if (!reply.ok)
+      throw Error(
+        "Converter unavailable. Reopen Space Studio from the updated Bridge app.",
+      );
+    if (reply.headers.get("Content-Type").includes("json"))
+      throw Error((await reply.json()).error);
+    object = await parseGLB(await reply.arrayBuffer());
+  } else throw Error("Supported models: GLB, OBJ, FBX and optional BLEND.");
+  remember();
+  let project = false;
+  object.traverse((node) => {
+    if (node.userData.apcProject?.version === 1) project = true;
+  });
+  if (project) {
+    select(null);
+    root.clear();
+  }
+  object.name = file.name;
+  object.traverse((node) => {
+    meta(node);
+    if (node.isMesh) {
+      for (const m of Array.isArray(node.material)
+        ? node.material
+        : [node.material]) {
+        m.emissive?.setRGB(0, 0, 0);
+        m.emissiveIntensity = 0;
+      }
+    }
+  });
+  root.add(object);
+  select(object);
+  refresh();
+  frame();
+  changed();
+  message(
+    "Imported locally. Save project to keep a converted GLB. OBJ/FBX sidecar textures are not imported.",
+  );
+}
+let pendingBlend = null;
+$("convertBlend").onclick = async () => {
+  const file = pendingBlend;
+  pendingBlend = null;
+  $("blenderHelp").close();
+  try {
+    await loadFile(file, true);
+  } catch (error) {
+    message(error.message);
+  }
+};
+$("cancelBlend").onclick = () => {
+  pendingBlend = null;
+  $("blenderHelp").close();
+};
+$("import").onclick = () => $("file").click();
+$("file").onchange = async () => {
+  const file = $("file").files[0];
+  $("file").value = "";
+  if (!file) return;
+  $("import").disabled = true;
+  try {
+    await loadFile(file);
+  } catch (error) {
+    message(error.message);
+  } finally {
+    $("import").disabled = false;
+  }
+};
+async function exportGLB() {
+  root.userData.apcProject = {
+    version: 1,
+    camera: { pos: camera.position.toArray(), target: orbit.target.toArray() },
+  };
+  return new GLTFExporter().parseAsync(root, {
+    binary: true,
+    onlyVisible: false,
+    includeCustomExtensions: false,
+  });
+}
+$("apply").onclick = async () => {
+  const button = $("apply");
+  button.disabled = true;
+  const wasPreview = preview;
+  if (wasPreview) setPreview(false);
+  try {
+    const glb = await exportGLB();
+    await window.apcProjectStore(glb);
+    dirty = false;
+    location.href = "preview.html" + location.search;
+  } catch (error) {
+    message(
+      "Could not store project locally: " +
+        error.message +
+        " Save GLB instead.",
+    );
+    if (wasPreview) setPreview(true);
+    button.disabled = false;
+  }
+};
+$("save").onclick = async () => {
+  const button = $("save");
+  button.disabled = true;
+  const wasPreview = preview;
+  if (wasPreview) setPreview(false);
+  try {
+    const glb = await exportGLB();
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(
+      new Blob([glb], { type: "model/gltf-binary" }),
+    );
+    link.download = "APC40-space.glb";
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 5000);
+    dirty = false;
+    message("GLB project downloaded.");
+    $("status").textContent =
+      "Project exported · keep the downloaded GLB to reopen your scene";
+  } catch (error) {
+    message(error.message);
+  } finally {
+    if (wasPreview) setPreview(true);
+    button.disabled = false;
+  }
+};
+function stopMedia() {
+  media?.getTracks().forEach((track) => track.stop());
+  media = null;
+  video.pause();
+  video.srcObject = null;
+  testPattern = false;
+  sourceUniform.value = blackTexture;
+  renderNeeded = true;
+}
+async function startMedia(screen) {
+  try {
+    stopMedia();
+    const id = $("cameraChoice").value;
+    media = await (screen
+      ? navigator.mediaDevices.getDisplayMedia({
+          video: { frameRate: { max: 30 } },
+          audio: false,
+        })
+      : navigator.mediaDevices.getUserMedia({
+          video: {
+            ...(id ? { deviceId: { exact: id } } : {}),
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+            frameRate: { ideal: 24, max: 30 },
+          },
+          audio: false,
+        }));
+    video.srcObject = media;
+    await video.play();
+    sourceUniform.value = videoTexture;
+    media.getVideoTracks()[0].addEventListener("ended", stopMedia);
+    if (!screen) {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      $("cameraChoice").replaceChildren();
+      for (const device of devices.filter((d) => d.kind === "videoinput")) {
+        const option = document.createElement("option");
+        option.value = device.deviceId;
+        option.textContent = device.label || "Camera";
+        $("cameraChoice").append(option);
+      }
+      const used = media.getVideoTracks()[0].getSettings().deviceId;
+      if (used) $("cameraChoice").value = used;
+    }
+    message("Live input connected. Stop releases the camera/capture.");
+  } catch (error) {
+    stopMedia();
+    message(error.message);
+  }
+}
+$("test").onclick = () => {
+  stopMedia();
+  black.width = black.height = 256;
+  testPattern = true;
+  sourceUniform.value = blackTexture;
+  message("TEST PATTERN · generated input, not Arena output");
+};
+$("camera").onclick = () => startMedia(false);
+$("capture").onclick = () => startMedia(true);
+$("stop").onclick = stopMedia;
+$("back").onclick = () => {
+  if (!dirty || confirm("Leave without saving the project?"))
+    location.href = "preview.html" + location.search;
+};
+window.addEventListener("beforeunload", (event) => {
+  if (dirty) {
+    event.preventDefault();
+    event.returnValue = "";
+  }
+});
+window.addEventListener("pagehide", () => {
+  stopMedia();
+  renderer.dispose();
+});
+renderer.domElement.addEventListener("pointerdown", (event) => {
+  if (event.button !== 0 || preview || transform.axis) return;
+  const bounds = renderer.domElement.getBoundingClientRect(),
+    mouse = new T.Vector2(
+      ((event.clientX - bounds.left) / bounds.width) * 2 - 1,
+      1 - ((event.clientY - bounds.top) / bounds.height) * 2,
+    ),
+    ray = new T.Raycaster();
+  ray.setFromCamera(mouse, camera);
+  const hit = ray
+    .intersectObject(root, true)
+    .find((h) => effective(h.object, "editorVisible"));
+  select(hit?.object || null);
+});
+window.addEventListener("keydown", (event) => {
+  if (
+    /INPUT|SELECT|TEXTAREA/.test(event.target.tagName) ||
+    $("blenderHelp").open
+  )
+    return;
+  const key = event.key.toLowerCase();
+  if ((event.ctrlKey || event.metaKey) && key === "z") {
+    event.preventDefault();
+    $(event.shiftKey ? "redo" : "undo").click();
+    return;
+  }
+  if (preview) return;
+  if (["g", "r", "s"].includes(key) && selected)
+    transform.setMode({ g: "translate", r: "rotate", s: "scale" }[key]);
+  if (key === "escape" && transaction) {
+    transform.reset();
+    transaction = null;
+  }
+  if (key === "f") frame();
+  if (event.code === "Numpad1" || key === "1")
+    setView(event.ctrlKey ? "back" : "front");
+  if (event.code === "Numpad3" || key === "3")
+    setView(event.ctrlKey ? "left" : "right");
+  if (event.code === "Numpad7" || key === "7")
+    setView(event.ctrlKey ? "bottom" : "top");
+  if (key === "5")
+    setView(camera.isOrthographicCamera ? "perspective" : "front");
+  if (key === "delete") $("delete").click();
+});
+async function heartbeat() {
+  try {
+    const response = await fetch("heartbeat" + location.search);
+    if (!response.ok)
+      message(
+        "Viewer session expired. Save your project and reopen from Bridge.",
+      );
+  } catch {
+    message("Local viewer is unavailable. Save your project before closing.");
+  }
+}
+setInterval(heartbeat, 20000);
+heartbeat();
+async function loadInitial() {
+  try {
+    const response = await fetch("layout" + location.search);
+    if (response.ok) {
+      fixtures = (await response.json()).outputFixtures || [];
+    }
+  } catch {}
+  const option = document.createElement("option");
+  option.value = "composition";
+  option.textContent = "Whole composition";
+  $("source").append(option);
+  for (const fixture of fixtures) {
+    const o = document.createElement("option");
+    o.value = fixture.sliceUid;
+    o.textContent = fixture.screen + " / " + fixture.slice;
+    $("source").append(o);
+  }
+  try {
+    const response = await fetch("active-layout.js" + location.search);
+    const text = await response.text();
+    const layout = JSON.parse(text.slice("window.APC40Layout=".length, -1));
+    const saved = await window.apcProjectStore();
+    const object = saved
+      ? await parseGLB(saved)
+      : (await loader.loadAsync(layout.space?.model || "room-current.glb"))
+          .scene;
+    root.add(object);
+    root.traverse((n) => meta(n));
+    refresh();
+    frame();
+  } catch (error) {
+    message("Start an empty space or import a model. " + error.message);
+  }
+}
+loadInitial();
+function animate(time) {
+  requestAnimationFrame(animate);
+  if (document.hidden || time - lastFrame < 1000 / 30) return;
+  if (testPattern) {
+    const g = blackContext.createLinearGradient(0, 0, 256, 256);
+    g.addColorStop(0, "hsl(" + ((time / 40) % 360) + ",90%,55%)");
+    g.addColorStop(1, "#060a14");
+    blackContext.fillStyle = g;
+    blackContext.fillRect(0, 0, 256, 256);
+    blackTexture.needsUpdate = true;
+  }
+  if (renderNeeded || media || testPattern) {
+    renderer.render(scene, camera);
+    renderNeeded = false;
+    lastFrame = time;
+  }
+}
+requestAnimationFrame(animate);
