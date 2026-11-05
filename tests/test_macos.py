@@ -107,6 +107,7 @@ class MacTests(unittest.TestCase):
         output = package.build(self.data / "mac.zip")
         with zipfile.ZipFile(output) as archive:
             names = archive.namelist()
+            self.assertTrue(any(n.endswith(package.APP + "Resources/visualizer/workspace.js") for n in names))
             self.assertFalse(any(name.endswith((".exe", ".ps1", ".bat")) for name in names))
             launcher = next(n for n in names if n.endswith("MacOS/launcher"))
             self.assertTrue(archive.getinfo(launcher).external_attr >> 16 & stat.S_IXUSR)

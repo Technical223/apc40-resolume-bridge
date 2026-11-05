@@ -46,3 +46,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 Space Studio modules are vendored from mrdoob/three.js tag r160 (core, controls, loaders, exporter and utilities). MIT license: editor-vendor/LICENSE. Bundled fflate retains its embedded MIT copyright/license header. Only relative module imports were adjusted; no CDN is required at runtime.
+
+Windows embedded host: Microsoft.Web.WebView2 SDK 1.0.4314.35, Microsoft license.
+The Windows builder copies LICENSE.txt as WebView2-SDK-LICENSE.txt beside the app.
+Microsoft WebView2 Runtime has its own Microsoft terms; it is not MIT licensed.
+https://www.nuget.org/packages/Microsoft.Web.WebView2/1.0.4314.35

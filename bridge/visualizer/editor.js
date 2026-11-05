@@ -197,15 +197,17 @@ async function performDraft() {
   try {
     if (signature !== draftTopology) {
       const base = await exportGLB();
-      if (signature !== topology()) return;
+      if (signature !== topology()) return false;
       await window.apcLocalStore("recovery-base", base);
       draftTopology = signature;
     }
     await window.apcLocalStore("recovery-state", sceneState(root));
     $("recoveryStatus").textContent = "Recovery saved locally";
+    return true;
   } catch (error) {
     $("recoveryStatus").textContent =
       "Recovery unavailable — use Save project: " + error.message;
+    return false;
   } finally {
     draftBusy = false;
     if (signature !== topology()) queueDraft();
@@ -940,7 +942,7 @@ function setPreview(value) {
   refresh();
 }
 $("mode").onclick = async () => {
-  if (!preview) await saveDraft();
+  if (!preview && await saveDraft() === false) { message("Recovery could not be saved. Save a GLB project before switching."); return; }
   setPreview(!preview);
 };
 const manager = new T.LoadingManager();
@@ -1443,6 +1445,10 @@ async function loadInitial() {
     message("Start an empty space or import a model. " + error.message);
   }
 }
+window.apcPrepareToLeave = async () => {
+  if (await saveDraft() === false) throw Error("Local recovery could not be saved. Save a GLB project before leaving.");
+  storeView(); await new Promise(resolve => setTimeout(resolve, 120));
+};
 loadInitial();
 let statsAt = 0,
   rendered = 0,

@@ -16,7 +16,7 @@ from urllib.parse import parse_qs
 HOME = Path(__file__).resolve().parent
 sys.path.insert(0, str(HOME))
 STATE = HOME / "viewer-session.json"
-FILES = {"preview.html": "text/html; charset=utf-8", "active-layout.js": "text/javascript",
+FILES = {"workspace.js": "text/javascript", "preview.html": "text/html; charset=utf-8", "active-layout.js": "text/javascript",
          "room-current.glb": "model/gltf-binary",
          "editor.html": "text/html; charset=utf-8", "editor.js": "text/javascript",
          "wiring.js": "text/javascript", "editor-project.js": "text/javascript", "editor-model.js": "text/javascript"}
@@ -201,7 +201,7 @@ def current_url():
         pass
     return None
 
-def open_preview():
+def ensure_preview():
     from prepare import prepare
     prepare()
     url = current_url()
@@ -224,7 +224,20 @@ def open_preview():
                 process.terminate()
                 process.wait(timeout=5)
             raise RuntimeError("The local visualizer could not start.")
-    webbrowser.open(url + "preview.html")
+    return url
+
+def open_preview():
+    app = HOME.parent / "APC40 Bridge.exe"
+    if os.name == "nt" and app.is_file():
+        subprocess.Popen([str(app), "--visualizer"], cwd=app.parent)
+    else:
+        webbrowser.open(ensure_preview() + "preview.html")
 
 if __name__ == "__main__":
-    serve(token=sys.argv[1] if len(sys.argv) == 2 else None)
+    if sys.argv[1:] == ["--url"]:
+        import contextlib
+        with contextlib.redirect_stdout(sys.stderr):
+            url = ensure_preview()
+        print(json.dumps({"url": url}))
+    else:
+        serve(token=sys.argv[1] if len(sys.argv) == 2 else None)

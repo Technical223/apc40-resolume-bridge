@@ -24,3 +24,7 @@ bridge/visualizer/active-layout*.js
 bridge/visualizer/viewer-session.json
 bridge/visualizer/*.ax
 bridge/visualizer/*.download
+
+# Generated WebView2 SDK redistributables (pinned package downloaded during build)
+bridge/*.dll
+bridge/WebView2-SDK-LICENSE.txt

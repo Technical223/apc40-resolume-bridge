@@ -47,7 +47,7 @@ def build(destination, require_native=False):
                  LSUIElement=False, NSHighResolutionCapable=True,
                  NSAppTransportSecurity={"NSAllowsLocalNetworking":True})
     payloads = {name: path.read_bytes() for name, path in files.items()}
-    for name in ("preview.html","wiring.js","prepare.py","launcher.py","physical-layout.json","room-current.glb","THIRD-PARTY-NOTICES.txt"):
+    for name in ("workspace.js","preview.html","wiring.js","prepare.py","launcher.py","physical-layout.json","room-current.glb","THIRD-PARTY-NOTICES.txt"):
         payloads[APP+"Resources/visualizer/"+name]=(ROOT/"bridge/visualizer"/name).read_bytes()
     native=False
     if sys.platform=="darwin":

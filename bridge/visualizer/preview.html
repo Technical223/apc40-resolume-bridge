@@ -51,6 +51,7 @@
   #visualizerNav label { font:12px system-ui; }
 </style>
 <script src="editor-project.js"></script>
+<script src="workspace.js"></script>
 <script src="wiring.js"></script>
 </head>
 <body>
@@ -4090,6 +4091,7 @@ async function restoreSharedInput(){
  }catch(error){di('Input could not resume: '+error.message);return true;}
  return false;
 }
+window.apcPrepareToLeave=()=>saveSharedPreviewState();
 async function saveSharedPreviewState(){
  const previous=readSharedView()||{};
  const file=Ye('file')?.files?.[0];

@@ -18,6 +18,9 @@ using System.Web.Script.Serialization;
 
 namespace ApcBridge {
     static class Program {
+        internal static int VisualizerMessage;
+        [System.Runtime.InteropServices.DllImport("user32.dll",CharSet=System.Runtime.InteropServices.CharSet.Unicode)]static extern int RegisterWindowMessage(string message);
+        [System.Runtime.InteropServices.DllImport("user32.dll")]static extern bool PostMessage(IntPtr window,int message,IntPtr w,IntPtr l);
         [STAThread] static void Main(string[] args) {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
@@ -29,9 +32,10 @@ namespace ApcBridge {
             }
             bool created;
             string key = Convert.ToBase64String(System.Security.Cryptography.SHA256.Create().ComputeHash(Encoding.UTF8.GetBytes(home.ToLowerInvariant()))).Replace("/", "_");
+            VisualizerMessage=RegisterWindowMessage("APC40Bridge.Visualizer."+key);
             using (var mutex = new Mutex(true, "Local\\APC40ControlPanel_" + key, out created)) {
-                if (!created) { MessageBox.Show("The bridge dashboard is already open.", "APC40 Bridge", MessageBoxButtons.OK, MessageBoxIcon.Information); return; }
-                Application.Run(new Dashboard(home,args.Contains("--studio")));
+                if (!created) { if(args.Contains("--visualizer"))PostMessage(new IntPtr(0xffff),VisualizerMessage,IntPtr.Zero,IntPtr.Zero);else MessageBox.Show("The bridge dashboard is already open.", "APC40 Bridge", MessageBoxButtons.OK, MessageBoxIcon.Information);return; }
+                Application.Run(new Dashboard(home,args.Contains("--studio"),args.Contains("--visualizer")));
             }
         }
     }
@@ -128,7 +132,7 @@ namespace ApcBridge {
             TextRenderer.DrawText(g,Text,Font,bounds,Enabled?ForeColor:Theme.Muted,flags);if(Focused)ControlPaint.DrawFocusRectangle(g,new Rectangle(4,4,Width-8,Height-8));
         }
     }
-    sealed class Dashboard : Form {
+    sealed partial class Dashboard : Form {
         readonly string home;
         readonly Label title, description, notice;
         readonly Label[] values = new Label[4];
@@ -138,7 +142,7 @@ namespace ApcBridge {
         bool busy, refreshing, applying;
         bool ready, running;
         readonly List<Control> actions = new List<Control>();
-        public Dashboard(string path,bool openStudio=false) {
+        public Dashboard(string path,bool openStudio=false,bool openVisualizer=false) {
             home=path;
             Theme.Form(this,"APC40 Bridge",new Size(1160,780));
             MinimumSize=new Size(1040,740); MaximizeBox=true; FormBorderStyle=FormBorderStyle.Sizable;
@@ -190,24 +194,11 @@ namespace ApcBridge {
 
             more.Controls.Add(visualizer,3,0);
             visualizer.Font=new Font("Segoe UI",9);
-            visualizer.Click+=(sender,e)=>{
-                try {
-                    string page=Path.Combine(home,"visualizer","preview.html");
-                    if(!File.Exists(page))throw new Exception("Install the optional visualizer package first.");
-                    string layoutScript=Path.Combine(home,"visualizer","prepare.py");
-                    if(File.Exists(layoutScript)) {
-                        var layoutStart=new ProcessStartInfo(Path.Combine(home,"runtime","python.exe"),"\""+layoutScript+"\" --open"){UseShellExecute=false,CreateNoWindow=true,RedirectStandardError=true,RedirectStandardOutput=true};
-                        using(var process=Process.Start(layoutStart)) {
-                            if(!process.WaitForExit(10000)){process.Kill();process.WaitForExit();throw new Exception("Preparing the output layout timed out.");}
-                            if(process.ExitCode!=0)throw new Exception("Could not read the saved Advanced Output preset. Save it in Arena first.\n"+process.StandardError.ReadToEnd());
-                        }
-                    }
-                    else Process.Start(new ProcessStartInfo(page){UseShellExecute=true});
-                }catch(Exception ex){ShowError(ex.Message);}
-            };
+            visualizer.Click+=(sender,e)=>ShowVisualizer();
             foreach(var b in new[]{studio,settings,logs,shortcut,loop,restore}) b.Font=new Font("Segoe UI",9);
             more.Controls.Add(loop,0,0);more.Controls.Add(shortcut,1,0);more.Controls.Add(restore,2,0);
             actions.AddRange(new Control[]{studio,settings,shortcut,restore});
+            AddLocalTools(more);
             studio.Click+=(s,e)=>{try{ShowPage(()=>new ControllerEditor(home));}catch(Exception ex){ShowError(ex.Message);}};root.Controls.Add(more,0,5);
             settings.Click+=(s,e)=> { try { ShowPage(()=>new Settings(home)); }catch(Exception ex){ ShowError(ex.Message); } };
             logs.Click+=(s,e)=> { ShowPage(()=>new Logs(home)); };
@@ -232,23 +223,35 @@ namespace ApcBridge {
             timer.Interval=5000;timer.Tick+=async(s,e)=>await RefreshStatus();timer.Start();
             FormClosed+=(s,e)=>timer.Dispose();
             BuildNavigation(root);
-            FormClosing+=(sender,e)=>{if(!ClosePage())e.Cancel=true;};
-            if(openStudio)Shown+=(sender,e)=>ShowPage(()=>new ControllerEditor(home));
+            FormClosing+=async(sender,e)=>{
+                if(e.Cancel)return;
+                var viewer=activePage as VisualizerPage;
+                if(viewer!=null&&!viewer.ReadyToClose){e.Cancel=true;if(await viewer.PrepareCloseAsync())BeginInvoke(new Action(Close));}
+                else if(!ClosePage())e.Cancel=true;
+            };
+            if(openVisualizer)Shown+=(sender,e)=>ShowVisualizer();
+            else if(openStudio)Shown+=(sender,e)=>ShowPage(()=>new ControllerEditor(home));
         }
+        partial void AddLocalTools(TableLayoutPanel tools);
+        protected override void WndProc(ref Message message){
+            if(message.Msg==Program.VisualizerMessage){if(WindowState==FormWindowState.Minimized)WindowState=FormWindowState.Normal;Show();Activate();ShowVisualizer();}
+            base.WndProc(ref message);
+        }
+        void ShowVisualizer(){if(activePage is VisualizerPage){activePage.BringToFront();return;}ShowPage(()=>new VisualizerPage(home));}
         Panel pageHost;
         Control overview;
         Form activePage;
-        bool switching;
+        bool switching,navigationBusy;
         void BuildNavigation(Control content){
             overview=content;Controls.Remove(content);
             var shell=new TableLayoutPanel{Dock=DockStyle.Fill,ColumnCount=2,RowCount=1,Margin=Padding.Empty};
             shell.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,190));shell.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));
             var nav=new FlowLayoutPanel{Dock=DockStyle.Fill,FlowDirection=FlowDirection.TopDown,WrapContents=false,Padding=new Padding(16,26,10,16),BackColor=Theme.Card};
             nav.Controls.Add(new Label{Text="APC40 BRIDGE",AutoSize=false,Width=155,Height=56,ForeColor=Theme.Accent,Font=new Font("Segoe UI",12,FontStyle.Bold)});
-            string[] names={"Overview","Controller Studio","Settings","Logs"};
+            string[] names={"Overview","Controller Studio","Visualizer","Settings","Logs"};
             for(int i=0;i<names.Length;i++){
                 int index=i;var button=Theme.Button(names[i],false);button.Dock=DockStyle.None;button.Width=155;button.Height=46;button.Margin=new Padding(0,0,0,8);button.TextAlign=ContentAlignment.MiddleLeft;
-                button.Click+=(sender,e)=>{if(index==0)ShowOverview();else if(index==1)ShowPage(()=>new ControllerEditor(home));else if(index==2)ShowPage(()=>new Settings(home));else ShowPage(()=>new Logs(home));};nav.Controls.Add(button);
+                button.Click+=(sender,e)=>{if(index==0)ShowOverview();else if(index==1)ShowPage(()=>new ControllerEditor(home));else if(index==2)ShowVisualizer();else if(index==3)ShowPage(()=>new Settings(home));else ShowPage(()=>new Logs(home));};nav.Controls.Add(button);
             }
             pageHost=new Panel{Dock=DockStyle.Fill};pageHost.Controls.Add(content);shell.Controls.Add(nav,0,0);shell.Controls.Add(pageHost,1,0);Controls.Add(shell);
         }
@@ -257,12 +260,20 @@ namespace ApcBridge {
             var closing=activePage;switching=true;closing.Close();switching=false;
             if(!closing.IsDisposed)return false;activePage=null;return true;
         }
-        void ShowOverview(){if(!ClosePage())return;overview.Show();overview.BringToFront();timer.Start();}
-        void ShowPage(Func<Form> create){
-            if(busy||!ClosePage())return;
-            activePage=create();activePage.MinimumSize=Size.Empty;activePage.MaximumSize=Size.Empty;activePage.TopLevel=false;activePage.FormBorderStyle=FormBorderStyle.None;activePage.Dock=DockStyle.Fill;
-            activePage.FormClosed+=(sender,e)=>{if(!switching){if(sender is Settings&&((Form)sender).DialogResult==DialogResult.OK)notice.Text="Settings saved. Restart the bridge to apply MIDI settings.";activePage=null;overview.Show();overview.BringToFront();timer.Start();}};
-            overview.Hide();timer.Stop();pageHost.Controls.Add(activePage);activePage.Show();activePage.BringToFront();AnimatePage(activePage);
+        async void ShowOverview(){
+            if(navigationBusy||busy)return;navigationBusy=true;
+            try{if(activePage is VisualizerPage&&!await ((VisualizerPage)activePage).PrepareCloseAsync())return;if(!ClosePage())return;overview.Show();overview.BringToFront();timer.Start();}
+            catch(Exception ex){ShowError(ex.Message);}finally{navigationBusy=false;}
+        }
+        async void ShowPage(Func<Form> create){
+            if(navigationBusy||busy)return;navigationBusy=true;
+            try{
+                if(activePage is VisualizerPage&&!await ((VisualizerPage)activePage).PrepareCloseAsync())return;
+                if(!ClosePage())return;
+                activePage=create();activePage.MinimumSize=Size.Empty;activePage.MaximumSize=Size.Empty;activePage.TopLevel=false;activePage.FormBorderStyle=FormBorderStyle.None;activePage.Dock=DockStyle.Fill;
+                activePage.FormClosed+=(sender,e)=>{if(!switching){if(sender is Settings&&((Form)sender).DialogResult==DialogResult.OK)notice.Text="Settings saved. Restart the bridge to apply MIDI settings.";activePage=null;overview.Show();overview.BringToFront();timer.Start();}};
+                overview.Hide();timer.Stop();pageHost.Controls.Add(activePage);activePage.Show();activePage.BringToFront();if(!(activePage is VisualizerPage))AnimatePage(activePage);
+            }catch(Exception ex){ShowError(ex.Message);}finally{navigationBusy=false;}
         }
         void AnimatePage(Form page){
             if(!SystemInformation.IsMenuAnimationEnabled)return;
