@@ -71,15 +71,18 @@ function install(api){
   save({...data,connections:data.connections.map(c=>c.uid===current.uid?{...c,order:target,reverse:reverse.checked}:c.output===current.output&&c.order===target?{...c,order:current.order}:c)});
  }
  order.onchange=reverse.onchange=change;api.mapper.addEventListener('click',event=>{if(!box.contains(event.target))refresh();});
- const tool=el('div'),flip=el('button'),close=el('button');tool.id='fixtureDirectionTool';tool.hidden=true;tool.style.cssText='position:fixed;z-index:4;padding:6px;background:#101820ee;border:1px solid #ff9b38;border-radius:8px;display:flex;gap:6px';
- flip.textContent='Reverse direction';flip.id='reverseFixture';close.textContent='Close';close.onclick=()=>{focusUid=null;tool.hidden=true;canvas.hidden=!enabled;};tool.append(flip,close);document.body.append(tool);
+ const tool=el('div'),flip=el('button');tool.id='fixtureDirectionTool';tool.hidden=true;tool.style.cssText='position:fixed;z-index:4;padding:6px;background:#101820ee;border:1px solid #ff9b38;border-radius:8px;display:none';
+ flip.textContent='Reverse direction';flip.id='reverseFixture';tool.title='Double-click empty space or press Escape to dismiss';tool.append(flip);document.body.append(tool);
+ function showTool(show){tool.hidden=!show;tool.style.display=show?'flex':'none';}
+ function clearFocus(){focusUid=null;showTool(false);canvas.hidden=!enabled;ctx.clearRect(0,0,canvas.width,canvas.height);api.select?.(null);}
+ document.addEventListener('keydown',event=>{if(event.key==='Escape')clearFocus();});
  flip.onclick=()=>{const current=data.connections.find(c=>c.uid===focusUid);if(current)save({...data,connections:data.connections.map(c=>c.uid===focusUid?{...c,reverse:!c.reverse}:c)});};
  api.canvas.addEventListener('dblclick',event=>{
   if(api.isMapping?.())return;let uid=null,best=14;
   for(const fixture of api.layout().fixtures||[]){if(!api.visible(fixture.sliceUid))continue;const points=api.positions(fixture.sliceUid)||[],stride=Math.max(1,Math.ceil(points.length/100));
    for(let i=0;i<points.length;i+=stride){const point=api.project(points[i]);if(!point)continue;const d=Math.hypot(event.clientX-point[0],event.clientY-point[1]);if(d<best){best=d;uid=fixture.sliceUid;}}
   }
-  if(!uid)return;focusUid=uid;api.select?.(uid);refresh();canvas.hidden=false;
+  if(!uid){clearFocus();return;}focusUid=uid;api.select?.(uid);refresh();canvas.hidden=false;
  });
  function arrow(a,b,color,dashed=false,head=true){
   if(!a||!b)return;ctx.strokeStyle=ctx.fillStyle=color;ctx.lineWidth=dashed?1.5:3;ctx.setLineDash(dashed?[5,5]:[]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([]);if(!head||Math.hypot(b[0]-a[0],b[1]-a[1])<2)return;
@@ -89,7 +92,7 @@ function install(api){
  function draw(){
   if(!enabled&&!focusUid)return;api.setWiring(enabled);const width=innerWidth,height=innerHeight;if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height;}ctx.clearRect(0,0,width,height);
   let previous=null,drawn=0;
-  tool.hidden=true;
+  showTool(false);
   for(const c of chains){
    if(!enabled&&c.uid!==focusUid)continue;
    const positions=api.positions(c.uid),color=c.uid===focusUid?'#ff9b38':'hsl('+((c.output-1)*137.5%360)+' 85% 70%)';
@@ -100,7 +103,7 @@ function install(api){
    if(c.uid===focusUid){
     label('IN',first,'#51f29b');label('OUT',last,'#ff6475');
     if(first&&points[1])arrow(first,points[1],'#51f29b');if(last&&points[points.length-2])arrow(points[points.length-2],last,'#ff6475');
-    const middle=points[Math.floor(points.length/2)];if(middle){tool.hidden=false;tool.style.left=Math.max(10,Math.min(width-210,middle[0]+10))+'px';tool.style.top=Math.max(60,Math.min(height-50,middle[1]+10))+'px';flip.textContent='Reverse direction'+(c.reverse?' (reversed)':'');}
+    const middle=points[Math.floor(points.length/2)];if(middle){showTool(true);tool.style.left=Math.max(10,Math.min(width-210,middle[0]+10))+'px';tool.style.top=Math.max(60,Math.min(height-50,middle[1]+10))+'px';flip.textContent='Reverse direction'+(c.reverse?' (reversed)':'');}
    }else{label('OUT '+c.output+' | '+c.order+' IN',first,color);label('OUT',last,color);}
    previous={output:c.output,order:c.order,end:last};drawn++;
   }

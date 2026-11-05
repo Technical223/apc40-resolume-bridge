@@ -54,7 +54,7 @@ The 16-output profile has outputs 1–5 with ten 1 m strips each, 6–11 with fi
 
 Select multiple pieces with a **drag rectangle** over the output diagram, **Ctrl-click** to add/remove, or **Shift-click** for a range in the list. **Use selected / Do not use selected** changes the entire selection. Selection and enabled state are separate; selecting a piece never disables it.
 
-Turn on **Wiring view** for a gray room with colored chains and IN / OUT labels. In the normal Visualizer, **double-click a modeled strip** to highlight it, show green IN / red OUT, and open **Reverse direction** beside it. Reversing updates the arrows and the video sampling along that strip in the preview. It does not reverse Arena's hardware output. Order and direction share the same saved settings as the mapper.
+Turn on **Wiring view** for a gray room with colored chains and IN / OUT labels. In the normal Visualizer, **double-click a modeled strip** to highlight it, show green IN / red OUT, and open **Reverse direction** beside it. Double-click empty 3D space or press **Escape** to dismiss it; the saved direction stays unchanged. Reversing updates the arrows and the video sampling along that strip in the preview. It does not reverse Arena's hardware output. Order and direction share the same saved settings as the mapper.
 
 Assignments and direction save locally per preset and space, and are included in selection export/import. Existing direction settings are retained when fixed groups are recognized. Unknown group names can be assigned at group level; missing 3D positions are never invented. Export a selection to transfer or back it up. Original model geometry, actual pixel counts and Arena/DMX addressing are unchanged.
 
