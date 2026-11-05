@@ -1,6 +1,6 @@
 # Space Studio — experimental scene editor
 
-Open **APC40 Bridge → Visualizer → 3D Editor**. **Preview** returns to the same visualizer; no second application or installation is required. Both views load from the same `visualizer` folder. The editor stays in the same browser tab and uses the same local server and port. Switching views changes only the page path, not the IP address or application. The layout and 3D canvas resize with the browser window; no fullscreen mode is required.
+Open **APC40 Bridge → Visualizer → 3D Editor**. **Visualizer** returns to the same visualizer; no second application or installation is required. Both views load from the same `visualizer` folder. The editor stays in the same browser tab and uses the same local server and port. Switching views changes only the page path, not the IP address or application. The layout and 3D canvas resize with the browser window; no fullscreen mode is required.
 It edits a local preview project, never Arena, Advanced Output or DMX.
 
 ## Build a space
@@ -9,7 +9,7 @@ It edits a local preview project, never Arena, Advanced Output or DMX.
 2. Add **Projection**, **LED panel**, **LED strip** or a **Box**. Select objects in the collection or by clicking the viewport. Rename them and set position, rotation, scale, video input slice and pixel counts. Dimensions use meters; a strip runs along local X. At most 4096 pixels are supported per object.
 3. Use **Front / Back / Left / Right / Top / Bottom** for orthographic views, or **Perspective**. Middle-drag orbits, Shift + middle-drag pans, the wheel zooms, and **Frame** centers the selection. **G / R / S** chooses the move/rotate/scale gizmo; drag its handles. **1 / 3 / 7** switches axes, **5** toggles perspective, **F** frames. This is an object editor, not Blender's vertex/sculpt/animation toolset.
 4. **Center pivot** puts a pivot at the geometry bounds center without moving the object in the scene. It uses a pivot parent in the collection, preserves UVs/children and supports Undo. The **eye** controls editor visibility. **Power / Include in preview** controls the final preview independently. Switching off a parent also excludes its children. An object can stay visible while editing yet be excluded from the preview.
-5. Click **Preview** to inspect video on surfaces and pixels. Choose **Open video** for a local, muted looping video (H.264 MP4 or WebM recommended), **Camera** / **Capture screen** for live input, or explicitly choose **Test pattern**. Files are not uploaded; DXV clips need conversion to a browser-compatible format first. No input means black; the test pattern is generated content, not proof of Arena output. **Stop** releases input.
+5. Click **Scene preview** to inspect video on surfaces and pixels. Choose **Open video** for a local, muted looping video (H.264 MP4 or WebM recommended), **Camera** / **Capture screen** for live input, or explicitly choose **Test pattern**. Files are not uploaded; DXV clips need conversion to a browser-compatible format first. No input means black; the test pattern is generated content, not proof of Arena output. **Stop** releases input.
 6. **Apply to visualizer** stores the project in this browser and returns to the visualizer. The next editor session reopens it. **Save project · GLB** downloads a portable copy with geometry and object settings; import it to continue on another machine. Browser data can be cleared, so keep a GLB backup.
 
 Projects are kept per space ID in this browser. No upload or automatic sharing occurs. Selecting a saved slice controls the preview input; it does not create or rename output slices in Arena. Existing configured physical fixtures remain separate from objects added in the editor. Match the plane's proportions to the slice to avoid stretching.
@@ -22,9 +22,9 @@ The optional converter runs Blender in the background only after consent, with e
 
 ## Performance and test status
 
-Rendering is capped at 30 FPS and pauses in hidden tabs. A static editor redraws only when needed. Undo stores object states rather than serializing full geometry on every edit and retains up to 30 actions. Large imports and video still consume GPU/RAM; close the preview when Arena needs those resources.
+Video preview is capped at 30 FPS and pauses in hidden tabs. A static editor redraws only when needed. Undo stores object states rather than serializing full geometry on every edit and retains up to 30 actions. Large imports and video still consume GPU/RAM; close the preview when Arena needs those resources.
 
-This branch is experimental. Browser checks cover exact dimensions, row duplication, slice assignment, automatic recovery, and switching Preview ↔ 3D Editor with selection, orthographic view, snap and a local video loop preserved. OBJ/FBX import and GLB roundtrips have automated checks. Live Arena capture, optional Blender conversion on a clean computer, Mac hardware, compressed GLB extensions and arbitrary production models still need validation. The stable installed application is not changed by checking out this branch.
+This branch is experimental. Browser checks cover exact dimensions, row duplication, slice assignment, automatic recovery, and switching Preview ↔ 3D Editor with selection, orthographic view, snap and a local video loop preserved. OBJ/FBX import and GLB roundtrips have automated checks. An installed 35.6 MB production model was also checked for selection, visibility recovery, Undo and Edit/Scene preview switching without page errors. Live Arena capture, optional Blender conversion on a clean computer, Mac hardware, compressed GLB extensions and other production models still need validation. The stable installed application is not changed by checking out this branch.
 
 ## Dimensions and arrays
 
@@ -44,7 +44,7 @@ The slice diagram highlights the selected object's source. Click an outline to s
 
 The input readout distinguishes decoded **source FPS** from **render FPS**, displays source dimensions and reports a static scene instead of pretending to render continuously. Browser support determines whether source-frame counts are available. Rendering pauses in hidden tabs.
 
-The browser workflow was checked with a small model and a local H.264 loop. Missing slices show a warning; Stop returns the input to black. Large production models, live camera permissions and storage pressure still need validation before a public release.
+The browser workflow was checked with a small model and a local H.264 loop. Missing slices show a warning; Stop returns the input to black. Live camera permissions, performance alongside Arena and storage pressure still need validation before a public release.
 
 ## Wiring view and physical groups
 
@@ -89,3 +89,12 @@ Drag an OUT to a nearby IN: a valid input snaps within the cursor range. Drag an
 Configured links determine the simulated signal path. Unlinked modeled pieces are black in the preview; this does not measure electrical power or live hardware data. The first piece stays attached to its physical output source. Connecting a different occupied input replaces that input's previous cable. Ports require known 3D fixture positions; positions are not guessed from output rectangles.
 
 Links save with the wiring profile and selection export/import. They do not rewrite Arena channel addresses or automatically reorder video across pieces. Use Reverse direction to flip video sampling along one piece. Camera orbit/pan/zoom and live playback keep working; pointer drags are intercepted only when grabbing a wiring port. Wiring controls are hidden in Output mapping.
+
+
+## Room visibility and navigation
+
+**Audience** restores the space's configured viewing position. **Frame** fits visible geometry; hidden fog/reference helpers do not affect framing. If every object is hidden in Edit mode, a status message explains why. **Show hidden objects** reveals the scene for editing and supports Undo. It does not change which objects are included in the final preview. **Scene preview** is read-only; use **Back to editing** to select or transform objects.
+
+Runtime fog volumes stay hidden when saved project flags are applied. A space can optionally set `frontCut` in its physical layout (`axis` and a world-coordinate `min`) to open only front-facing wall triangles beyond that boundary. Viewer and editor use the same treatment, preserving side walls and the source model file.
+
+Visualizer, Output mapping and 3D Editor share dark controls, typography, focus indicators and a mint accent matching the Bridge dashboard. Panel transitions respect reduced-motion preferences. Camera orbit and pan use damping and redraw while moving; video updates retain the 30 FPS scheduler. Idle scenes stop redrawing and hidden tabs stop rendering. This is not a measured performance guarantee for every GPU or model.

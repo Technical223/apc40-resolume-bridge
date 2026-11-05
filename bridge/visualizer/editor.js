@@ -332,7 +332,8 @@ function setupControls() {
   }
   orbit = new OrbitControls(camera, renderer.domElement);
   orbit.target.copy(target);
-  orbit.enableDamping = false;
+  orbit.enableDamping = true;
+  orbit.dampingFactor = 0.12;
   orbit.mouseButtons = {
     LEFT: null,
     MIDDLE: T.MOUSE.ROTATE,
@@ -426,8 +427,32 @@ document.querySelectorAll("[data-tool]").forEach(
         );
     }),
 );
+let roomCamera = null;
+function audienceView() {
+  if (!roomCamera?.pos || !roomCamera?.target) return;
+  camera = perspective;
+  camera.up.set(0, 1, 0);
+  camera.fov = roomCamera.fovV || 45;
+  camera.position.fromArray(roomCamera.pos);
+  target.fromArray(roomCamera.target);
+  camera.lookAt(target);
+  viewName = "Perspective";
+  $("viewLabel").textContent = "Audience · meters";
+  setupControls();
+  resize();
+  storeView();
+  renderNeeded = true;
+}
+$("audienceView").onclick = audienceView;
 function frame() {
-  const box = new T.Box3().setFromObject(selected || root);
+  const box = new T.Box3(), object = selected || root;
+  object.updateWorldMatrix(true, true);
+  object.traverse(node => {
+    if (!node.isMesh || objectCategory(node) === "Helpers" ||
+        !effective(node, preview ? "active" : "editorVisible")) return;
+    node.geometry.computeBoundingBox();
+    box.union(node.geometry.boundingBox.clone().applyMatrix4(node.matrixWorld));
+  });
   if (box.isEmpty()) return;
   box.getCenter(target);
   const radius = Math.max(0.2, box.getSize(new T.Vector3()).length() / 2);
@@ -501,6 +526,10 @@ function renderTree() {
     tree.append(section);
   }
 }
+$("showHidden").onclick = () => {
+  remember(); root.traverse(node => { if(node!==root)meta(node).editorVisible=true; });
+  if(preview)setPreview(false); $("selectionScope").value="All"; refresh(); frame(); changed();
+};
 $("treeSearch").oninput = renderTree;
 $("ledOutlines").onchange = () => { renderNeeded = true; };
 for (const [name,color] of Object.entries(EDITOR_COLORS)) {
@@ -677,6 +706,9 @@ function refresh() {
         !sourceQuad(meta(node).source)
       );
   });
+  let total=0,shown=0;root.traverse(node=>{if(node.isMesh&&objectCategory(node)!=="Helpers"){total++;if(effective(node,"editorVisible"))shown++;}});
+  $("editVisibility").textContent = preview ? "Preview only. Use Back to editing to select and edit objects." : total && !shown ? "All objects are hidden in Edit mode. Use Show hidden objects." : shown+" / "+total+" objects visible in Edit mode";
+  $("showHidden").hidden = shown===total;
   syncEditorStyles();
   renderTree();
   fillProperties();
@@ -859,7 +891,7 @@ function setPreview(value) {
   grid.visible = !preview;
   $("views").hidden = preview;
   $("previewBadge").hidden = !preview;
-  $("mode").textContent = preview ? "Edit scene" : "Scene preview";
+  $("mode").textContent = preview ? "Back to editing" : "Scene preview";
   for (const id of [
     "import",
     "addRoom",
@@ -1322,6 +1354,7 @@ async function loadInitial() {
     const response = await fetch("active-layout.js" + location.search);
     const text = await response.text();
     const layout = JSON.parse(text.slice("window.APC40Layout=".length, -1));
+    roomCamera=layout.camera;
     restoring = true;
     let recovery=null,recoveryBase=null,saved=null;
     try {
@@ -1342,6 +1375,7 @@ async function loadInitial() {
       } catch (error) {
         message("Recovery could not apply: " + error.message);
       }
+    window.apcOpenFront?.(root,layout.frontCut,{Vector3:T.Vector3});
     refresh();
     frame();
     draftTopology = recoveryBase ? topology() : "";
@@ -1397,6 +1431,7 @@ async function loadInitial() {
           "Reconnect the previous live source using Camera or Capture screen.",
         );
     }
+    if(!view)audienceView();
     restoring = false;
     ready = true;
     drawSliceMap();
@@ -1441,8 +1476,9 @@ function animate(time) {
     rendered = 0;
     statsAt = time;
   }
+  orbit.update();
   const nextFrame = advanceFrame(time, lastFrame);
-  if (nextFrame === null) return;
+  if (nextFrame === null && !renderNeeded) return;
   if (testPattern) {
     const g = blackContext.createLinearGradient(0, 0, 256, 256);
     g.addColorStop(0, "hsl(" + ((time / 40) % 360) + ",90%,55%)");
@@ -1461,7 +1497,7 @@ function animate(time) {
     }
     rendered++;
     renderNeeded = false;
-    lastFrame = nextFrame;
+    if (nextFrame !== null) lastFrame = nextFrame;
   }
 }
 requestAnimationFrame(animate);

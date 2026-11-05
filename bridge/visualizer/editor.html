@@ -292,6 +292,7 @@
         ><button id="addPanel">LED panel</button
         ><button id="addStrip">LED strip</button>
       </div>
+      <p id="editVisibility" role="status" class="note"></p><button id="showHidden" hidden>Show hidden objects</button>
       <div id="tree" role="tree" aria-label="Scene objects"></div>
       <hr />
       <div class="tools">
@@ -309,7 +310,7 @@
         <label style="margin:0">Select <select id="selectionScope"><option value="All">All</option><option>Environment</option><option>LEDs</option><option>Surfaces</option><option>Objects</option></select></label>
         <label style="margin:0"><input id="ledOutlines" type="checkbox" checked>LED outlines</label>
         <label style="margin:0">Shading <select id="shading"><option value="solid">Solid</option><option value="materials">Materials</option></select></label>
-        <button data-view="perspective">Perspective</button
+        <button id="audienceView">Audience</button><button data-view="perspective">Perspective</button
         ><button data-view="front">Front</button
         ><button data-view="back">Back</button
         ><button data-view="left">Left</button

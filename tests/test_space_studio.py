@@ -46,6 +46,20 @@ class ConversionTest(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError,'stopped'):convert.convert_model(b'BLENDER','.blend',executable='fake-blender')
 
 class EditorTest(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('node'),'Node checks room front geometry')
+    def test_front_cut_clones_geometry_and_keeps_sides(self):
+        script=r"""
+import fs from 'node:fs';import vm from 'node:vm';import path from 'node:path';import {pathToFileURL} from 'node:url';import assert from 'node:assert/strict';
+const T=await import(pathToFileURL(path.resolve('bridge/visualizer/editor-vendor/three.module.js')));
+const context={window:{}};vm.createContext(context);vm.runInContext(fs.readFileSync('bridge/visualizer/editor-project.js','utf8'),context);
+const root=new T.Group(),geometry=new T.BoxGeometry(2,2,.2),material=new T.MeshStandardMaterial();material.name='stena';const wall=new T.Mesh(geometry,material);wall.position.z=4.7;root.add(wall);
+const removed=context.window.apcOpenFront(root,{axis:'z',min:4.7},{Vector3:T.Vector3});
+assert.equal(removed,2);assert.equal(geometry.index.count,36);assert.equal(wall.geometry.index.count,30);assert.notEqual(wall.geometry,geometry);
+assert.throws(()=>context.window.apcOpenFront(root,{axis:'q',min:4.7},{Vector3:T.Vector3}));
+"""
+        result=subprocess.run(['node','--input-type=module','-e',script],cwd=ROOT,capture_output=True,text=True,encoding='utf-8',timeout=20)
+        self.assertEqual(result.returncode,0,result.stderr)
+
     @unittest.skipUnless(shutil.which('node'),'Node checks explicit outliner fold state')
     def test_selected_object_does_not_expand_closed_collection(self):
         script=r"""
@@ -53,7 +67,7 @@ import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:asser
 const source=fs.readFileSync('bridge/visualizer/editor.js','utf8');
 const code=source.slice(source.indexOf('const collectionStateKey ='),source.indexOf('$("treeSearch").oninput'));
 class Element {constructor(){this.children=[];this.style={};this.value='';}append(...items){this.children.push(...items);}replaceChildren(){this.children=[];}setAttribute(){} }
-const controls={tree:new Element(),treeSearch:{value:''},selectionScope:{value:'All'}};
+const controls={tree:new Element(),treeSearch:{value:''},selectionScope:{value:'All'},showHidden:new Element()};
 const node={isMesh:true,name:'Wall',userData:{apcEditor:{editorVisible:true,active:true}}};
 let saved=JSON.stringify({Environment:false});
 const context={URLSearchParams,location:{search:''},localStorage:{getItem(){return saved;},setItem(key,value){saved=value;}},document:{createElement(){return new Element();}},$:id=>controls[id],root:{traverse(fn){fn(node);}},selected:node,objectCategory(){return 'Environment';},objectLabel(){return 'Wall';},meta:n=>n.userData.apcEditor,effective:()=>true,select(){},remember(){},changed(){}};
@@ -238,6 +252,7 @@ assert.equal(material.uniforms.map.value,'input');
 parent.userData.apcEditor.active=false;
 context.window.applyAPCEditorProject(root,{Material,Vector2,map:{value:'input'},crop:{},fixtures:[]});
 assert.equal(node.visible,false);
+parent.userData.apcEditor.active=true;node.userData.apcPreviewExcluded=true;context.window.applyAPCEditorProject(root,{Material,Vector2,map:{value:'input'},crop:{},fixtures:[]});assert.equal(node.visible,false);
 console.log('Editor validation, UV sampling and preview inclusion passed');
 """
         result=subprocess.run(['node','--input-type=module','-e',script],cwd=ROOT,capture_output=True,text=True,encoding='utf-8',timeout=20)
