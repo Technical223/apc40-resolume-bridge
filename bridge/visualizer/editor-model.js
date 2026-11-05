@@ -69,3 +69,38 @@ export function centerPivot(node, T) {
   pivot.attach(node);
   return pivot;
 }
+
+export function dimensions(node, T) {
+  node.updateWorldMatrix(true, true);
+  const inverse = node.matrixWorld.clone().invert(), box = new T.Box3();
+  node.traverse(child => {
+    if (!child.geometry) return;
+    child.geometry.computeBoundingBox();
+    if (child.geometry.boundingBox) box.union(child.geometry.boundingBox.clone().applyMatrix4(inverse.clone().multiply(child.matrixWorld)));
+  });
+  if (box.isEmpty()) return new T.Vector3();
+  const size = box.getSize(new T.Vector3()), matrix = new T.Matrix3().setFromMatrix4(node.matrixWorld);
+  for (const [index, axis] of ['x','y','z'].entries()) size[axis] *= new T.Vector3().setComponent(index, 1).applyMatrix3(matrix).length();
+  return size;
+}
+export function resizeDimension(node, axis, meters, T) {
+  if (!['x','y','z'].includes(axis) || !Number.isFinite(meters) || meters < .001 || meters > 10000) throw Error('Dimension must be 0.001–10000 meters.');
+  const current = dimensions(node, T)[axis];
+  if (current < 1e-8) throw Error('A flat surface has no thickness on this axis.');
+  node.scale[axis] *= meters/current;
+  node.updateWorldMatrix(true, true);
+}
+export function duplicateRow(node, axis, count, spacing, T) {
+  if (!node.parent || !['x','y','z'].includes(axis) || !Number.isInteger(count) || count < 2 || count > 32 || !Number.isFinite(spacing) || spacing < .001 || spacing > 1000) throw Error('Use 2–32 objects and spacing of 0.001–1000 meters.');
+  node.updateWorldMatrix(true, true);
+  const origin=node.getWorldPosition(new T.Vector3());
+  const direction=new T.Vector3().setComponent(['x','y','z'].indexOf(axis),1).transformDirection(node.matrixWorld);
+  const copies=[];
+  for(let index=1;index<count;index++) {
+    const copy=node.clone(true);
+    copy.name=(node.name||'Object')+' '+(index+1);
+    copy.position.copy(node.parent.worldToLocal(origin.clone().addScaledVector(direction,spacing*index)));
+    node.parent.add(copy);copies.push(copy);
+  }
+  return copies;
+}

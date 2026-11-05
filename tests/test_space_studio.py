@@ -46,6 +46,24 @@ class ConversionTest(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError,'stopped'):convert.convert_model(b'BLENDER','.blend',executable='fake-blender')
 
 class EditorTest(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('node'),'Node checks physical dimensions and array spacing')
+    def test_dimensions_and_row_under_transformed_parent(self):
+        script=r"""
+import fs from 'node:fs';import assert from 'node:assert/strict';import {pathToFileURL} from 'node:url';
+const helpers=fs.readFileSync('bridge/visualizer/editor-model.js');const {dimensions,resizeDimension,duplicateRow}=await import('data:text/javascript;base64,'+helpers.toString('base64'));
+const T=await import(pathToFileURL(process.cwd()+'/bridge/visualizer/editor-vendor/three.module.js'));
+const parent=new T.Group();parent.scale.set(2,.5,3);parent.rotation.y=.7;
+const mesh=new T.Mesh(new T.PlaneGeometry(2,1));mesh.rotation.z=.4;parent.add(mesh);
+resizeDimension(mesh,'x',4,T);assert.ok(Math.abs(dimensions(mesh,T).x-4)<1e-6);
+resizeDimension(mesh,'y',2,T);assert.ok(Math.abs(dimensions(mesh,T).y-2)<1e-6);
+assert.throws(()=>resizeDimension(mesh,'z',1,T));assert.throws(()=>resizeDimension(mesh,'x',NaN,T));
+const origin=mesh.getWorldPosition(new T.Vector3()),copies=duplicateRow(mesh,'x',4,1.25,T);
+assert.equal(copies.length,3);copies.forEach((copy,i)=>{assert.ok(Math.abs(copy.getWorldPosition(new T.Vector3()).distanceTo(origin)-1.25*(i+1))<1e-6);assert.equal(copy.geometry,mesh.geometry);});
+assert.throws(()=>duplicateRow(mesh,'x',500,1,T));assert.throws(()=>duplicateRow(mesh,'x',2,-1,T));
+"""
+        result=subprocess.run(['node','--input-type=module','-e',script],cwd=ROOT,capture_output=True,text=True,encoding='utf-8',timeout=20)
+        self.assertEqual(result.returncode,0,result.stderr)
+
     def test_all_static_editor_controls_exist(self):
         html=(VIEWER/'editor.html').read_text(encoding='utf-8')
         js=(VIEWER/'editor.js').read_text(encoding='utf-8')

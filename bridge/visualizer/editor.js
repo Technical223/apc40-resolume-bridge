@@ -5,7 +5,7 @@ import { GLTFLoader } from "./editor-vendor/GLTFLoader.js";
 import { GLTFExporter } from "./editor-vendor/GLTFExporter.js";
 import { OBJLoader } from "./editor-vendor/OBJLoader.js";
 import { FBXLoader } from "./editor-vendor/FBXLoader.js";
-import { validateObject, effective, COMPOSITION, advanceFrame, centerPivot } from "./editor-model.js";
+import { validateObject, effective, COMPOSITION, advanceFrame, centerPivot, dimensions, resizeDimension, duplicateRow } from "./editor-model.js";
 const $ = (id) => document.getElementById(id),
   viewport = $("viewport");
 const scene = new T.Scene();
@@ -365,10 +365,23 @@ for (const property of ["position", "rotation", "scale"]) {
   }
   $("transforms").append(group);
 }
+for (const axis of ['x','y','z']) {
+  const label=document.createElement('label');label.textContent=axis.toUpperCase();
+  const input=document.createElement('input');input.id='dimension-'+axis;input.type='number';input.min='.001';input.step='.1';input.setAttribute('aria-label','Dimension '+axis.toUpperCase()+' meters');
+  input.onchange=()=>{if(!selected||preview)return;try{remember();resizeDimension(selected,axis,Number(input.value),T);fillProperties();changed();}catch(error){message(error.message);fillProperties();}};
+  label.append(input);$('dimensions').append(label);
+}
+$('makeRow').onclick=()=>{
+  if(!selected||preview)return;
+  try{remember();const copies=duplicateRow(selected,$('rowAxis').value,Number($('rowCount').value),Number($('rowSpacing').value),T);select(copies[copies.length-1]);refresh();changed();}
+  catch(error){message(error.message);}
+};
 function fillProperties() {
   $("empty").hidden = !!selected;
   $("fields").hidden = !selected;
   if (!selected) return;
+  const size = dimensions(selected, T);
+  for(const axis of ['x','y','z']) {const field=$('dimension-'+axis);field.value=size[axis].toFixed(3);field.disabled=preview||size[axis]<1e-8;}
   const data = meta(selected);
   $("name").value = selected.name;
   $("kind").value = data.type;

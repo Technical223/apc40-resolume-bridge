@@ -290,7 +290,8 @@
           <option value="strip">LED strip</option></select
         ><label><input id="visible" type="checkbox" />Visible in editor</label
         ><label><input id="active" type="checkbox" />Include in preview</label>
-        <div id="transforms"></div>
+        <div id="transforms"></div><label>Dimensions · meters (local axes)</label><div id="dimensions" class="xyz"></div>
+<details><summary>Duplicate into a row</summary><label for="rowCount">Total objects (including original)</label><input id="rowCount" type="number" min="2" max="32" value="4"><label for="rowSpacing">Center-to-center spacing · meters</label><input id="rowSpacing" type="number" min="0.001" max="1000" step="0.1" value="1"><label for="rowAxis">Object axis</label><select id="rowAxis"><option value="x">X</option><option value="y">Y</option><option value="z">Z</option></select><button id="makeRow">Create row</button></details>
         <label for="source">Video source slice</label
         ><select id="source"></select>
         <div class="xyz">

@@ -25,3 +25,9 @@ The optional converter runs Blender in the background only after consent, with e
 Rendering is capped at 30 FPS and pauses in hidden tabs. A static editor redraws only when needed. Undo stores object states rather than serializing full geometry on every edit and retains up to 30 actions. Large imports and video still consume GPU/RAM; close the preview when Arena needs those resources.
 
 This branch is experimental. Basic browser editing and GLB export have been checked; OBJ/FBX import and GLB roundtrips have automated checks. Live Arena capture, optional Blender conversion on a clean computer, Mac hardware, compressed GLB extensions and arbitrary production models still need validation. The stable installed application is not changed by checking out this branch.
+
+## Dimensions and arrays
+
+**Dimensions · meters** sets the physical size along the object's local axes, including inherited scale. A plane has no thickness; its zero dimension is disabled. Geometry and UVs are preserved by changing scale.
+
+**Duplicate into a row** creates 2–32 total objects, including the original. Choose the object's X/Y/Z axis and center-to-center spacing in meters. Rotation and parent scale are taken into account. The whole row is one Undo action. Copies share geometry/material resources to avoid multiplying GPU memory; object settings and transforms remain independent.
