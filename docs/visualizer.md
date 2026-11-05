@@ -2,8 +2,9 @@
 
 [Home](../README.md)
 
-Open **Visualizer** from the dashboard. It runs locally in your browser and is
-optional. Keep automatic opening disabled unless you want the preview at startup.
+Open **Visualizer** from the dashboard. In the Windows development preview it runs inside Bridge through WebView2; the stable release and macOS preview use a browser. It is optional. Keep automatic opening disabled unless you want the preview at startup.
+
+See [embedded setup and workspace migration](native-visualizer.md) when moving from Chrome.
 
 ## Input and mapping
 

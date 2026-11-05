@@ -1,6 +1,6 @@
 # Space Studio — experimental scene editor
 
-Open **APC40 Bridge → Visualizer → 3D Editor**. **Visualizer** returns to the same visualizer; no second application or installation is required. Both views load from the same `visualizer` folder. The editor stays in the same browser tab and uses the same local server and port. Switching views changes only the page path, not the IP address or application. The layout and 3D canvas resize with the browser window; no fullscreen mode is required.
+Open **APC40 Bridge → Visualizer → 3D Editor**. **Visualizer** returns to the same visualizer; no second application or installation is required. Both views load from the same `visualizer` folder. The Windows development preview embeds both views inside Bridge; the stable browser path uses the same tab, local server and port. Switching views changes only the page path, not the IP address or application. The layout and 3D canvas resize with the browser window; no fullscreen mode is required.
 It edits a local preview project, never Arena, Advanced Output or DMX.
 
 ## Build a space

@@ -23,7 +23,7 @@ Closing the window leaves the bridge running. Autostart creates a shortcut in th
 
 Settings preserve unknown configuration keys, validate ports and numeric ranges, and save atomically using `File.Replace` with a backup. Restart the watcher to apply changes. Logs are read with shared access, limited to the last 64 KB. MIDI restore requires explicit confirmation, refuses to run while Arena is open, and does not stop anything if no backup exists.
 
-Setup uses Python/mido/python-rtmidi/loopMIDI. Creating the virtual ports remains a manual loopMIDI step. Missing ports produce a specific instruction instead of a hidden five-minute wait. A complete installation on a pristine Windows machine has not been tested.
+Setup uses Python/mido/python-rtmidi/loopMIDI. Setup prepares the configured virtual ports without removing existing ports. Restart loopMIDI once if it was already running before they were prepared. Missing ports produce a specific instruction instead of a hidden five-minute wait. A complete installation on a pristine Windows machine has not been tested.
 
 The app, setup messages, and primary documentation use English. Legacy Czech launcher filenames remain for compatibility; new launchers are `AUTOSTART_ON.bat`, `AUTOSTART_OFF.bat`, `DEBUG.bat`, and `RESTORE_RESOLUME.bat`.
 
@@ -39,3 +39,7 @@ py -3 tests/test_stop_process.py
 ```
 
 The default package output is `dist/APC40-Bridge-Windows.zip`. For another build, select a different output directory or move the previous ZIP first. Packages include the repository’s clean default configuration, not local state, PIDs, logs, or runtime caches. Preserve your own `config.json` and `state.json` when updating an existing installation.
+
+## Embedded Visualizer · development branch
+
+Visualizer opens in the dashboard using Microsoft WebView2; no external browser is launched on Windows. The SDK DLLs are shipped beside the app, and the optional view needs WebView2 Runtime. [Setup, workspace migration and known limits](native-visualizer.md). The MIDI engine remains separate.
