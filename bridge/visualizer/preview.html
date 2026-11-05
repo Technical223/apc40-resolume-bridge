@@ -42,8 +42,8 @@
   #mappingEditor[hidden]{display:none}#mappingEditor header{display:flex;gap:12px;justify-content:space-between}#mappingEditor header p{font-size:12px;color:#9aaabd;margin:6px 0}
   .mappingTools{display:flex;gap:6px;flex-wrap:wrap}.mappingTools button{font-size:12px}.mappingTools input{width:100%;box-sizing:border-box;padding:10px;background:#1c2430;color:#eee;border:1px solid #354359;border-radius:7px}
   #mappingInfo,#mappingHint{font-size:11px;color:#a0b4ca}#mappingEditor>*{flex-shrink:0}#mappingList{overflow:auto;flex:none;max-height:32vh;min-height:100px}#mappingList summary{display:flex;gap:8px;padding:10px 0;color:#dce6f2;cursor:pointer}
-  .fixtureRow{display:flex;align-items:center;gap:8px;padding:8px;border-radius:6px;cursor:pointer}.fixtureRow:hover,.fixtureRow.selected{background:#263342}.fixtureRow .fixtureName{flex:1;text-align:left;border:0;background:transparent;color:inherit}.fixtureRow small{color:#9dafc3}#mappingEditor input[type=checkbox]{accent-color:#67e8bd}
-  .editingMapping #panel{display:none}.editingMapping #inset{left:370px!important;top:90px!important;bottom:auto!important;right:20px!important;width:calc(100vw - 400px)!important;max-width:none!important;max-height:calc(100vh - 160px);height:auto!important;object-fit:contain}
+  .fixtureRow{display:flex;align-items:center;gap:8px;padding:8px;border-radius:6px;cursor:pointer}.fixtureRow:hover,.fixtureRow.selected{background:#263342}.fixtureRow.selected{outline:1px solid #ff9b38;background:#493423}.fixtureRow .fixtureName{flex:1;text-align:left;border:0;background:transparent;color:inherit}.fixtureRow small{color:#9dafc3}#mappingEditor input[type=checkbox]{accent-color:#67e8bd}
+  .editingMapping #panel{display:none}.editingMapping #inset{left:370px!important;top:90px!important;bottom:auto!important;right:20px!important;width:min(calc(100vw - 400px),calc((100vh - 160px)*var(--mapping-aspect,1.77778)))!important;max-width:none!important;max-height:none;height:auto!important;object-fit:fill}
 </style>
 <script src="editor-project.js"></script>
 <script src="wiring.js"></script>
@@ -3973,6 +3973,14 @@ function polygonContains(points,x,y){
  const [xi,yi]=points[i],[xj,yj]=points[j];if((yi>y)!==(yj>y)&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)inside=!inside;
  }return inside;
 }
+function fixtureHitDistance(fixture,u,v,width,height){
+ if(polygonContains(fixture.uv,u,v))return 0;
+ const points=fixture.uv;let distance=Infinity;
+ for(let i=0;i<points.length;i++){
+  const a=points[i],b=points[(i+1)%points.length],x=(u-a[0])*width,y=(v-a[1])*height,dx=(b[0]-a[0])*width,dy=(b[1]-a[1])*height;
+  const t=Math.max(0,Math.min(1,(x*dx+y*dy)/(dx*dx+dy*dy||1)));distance=Math.min(distance,Math.hypot(x-t*dx,y-t*dy));
+ }return distance;
+}
 function fixturePixelUV(fixture,index){
  const w=Math.max(1,fixture.width||1),h=Math.max(1,fixture.height||1),u=(index%w+.5)/w,v=(Math.floor(index/w)+.5)/h,p=fixture.uv;
  return [(1-u)*(1-v)*p[0][0]+u*(1-v)*p[1][0]+u*v*p[2][0]+(1-u)*v*p[3][0],
@@ -4005,7 +4013,7 @@ i0.fillStyle="#000";i0.fillRect(0,0,w,h);
 if(sw&&sh)i0.drawImage(source,yt.x*sw,yt.y*sh,yt.w*sw,yt.h*sh,0,0,w,h);
 for(const fixture of (wn.outputFixtures||[])){
  const points=fixture.uv;if(!points.length||(!mappingEditing&&fixtureSelection.disabled[fixture.sliceUid]===true))continue;
- i0.strokeStyle=mappingSelected===fixture.sliceUid?"#67e8bd":fixtureSelection.disabled[fixture.sliceUid]===true?"#ef6972":"rgba(255,255,255,.7)";i0.lineWidth=mappingSelected===fixture.sliceUid?2:1;i0.beginPath();
+ i0.strokeStyle=mappingSelected===fixture.sliceUid?"#ff9b38":fixtureSelection.disabled[fixture.sliceUid]===true?"#ef6972":"rgba(255,255,255,.7)";i0.lineWidth=mappingSelected===fixture.sliceUid?4:1;i0.beginPath();
  points.forEach(([u,v],index)=>index?i0.lineTo(u*w,(1-v)*h):i0.moveTo(u*w,(1-v)*h));
  i0.closePath();i0.stroke();i0.fillStyle="#0f0";i0.fillRect(points[0][0]*w-1,(1-points[0][1])*h-1,2,2);
 }drawMappingPixelOverlay();}
@@ -4115,7 +4123,7 @@ reset.onclick=()=>{try{localStorage.removeItem(settingsKey);}catch{}location.rel
 function applyInsetLayout(layout){
 if(!Array.isArray(layout.outputFixtures)||!Array.isArray(layout.comp)||layout.comp.some(x=>!Number.isFinite(x)||x<=0))throw Error("Invalid mapping dimensions");
 const presetChanged=wn.preset!==layout.preset;wn.outputFixtures=layout.outputFixtures;wn.preset=layout.preset;if(presetChanged)loadFixtureSelection();if(mappingEditorReady){renderMappingList();window.apcWiring?.refresh();}
-const [w,h]=layout.comp;Yi.width=Math.max(1,Math.round(768*Math.min(1,w/h)));Yi.height=Math.max(1,Math.round(768*Math.min(1,h/w)));
+const [w,h]=layout.comp;Yi.style.setProperty("--mapping-aspect",w/h);Yi.width=Math.max(1,Math.round(768*Math.min(1,w/h)));Yi.height=Math.max(1,Math.round(768*Math.min(1,h/w)));
 Yi.style.width="384px";Yi.style.maxWidth="45vw";Yi.style.height="auto";
 Yi.title=layout.preset+" — "+layout.outputFixtures.length+" output slices";
 insetCaption.textContent=layout.outputFixtures.length+" output slices · saved mapping";
@@ -4142,10 +4150,29 @@ addEventListener("pagehide",()=>{Jo();At.pause();});
 
 var mappingEditorReady=false;
 const mappingEditor=document.createElement("section");mappingEditor.id="mappingEditor";
-mappingEditor.innerHTML='<header><div><strong>Output editor</strong><p>Select the fixtures used in this preview. Arena mapping is unchanged.</p></div><button id="mappingDone">Done</button></header><div class="mappingTools"><input id="mappingSearch" placeholder="Search output, fixture or Lumiverse" aria-label="Search fixtures"><button id="mappingAll">Enable all</button><button id="mappingNone">Disable all</button><button id="mappingExport">Export selection</button><button id="mappingImport">Import selection</button></div><div id="mappingInfo"></div><div id="mappingList"></div><div class="mappingTools"><button id="mappingPixels">Edit selected fixture pixels</button><span id="mappingHint">Click an outline to select a fixture. Click again to toggle it.</span></div>';
+mappingEditor.innerHTML='<header><div><strong>Output editor</strong><p>Select the fixtures used in this preview. Arena mapping is unchanged.</p></div><button id="mappingDone">Done</button></header><div class="mappingTools"><input id="mappingSearch" placeholder="Search output, fixture or Lumiverse" aria-label="Search fixtures"><button id="mappingAll">Enable all</button><button id="mappingNone">Disable all</button><button id="mappingExport">Export selection</button><button id="mappingImport">Import selection</button></div><div id="mappingInfo"></div><div id="mappingList"></div><div class="mappingTools"><button id="mappingPixels">Edit selected fixture pixels</button><span id="mappingHint">Click an outline to select a fixture. Use its checkbox to enable or disable it.</span></div>';
 document.body.append(mappingEditor);
 const editMapping=document.createElement("button");editMapping.textContent="Edit output mapping";Ye("panel").querySelector(".body").prepend(editMapping);
-let mappingEditing=false,mappingSelected=null,pixelEditing=false;
+let mappingEditing=false,mappingSelected=null,pixelEditing=false,mappingPixelPage=0,mappingPixelSelected=-1;
+const pixelControls=document.createElement("section");pixelControls.hidden=true;pixelControls.id="mappingPixelControls";
+pixelControls.innerHTML='<strong>Pixel selection · magnified</strong><p>Click a numbered pixel to enable or disable it. Pixel numbers start at 1.</p><label>Pixels <select id="mappingPixelPage" aria-label="Pixel range"></select></label><div id="mappingPixelGrid" style="display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px;margin-top:8px"></div><p id="mappingPixelStatus"></p>';
+mappingEditor.append(pixelControls);
+function renderPixelGrid(){
+ const item=(wn.outputFixtures||[]).find(f=>f.sliceUid===mappingSelected);pixelControls.hidden=!pixelEditing||!item;
+ if(!item)return;
+ pixelControls.querySelector("strong").textContent=fixtureTitle(item)+" · magnified pixels";
+ Ye("mappingHint").textContent='Selected: '+fixtureTitle(item)+' · '+item.pixels+' pixels. '+(pixelEditing?'Use the numbered grid for precise selection.':'Checkboxes enable/disable fixtures.');
+ if(!pixelEditing)return;
+ const pages=Ye("mappingPixelPage"),grid=Ye("mappingPixelGrid");pages.replaceChildren();grid.replaceChildren();
+ mappingPixelPage=Math.min(mappingPixelPage,Math.max(0,Math.ceil(item.pixels/64)-1));
+ for(let i=0;i<Math.ceil(item.pixels/64);i++){const option=document.createElement("option");option.value=i;option.textContent=(i*64+1)+'–'+Math.min(item.pixels,(i+1)*64);pages.append(option);}pages.value=mappingPixelPage;
+ pages.onchange=()=>{mappingPixelPage=Number(pages.value);renderPixelGrid();};
+ for(let i=mappingPixelPage*64;i<Math.min(item.pixels,(mappingPixelPage+1)*64);i++){
+  const button=document.createElement("button"),active=previewEnabled(item,i);button.textContent=i+1;button.style.cssText='padding:7px 1px;border:1px solid '+(mappingPixelSelected===i?'#ff9b38':'#455368')+';background:'+(active?'#20483c':'#502c34');button.setAttribute('aria-label','Pixel '+(i+1)+(active?': enabled':': disabled'));button.setAttribute('aria-pressed',String(active));
+  button.onclick=()=>{const mask=fixtureSelection.pixels[item.sliceUid]||(fixtureSelection.pixels[item.sliceUid]={});mask[i]=!mask[i];mappingPixelSelected=i;saveFixtureSelection();};grid.append(button);
+ }
+ Ye("mappingPixelStatus").textContent=mappingPixelSelected>=0?'Pixel '+(mappingPixelSelected+1)+' selected':'Choose a numbered pixel';
+}
 function saveFixtureSelection(){
  try{localStorage.setItem("apc40-fixtures:"+wn.preset,JSON.stringify(fixtureSelection));}
  catch(error){di("Could not save preview selection: "+error.message);}
@@ -4174,22 +4201,23 @@ function renderMappingList(){
    row.append(checkbox,name,meta);row.onclick=event=>{if(event.target===checkbox)return;mappingSelected=item.sliceUid;renderMappingList();window.apcWiring?.refresh();};section.append(row);
   }list.append(section);
  }
+ renderPixelGrid();
 }
-function setMappingEditing(value){mappingEditing=value;pixelEditing=false;document.body.classList.toggle("editingMapping",value);mappingEditor.hidden=!value;Yi.style.cursor=value?"crosshair":"default";renderMappingList();}
+function setMappingEditing(value){mappingEditing=value;pixelEditing=false;document.body.classList.toggle("editingMapping",value);mappingEditor.hidden=!value;Yi.style.cursor=value?"pointer":"default";renderMappingList();}
 mappingEditor.hidden=true;editMapping.onclick=()=>setMappingEditing(true);Ye("mappingDone").onclick=()=>setMappingEditing(false);
 Ye("mappingSearch").oninput=renderMappingList;
 for(const [id,disabled] of [["mappingAll",false],["mappingNone",true]])Ye(id).onclick=()=>{for(const item of wn.outputFixtures||[])fixtureSelection.disabled[item.sliceUid]=disabled;saveFixtureSelection();};
-Ye("mappingPixels").onclick=()=>{const item=(wn.outputFixtures||[]).find(f=>f.sliceUid===mappingSelected);if(!item||!item.pixels||item.pixels>4096){Ye("mappingHint").textContent="Select a fixture with 1–4096 pixels first.";return;}pixelEditing=!pixelEditing;Ye("mappingHint").textContent=pixelEditing?"Click individual pixels in the selected fixture to toggle them.":"Click a fixture outline to select it.";};
+Ye("mappingPixels").onclick=()=>{const item=(wn.outputFixtures||[]).find(f=>f.sliceUid===mappingSelected);if(!item||!item.pixels||item.pixels>4096){Ye("mappingHint").textContent="Select a fixture with 1–4096 pixels first.";return;}pixelEditing=!pixelEditing;mappingPixelPage=0;renderPixelGrid();};
 Yi.addEventListener("click",event=>{
  if(!mappingEditing)return;const rect=Yi.getBoundingClientRect(),u=(event.clientX-rect.left)/rect.width,v=1-(event.clientY-rect.top)/rect.height;
  const items=wn.outputFixtures||[],selected=items.find(f=>f.sliceUid===mappingSelected);
  if(pixelEditing&&selected){
   let nearest=-1,distance=Infinity;for(let i=0;i<selected.pixels;i++){const p=fixturePixelUV(selected,i),d=(p[0]-u)**2*rect.width**2+(p[1]-v)**2*rect.height**2;if(d<distance){distance=d;nearest=i;}}
-  if(nearest>=0&&distance<144){const mask=fixtureSelection.pixels[selected.sliceUid]||(fixtureSelection.pixels[selected.sliceUid]={});mask[nearest]=!mask[nearest];saveFixtureSelection();}return;
+  if(nearest>=0&&distance<144){const mask=fixtureSelection.pixels[selected.sliceUid]||(fixtureSelection.pixels[selected.sliceUid]={});mask[nearest]=!mask[nearest];mappingPixelSelected=nearest;mappingPixelPage=Math.floor(nearest/64);saveFixtureSelection();}return;
  }
- const hits=items.filter(f=>polygonContains(f.uv,u,v));if(!hits.length)return;
- hits.sort((a,b)=>{const area=f=>Math.abs(f.uv.reduce((sum,p,i)=>{const q=f.uv[(i+1)%f.uv.length];return sum+p[0]*q[1]-q[0]*p[1];},0));return area(a)-area(b);});
- const item=hits[0];if(mappingSelected===item.sliceUid){fixtureSelection.disabled[item.sliceUid]=fixtureSelection.disabled[item.sliceUid]!==true;saveFixtureSelection();}else{mappingSelected=item.sliceUid;renderMappingList();}
+ const hits=items.filter(f=>fixtureHitDistance(f,u,v,rect.width,rect.height)<=7);if(!hits.length)return;
+ hits.sort((a,b)=>{const area=f=>Math.abs(f.uv.reduce((sum,p,i)=>{const q=f.uv[(i+1)%f.uv.length];return sum+p[0]*q[1]-q[0]*p[1];},0));return fixtureHitDistance(a,u,v,rect.width,rect.height)-fixtureHitDistance(b,u,v,rect.width,rect.height)||area(a)-area(b);});
+ const item=hits[0];mappingSelected=item.sliceUid;mappingPixelPage=0;renderMappingList();window.apcWiring?.refresh();
 });
 function drawMappingPixelOverlay(){
  if(!mappingEditing||!pixelEditing)return;const item=(wn.outputFixtures||[]).find(f=>f.sliceUid===mappingSelected);if(!item)return;

@@ -53,3 +53,13 @@ In **Visualizer**, turn on **Wiring view** for a gray room with colored cable ch
 The included 16-output LED profile has outputs 1–5 with ten 1 m strips each (nominally 60 pixels per piece), 6–11 with five 2 m strips (120), and 12–16 with four 5 m neons (1,250). Actual pixel counts remain those from the saved mapping, including 59/118/119-pixel pieces. Four 512-channel DMX outputs are separate from these pixel sockets.
 
 A Lumiverse ID does not prove the physical socket or cable order. Assignments start empty. The overlay connects consecutive assigned pieces only; it never invents missing 3D positions or sends a hardware test signal. Fixtures without known positions remain assignable in the mapper; the status reports how many assigned fixtures can be shown in 3D. Export/import selection includes wiring, per preset and space. Browser cleanup can remove local data: keep an export to transfer or back it up.
+
+## Selecting objects and pixels
+
+The **Scene collections** outliner is on the right, with object properties below it. Search by name or material, or open Environment, LEDs, Surfaces, Objects and Helpers. These are display collections: original object names, parenting and geometry stay intact. Recognized room parts are labeled Wall, Floor or Ceiling. Eye toggles editor visibility; power toggles inclusion in the result.
+
+Above the viewport, **Select → LEDs** prevents room geometry from intercepting LED selection. Environment and Surfaces work the same way. Selected objects have an orange outline/bounds, an orange outliner row and a named status label. **H** hides the selected object; **Alt+H** reveals objects in the current selection scope. Undo restores visibility changes. Room walls are pickable from either side. Fog volumes and camera/reference helpers are hidden by default; enable **Show helper volumes / cameras** when needed.
+
+**Solid** is the default editing view: neutral double-sided shading without imported textures or emission. **Materials** shows the model's original materials; Scene preview shows the mapped video. Solid shading does not rewrite UVs, materials or mesh geometry in the exported project. For dense meshes, selection uses an orange bounds box instead of generating expensive edges.
+
+In Output mapping, thin fixtures have a small screen-space hit tolerance, and selecting an outline never disables it. Enable/disable uses the fixture checkbox. For exact pixels, select a fixture and choose **Edit selected fixture pixels**: the magnified numbered grid makes pixel 1 and the last pixel individually clickable. Use the range selector for long strips. Orange marks the selected fixture/pixel; changes save automatically.

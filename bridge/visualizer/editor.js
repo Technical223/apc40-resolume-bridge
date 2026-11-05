@@ -16,10 +16,12 @@ import {
   duplicateRow,
   sceneState,
   restoreSceneState,
+  objectCategory,
+  objectLabel,
 } from "./editor-model.js";
 const $ = (id) => document.getElementById(id),
   viewport = $("viewport");
-const scene = new T.Scene();
+const scene = new T.Scene(), helperScene = new T.Scene();
 scene.background = new T.Color("#10141b");
 const renderer = new T.WebGLRenderer({
   antialias: true,
@@ -31,8 +33,20 @@ const ownedNodes = new Set();
 const root = new T.Group();
 root.name = "Space";
 scene.add(root);
+const solidMaterial = new T.MeshStandardMaterial({color: 0x89929d, roughness: .85, metalness: 0, side: T.DoubleSide});
+scene.overrideMaterial = solidMaterial;
+const selectionBox = new T.BoxHelper(undefined, 0xff920a);
+selectionBox.material.depthTest = false; selectionBox.material.transparent = true; selectionBox.renderOrder = 10000; selectionBox.visible = false;
+helperScene.add(selectionBox);
+let selectionEdges = null;
+function updateSelectionOutline() {
+  selectionBox.visible = !!selected && !preview && effective(selected, "editorVisible");
+  if (selectionBox.visible) { selected.updateWorldMatrix(true, true); selectionBox.setFromObject(selected); }
+  if (selectionEdges) { selectionEdges.visible = selectionBox.visible; selectionEdges.matrix.copy(selected.matrixWorld); }
+}
+
 const grid = new T.GridHelper(20, 40, 0x52677f, 0x283443);
-scene.add(grid);
+helperScene.add(grid);
 scene.add(new T.HemisphereLight(0xe2efff, 0x68717c, 2));
 const key = new T.DirectionalLight(0xffffff, 2);
 key.position.set(4, 8, 5);
@@ -262,7 +276,7 @@ function setupControls() {
   orbit?.dispose();
   if (transform) {
     transform.detach();
-    scene.remove(transform);
+    helperScene.remove(transform);
     transform.dispose();
   }
   orbit = new OrbitControls(camera, renderer.domElement);
@@ -281,7 +295,7 @@ function setupControls() {
   transform = new TransformControls(camera, renderer.domElement);
   transform.setSpace("local");
   applySnaps();
-  scene.add(transform);
+  helperScene.add(transform);
   transform.addEventListener(
     "dragging-changed",
     (e) => (orbit.enabled = !e.value),
@@ -380,7 +394,14 @@ function frame() {
 }
 $("frame").onclick = frame;
 function select(node) {
+  if (selectionEdges) { helperScene.remove(selectionEdges); selectionEdges.geometry.dispose(); selectionEdges.material.dispose(); selectionEdges = null; }
   selected = node;
+  if (node?.isMesh && node.geometry.getAttribute("position").count <= 20000) {
+    selectionEdges = new T.LineSegments(new T.EdgesGeometry(node.geometry, 30), new T.LineBasicMaterial({ color: 0xff920a, depthTest: false, transparent: true }));
+    selectionEdges.matrixAutoUpdate = false; selectionEdges.renderOrder = 10001; helperScene.add(selectionEdges);
+  }
+  $("selectionBadge").textContent = node ? "Selected: " + objectLabel(node) : "No object selected";
+  updateSelectionOutline();
   transform.detach();
   if (node && !preview) transform.attach(node);
   fillProperties();
@@ -389,46 +410,48 @@ function select(node) {
   storeView();
   renderNeeded = true;
 }
-function renderTree() {
-  const tree = $("tree");
-  tree.replaceChildren();
-  function visit(parent, depth) {
-    for (const node of parent.children) {
-      if (!node.isMesh && !node.isGroup && !node.isObject3D) continue;
-      const data = meta(node),
-        row = document.createElement("div");
-      row.className = "tree-row" + (selected === node ? " selected" : "");
-      row.setAttribute("role", "treeitem");
-      row.setAttribute("aria-level", depth + 1);
-      const label = document.createElement("button");
-      label.textContent = node.name || "Object";
-      label.style.paddingLeft = depth * 10 + 5 + "px";
-      label.title = label.textContent;
-      label.onclick = () => select(node);
-      row.append(label);
-      for (const [property, symbol, title] of [
-        ["editorVisible", "◉", "Visible in editor"],
-        ["active", "⏻", "Include in preview"],
-      ]) {
-        const button = document.createElement("button");
-        button.textContent = symbol;
-        button.title = title;
-        button.setAttribute("aria-label", title + " — " + label.textContent);
-        button.setAttribute("aria-pressed", String(data[property] !== false));
-        button.onclick = () => {
-          remember();
-          data[property] = data[property] === false;
-          refresh();
-          changed();
-        };
-        row.append(button);
-      }
-      tree.append(row);
-      visit(node, depth + 1);
-    }
-  }
-  visit(root, 0);
+const openCollections = new Set(["Environment", "LEDs", "Surfaces"]);
+function selectable(node) {
+  return effective(node, "editorVisible") &&
+    ($("showHelpers").checked || objectCategory(node) !== "Helpers") &&
+    ($("selectionScope").value === "All" || objectCategory(node) === $("selectionScope").value);
 }
+function renderTree() {
+  const tree = $("tree"), categories = ["Environment", "LEDs", "Surfaces", "Objects", "Helpers"], nodes = [];
+  const query = $("treeSearch").value.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  root.traverse(node => { if (node !== root && (node.isMesh || node.userData.apcPivot || node.parent === root)) nodes.push(node); });
+  tree.replaceChildren();
+  for (const category of categories) {
+    if ($("selectionScope").value !== "All" && $("selectionScope").value !== category) continue;
+    const members = nodes.filter(node => objectCategory(node) === category);
+    const visible = members.filter(node => !query || (objectLabel(node) + " " + category + " " + (Array.isArray(node.material) ? node.material : [node.material]).map(m => m?.name || "").join(" ")).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(query));
+    if (!visible.length) continue;
+    const section = document.createElement("details"), summary = document.createElement("summary");
+    section.className = "collection"; section.open = !!query || openCollections.has(category) || visible.includes(selected);
+    summary.textContent = category + " · " + members.length;
+    const hide = document.createElement("button"); hide.textContent = "Eye"; hide.title = "Show / hide " + category;
+    hide.style.cssText = "float:right;padding:0 5px;font-size:11px";
+    hide.onclick = event => { event.preventDefault(); event.stopPropagation(); remember(); const show = !members.some(n => effective(n,"editorVisible")); for (const n of members) meta(n).editorVisible = show; refresh(); changed(); };
+    summary.append(hide); section.append(summary);
+    section.ontoggle = () => section.open ? openCollections.add(category) : openCollections.delete(category);
+    for (const node of visible) {
+      const data = meta(node), row = document.createElement("div");
+      row.className = "tree-row" + (selected === node ? " selected" : ""); row.setAttribute("role","treeitem"); row.setAttribute("aria-selected",String(selected === node));
+      const label = document.createElement("button"); label.textContent = objectLabel(node); label.title = node.name || "Object"; label.onclick = () => select(node); row.append(label);
+      for (const [property, symbol, title] of [["editorVisible","◉","Visible in editor"],["active","⏻","Include in preview"]]) {
+        const button = document.createElement("button"); button.textContent = symbol; button.title = title;
+        button.setAttribute("aria-label", title + " — " + label.textContent); button.setAttribute("aria-pressed", String(data[property] !== false));
+        button.onclick = () => { remember(); data[property] = data[property] === false; refresh(); changed(); }; row.append(button);
+      }
+      section.append(row);
+    }
+    tree.append(section);
+  }
+}
+$("treeSearch").oninput = renderTree;
+$("selectionScope").onchange = () => { if (selected && !selectable(selected)) select(null); renderTree(); };
+$("showHelpers").onchange = () => { refresh(); if (selected && !selectable(selected)) select(null); };
+$("shading").onchange = () => { scene.overrideMaterial = preview || $("shading").value === "materials" ? null : solidMaterial; renderNeeded = true; };
 for (const property of ["position", "rotation", "scale"]) {
   const label = document.createElement("label");
   label.textContent =
@@ -588,6 +611,7 @@ function refresh() {
   root.traverse((node) => {
     node.visible =
       effective(node, preview ? "active" : "editorVisible") &&
+      ($("showHelpers").checked || objectCategory(node) !== "Helpers") &&
       !(
         preview &&
         node.isMesh &&
@@ -770,6 +794,8 @@ function clearPreviewMaterials() {
 function setPreview(value) {
   clearPreviewMaterials();
   preview = value;
+  scene.overrideMaterial = preview || $("shading").value === "materials" ? null : solidMaterial;
+  updateSelectionOutline();
   transform.detach();
   grid.visible = !preview;
   $("views").hidden = preview;
@@ -1155,9 +1181,12 @@ renderer.domElement.addEventListener("pointerdown", (event) => {
     ),
     ray = new T.Raycaster();
   ray.setFromCamera(mouse, camera);
-  const hit = ray
-    .intersectObject(root, true)
-    .find((h) => effective(h.object, "editorVisible"));
+  // Back faces must be pickable from inside a room; restore original material sides immediately.
+  const sides = new Map();
+  root.traverse(n => { for (const material of n.material ? (Array.isArray(n.material) ? n.material : [n.material]) : []) if (!sides.has(material)) { sides.set(material, material.side); material.side = T.DoubleSide; } });
+  let hit;
+  try { hit = ray.intersectObject(root, true).find(h => selectable(h.object)); }
+  finally { for (const [material, side] of sides) material.side = side; }
   select(hit?.object || null);
 });
 window.addEventListener("keydown", (event) => {
@@ -1178,6 +1207,14 @@ window.addEventListener("keydown", (event) => {
   if (key === "escape" && transaction) {
     transform.reset();
     transaction = null;
+  }
+  if (key === "h") {
+    if (event.altKey || selected) {
+      remember();
+      if (event.altKey) root.traverse(n => { if (n !== root && ($("selectionScope").value === "All" || objectCategory(n) === $("selectionScope").value)) meta(n).editorVisible = true; });
+      else meta(selected).editorVisible = false;
+      refresh(); changed();
+    }
   }
   if (key === "f") frame();
   if (event.code === "Numpad1" || key === "1")
@@ -1354,7 +1391,12 @@ function animate(time) {
     blackTexture.needsUpdate = true;
   }
   if (renderNeeded || media || testPattern || videoFileUrl) {
+    updateSelectionOutline();
     renderer.render(scene, camera);
+    if (!preview) {
+      renderer.autoClear = false;
+      renderer.render(helperScene, camera); renderer.autoClear = true;
+    }
     rendered++;
     renderNeeded = false;
     lastFrame = nextFrame;

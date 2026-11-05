@@ -211,3 +211,23 @@ export function restoreSceneState(root, state) {
     (item.parent === null ? root : nodes.get(item.parent)).add(node);
   }
 }
+
+// Collections are a UI view; classification never reparents or edits model geometry.
+export function objectCategory(node) {
+  const role = node.userData?.apcEditor?.type;
+  if (role === "strip" || role === "panel") return "LEDs";
+  if (role === "projection") return "Surfaces";
+  const materials = Array.isArray(node.material) ? node.material : [node.material];
+  const text = [node.name, ...materials.map(m => m?.name || "")].join(" ").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  if (node.isCamera || node.isLight || /mlha|opar|fog|volume|ostreni|meritko|referencni|postava/.test(text)) return "Helpers";
+  if (/neon|metrov|dvoumetr|emission|svetlo|led[ _|]/.test(text)) return "LEDs";
+  if (/difuz|diffus|projection|screen|pletiv|mesh shell/.test(text)) return "Surfaces";
+  if (/stena|wall|podlaha|floor|ceiling|strop|open.room/.test(text)) return "Environment";
+  return "Objects";
+}
+export function objectLabel(node) {
+  const materials = Array.isArray(node.material) ? node.material : [node.material];
+  const text = [node.name, ...materials.map(m => m?.name || "")].join(" ").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  const prefix = /ceiling|strop/.test(text) ? "Ceiling" : /podlaha|floor/.test(text) ? "Floor" : /stena|wall/.test(text) ? "Wall" : "";
+  return (prefix ? prefix + " · " : "") + (node.name || "Object");
+}

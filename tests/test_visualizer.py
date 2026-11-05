@@ -75,6 +75,11 @@ const item={sliceUid:'a',width:1,height:2,uv:[[0,1],[1,1],[1,0],[0,0]]};
 assert(state.previewEnabled(item,0));state.fixtureSelection.disabled.a=true;assert(!state.previewEnabled(item,0));
 state.fixtureSelection.disabled.a=false;state.fixtureSelection.pixels.a={0:true};assert(!state.previewEnabled(item,0));assert(state.previewEnabled(item,1));
 assert(state.polygonContains(item.uv,.5,.5));assert(!state.polygonContains(item.uv,2,.5));
+const thin={uv:[[0,1],[.001,1],[.001,0],[0,0]]};
+assert(state.fixtureHitDistance(thin,.005,.5,1000,500)<7);
+assert(state.fixtureHitDistance(thin,.02,.5,1000,500)>7);
+assert.strictEqual(state.fixtureHitDistance(thin,.0005,.5,1000,500),0);
+
 assert.strictEqual(state.fixturePixelUV(item,0)[1],.75);assert.strictEqual(state.fixturePixelUV(item,1)[1],.25);
 assert(html.includes('previewEnabled(b,d)||c.set(0,0,0)'));
 assert(html.includes('drawMappingPixelOverlay();'));

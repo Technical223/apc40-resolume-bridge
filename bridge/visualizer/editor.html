@@ -84,10 +84,19 @@
     }
     main {
       display: grid;
-      grid-template-columns: 220px minmax(0, 1fr) 270px;
+      grid-template-columns: minmax(0, 1fr) 310px;
+      grid-template-rows: minmax(180px, 44fr) minmax(0, 56fr);
       min-width: 0;
       min-height: 0;
     }
+    main > aside:first-child { grid-column: 2; grid-row: 1; border-bottom: 1px solid var(--line); }
+    #properties { grid-column: 2; grid-row: 2; }
+    #viewport { grid-column: 1; grid-row: 1 / span 2; }
+    .collection > summary { cursor: pointer; padding: 8px 0; color: #dce5ef; font-weight: 600; }
+    .collection .tree-row { margin-left: 8px; }
+    .tree-row.selected { outline: 1px solid #ff9b38; border-radius: 5px; background: #493423; }
+    #selectionBadge { position: absolute; bottom: 38px; left: 14px; color: #ffad5c; background: #101820dd; padding: 4px 8px; pointer-events: none; max-width: calc(100% - 28px); }
+    #treeSearch { width: 100%; margin-bottom: 8px; }
     aside {
       min-width: 0;
       padding: 14px;
@@ -224,7 +233,7 @@
     }
     @media (max-width: 1000px) {
       main {
-        grid-template-columns: 180px minmax(0, 1fr) 230px;
+        grid-template-columns: minmax(0, 1fr) 280px;
       }
       header small {
         display: none;
@@ -232,7 +241,7 @@
     }
     @media (max-width: 800px) {
       main {
-        grid-template-columns: 150px minmax(0, 1fr) 200px;
+        grid-template-columns: minmax(0, 1fr) 250px;
       }
       header {
         gap: 6px;
@@ -265,7 +274,9 @@
   </header>
   <main>
     <aside>
-      <h2>Collection</h2>
+      <h2>Scene collections</h2>
+      <input id="treeSearch" type="search" placeholder="Find object, wall or material…" aria-label="Search scene objects">
+      <label><input id="showHelpers" type="checkbox">Show helper volumes / cameras</label>
       <div class="tools">
         <button id="addRoom">Box</button
         ><button id="addProjection">Projection</button
@@ -286,6 +297,8 @@
     </aside>
     <section id="viewport" aria-label="3D scene">
       <div id="views">
+        <label style="margin:0">Select <select id="selectionScope"><option value="All">All</option><option>Environment</option><option>LEDs</option><option>Surfaces</option><option>Objects</option></select></label>
+        <label style="margin:0">Shading <select id="shading"><option value="solid">Solid</option><option value="materials">Materials</option></select></label>
         <button data-view="perspective">Perspective</button
         ><button data-view="front">Front</button
         ><button data-view="back">Back</button
@@ -298,6 +311,7 @@
         ><button data-tool="rotate">Rotate</button
         ><button data-tool="scale">Scale</button>
       </div>
+      <div id="selectionBadge" role="status">No object selected</div>
       <div id="viewLabel">Perspective · meters</div>
       <div id="previewBadge" hidden>PREVIEW · no output sent to Arena</div>
     </section>

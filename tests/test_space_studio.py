@@ -46,6 +46,25 @@ class ConversionTest(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError,'stopped'):convert.convert_model(b'BLENDER','.blend',executable='fake-blender')
 
 class EditorTest(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('node'),'Node checks object collections')
+    def test_object_collections_preserve_model_metadata(self):
+        script=r"""
+import fs from 'node:fs';import assert from 'node:assert/strict';
+const source=fs.readFileSync('bridge/visualizer/editor-model.js');
+const {objectCategory,objectLabel}=await import('data:text/javascript;base64,'+source.toString('base64'));
+const wall={name:'Plane.002',material:{name:'stěna'},userData:{}};
+assert.equal(objectCategory(wall),'Environment');assert.equal(objectLabel(wall),'Wall · Plane.002');assert.equal(wall.name,'Plane.002');assert.deepEqual(wall.userData,{});
+assert.equal(objectCategory({name:'FINAL mlha v prostoru',material:{name:'Volume'}}),'Helpers');
+assert.equal(objectCategory({name:'Neon tube'}),'LEDs');
+assert.equal(objectCategory({name:'Unknown',userData:{apcEditor:{type:'strip'}}}),'LEDs');
+assert.equal(objectCategory({name:'Plane',userData:{apcEditor:{type:'projection'}}}),'Surfaces');
+assert.equal(objectCategory({name:'Difuzor jemne pletivo'}),'Surfaces');
+assert.equal(objectLabel({name:'STROP',material:{name:'stena'}}),'Ceiling · STROP');
+assert.equal(objectCategory({name:'Imported sculpture'}),'Objects');
+"""
+        result=subprocess.run(['node','--input-type=module','-e',script],cwd=ROOT,capture_output=True,text=True,encoding='utf-8',timeout=20)
+        self.assertEqual(result.returncode,0,result.stderr)
+
     @unittest.skipUnless(shutil.which('node'),'Node checks local storage keys')
     def test_local_store_keeps_project_compatibility_and_space_isolation(self):
         script=r"""
