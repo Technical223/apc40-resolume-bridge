@@ -843,10 +843,7 @@ $('videoFile').onchange = async () => {
   if (file) await openVideoFile(file);
 };
 $("stop").onclick = stopMedia;
-$("back").onclick = () => {
-  if (!dirty || confirm("Leave without saving the project?"))
-    location.href = "preview.html" + location.search;
-};
+$("back").onclick = () => $("apply").click();
 window.addEventListener("beforeunload", (event) => {
   if (dirty) {
     event.preventDefault();
