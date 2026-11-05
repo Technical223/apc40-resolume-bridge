@@ -57,8 +57,9 @@ window.applyAPCEditorProject = function (root, api) {
   return records;
 };
 
-window.apcProjectStore = async function (value) {
+window.apcLocalStore = async function (name, value) {
   const key = new URLSearchParams(location.search).get("space") || "default";
+  const storageKey = name === "project" ? key : key + ":" + name;
   return new Promise((resolve, reject) => {
     const open = indexedDB.open("apc40-space-projects", 1);
     open.onupgradeneeded = () => open.result.createObjectStore("projects");
@@ -71,7 +72,9 @@ window.apcProjectStore = async function (value) {
         ),
         store = tx.objectStore("projects");
       const request =
-        value === undefined ? store.get(key) : store.put(value, key);
+        value === undefined
+          ? store.get(storageKey)
+          : store.put(value, storageKey);
       let result;
       request.onsuccess = () => (result = request.result);
       tx.oncomplete = () => {
@@ -85,3 +88,5 @@ window.apcProjectStore = async function (value) {
     };
   });
 };
+
+window.apcProjectStore = (value) => window.apcLocalStore("project", value);

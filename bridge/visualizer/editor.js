@@ -5,7 +5,18 @@ import { GLTFLoader } from "./editor-vendor/GLTFLoader.js";
 import { GLTFExporter } from "./editor-vendor/GLTFExporter.js";
 import { OBJLoader } from "./editor-vendor/OBJLoader.js";
 import { FBXLoader } from "./editor-vendor/FBXLoader.js";
-import { validateObject, effective, COMPOSITION, advanceFrame, centerPivot, dimensions, resizeDimension, duplicateRow } from "./editor-model.js";
+import {
+  validateObject,
+  effective,
+  COMPOSITION,
+  advanceFrame,
+  centerPivot,
+  dimensions,
+  resizeDimension,
+  duplicateRow,
+  sceneState,
+  restoreSceneState,
+} from "./editor-model.js";
 const $ = (id) => document.getElementById(id),
   viewport = $("viewport");
 const scene = new T.Scene();
@@ -58,6 +69,91 @@ let media = null,
   testPattern = false;
 const previewMaterials = new Map();
 let lastFrame = 0;
+let restoring = false,
+  ready = false,
+  draftTimer = null,
+  draftBusy = false,
+  draftTopology = "",
+  viewTimer = null,
+  sourceMode = "black";
+const stateKey =
+  "apc40-view:" +
+  (new URLSearchParams(location.search).get("space") || "default");
+function storeView() {
+  if (restoring || !ready) return;
+  clearTimeout(viewTimer);
+  viewTimer = setTimeout(() => {
+    try {
+      sessionStorage.setItem(
+        stateKey,
+        JSON.stringify({
+          pos: camera.position.toArray(),
+          target: orbit.target.toArray(),
+          view: viewName.toLowerCase(),
+          span: camera.isOrthographicCamera
+            ? [
+                camera.left,
+                camera.right,
+                camera.top,
+                camera.bottom,
+                camera.zoom,
+              ]
+            : null,
+          snap: $("snapEnabled").checked,
+          step: Number($("snapStep").value),
+          up: camera.up.toArray(),
+          selected: selected?.userData.apcEditorId,
+          mode: sourceMode,
+          time: Number.isFinite(video.currentTime) ? video.currentTime : 0,
+        }),
+      );
+    } catch {}
+  }, 100);
+}
+function topology() {
+  const ids = [];
+  root.traverse((n) => {
+    if (n !== root)
+      ids.push(
+        (n.userData.apcEditorId || n.uuid) + ":" + (n.geometry?.uuid || ""),
+      );
+  });
+  return ids.join("|");
+}
+let draftPromise = null;
+function saveDraft() {
+  if (!draftPromise)
+    draftPromise = performDraft().finally(() => (draftPromise = null));
+  return draftPromise;
+}
+async function performDraft() {
+  if (restoring || !ready || draftBusy || preview) return;
+  draftBusy = true;
+  const signature = topology();
+  try {
+    if (signature !== draftTopology) {
+      const base = await exportGLB();
+      if (signature !== topology()) return;
+      await window.apcLocalStore("recovery-base", base);
+      draftTopology = signature;
+    }
+    await window.apcLocalStore("recovery-state", sceneState(root));
+    $("recoveryStatus").textContent = "Recovery saved locally";
+  } catch (error) {
+    $("recoveryStatus").textContent =
+      "Recovery unavailable — use Save project: " + error.message;
+  } finally {
+    draftBusy = false;
+    if (signature !== topology()) queueDraft();
+  }
+}
+function queueDraft() {
+  if (!ready || restoring) return;
+  clearTimeout(draftTimer);
+  draftTimer = setTimeout(saveDraft, 1800);
+  $("recoveryStatus").textContent = "Saving local recovery…";
+}
+
 function message(text) {
   $("message").textContent = text;
 }
@@ -93,11 +189,14 @@ function pruneResources() {
 function changed() {
   pruneResources();
   dirty = true;
+  queueDraft();
+  storeView();
   renderNeeded = true;
   $("status").textContent =
     "Unsaved changes · save a GLB project to keep your work";
 }
 function meta(node) {
+  node.userData.apcEditorId ||= node.uuid;
   if (node.isMesh || node.isLine) ownedNodes.add(node);
   const defaults = {
     type: "room",
@@ -176,10 +275,12 @@ function setupControls() {
   };
   orbit.addEventListener("change", () => {
     target.copy(orbit.target);
+    storeView();
     renderNeeded = true;
   });
   transform = new TransformControls(camera, renderer.domElement);
   transform.setSpace("local");
+  applySnaps();
   scene.add(transform);
   transform.addEventListener(
     "dragging-changed",
@@ -284,6 +385,8 @@ function select(node) {
   if (node && !preview) transform.attach(node);
   fillProperties();
   renderTree();
+  drawSliceMap();
+  storeView();
   renderNeeded = true;
 }
 function renderTree() {
@@ -365,23 +468,61 @@ for (const property of ["position", "rotation", "scale"]) {
   }
   $("transforms").append(group);
 }
-for (const axis of ['x','y','z']) {
-  const label=document.createElement('label');label.textContent=axis.toUpperCase();
-  const input=document.createElement('input');input.id='dimension-'+axis;input.type='number';input.min='.001';input.step='.1';input.setAttribute('aria-label','Dimension '+axis.toUpperCase()+' meters');
-  input.onchange=()=>{if(!selected||preview)return;try{remember();resizeDimension(selected,axis,Number(input.value),T);fillProperties();changed();}catch(error){message(error.message);fillProperties();}};
-  label.append(input);$('dimensions').append(label);
+for (const axis of ["x", "y", "z"]) {
+  const label = document.createElement("label");
+  label.textContent = axis.toUpperCase();
+  const input = document.createElement("input");
+  input.id = "dimension-" + axis;
+  input.type = "number";
+  input.min = ".001";
+  input.step = ".1";
+  input.setAttribute(
+    "aria-label",
+    "Dimension " + axis.toUpperCase() + " meters",
+  );
+  input.onchange = () => {
+    if (!selected || preview) return;
+    try {
+      remember();
+      resizeDimension(selected, axis, Number(input.value), T);
+      fillProperties();
+      changed();
+    } catch (error) {
+      message(error.message);
+      fillProperties();
+    }
+  };
+  label.append(input);
+  $("dimensions").append(label);
 }
-$('makeRow').onclick=()=>{
-  if(!selected||preview)return;
-  try{remember();const copies=duplicateRow(selected,$('rowAxis').value,Number($('rowCount').value),Number($('rowSpacing').value),T);select(copies[copies.length-1]);refresh();changed();}
-  catch(error){message(error.message);}
+$("makeRow").onclick = () => {
+  if (!selected || preview) return;
+  try {
+    remember();
+    const copies = duplicateRow(
+      selected,
+      $("rowAxis").value,
+      Number($("rowCount").value),
+      Number($("rowSpacing").value),
+      T,
+    );
+    select(copies[copies.length - 1]);
+    refresh();
+    changed();
+  } catch (error) {
+    message(error.message);
+  }
 };
 function fillProperties() {
   $("empty").hidden = !!selected;
   $("fields").hidden = !selected;
   if (!selected) return;
   const size = dimensions(selected, T);
-  for(const axis of ['x','y','z']) {const field=$('dimension-'+axis);field.value=size[axis].toFixed(3);field.disabled=preview||size[axis]<1e-8;}
+  for (const axis of ["x", "y", "z"]) {
+    const field = $("dimension-" + axis);
+    field.value = size[axis].toFixed(3);
+    field.disabled = preview || size[axis] < 1e-8;
+  }
   const data = meta(selected);
   $("name").value = selected.name;
   $("kind").value = data.type;
@@ -436,6 +577,7 @@ for (const [id, key] of [
       remember();
       meta(selected)[key] = value;
       refresh();
+      drawSliceMap();
       changed();
     } catch (error) {
       message(error.message);
@@ -444,7 +586,14 @@ for (const [id, key] of [
   };
 function refresh() {
   root.traverse((node) => {
-    node.visible = effective(node, preview ? "active" : "editorVisible");
+    node.visible =
+      effective(node, preview ? "active" : "editorVisible") &&
+      !(
+        preview &&
+        node.isMesh &&
+        meta(node).type !== "room" &&
+        !sourceQuad(meta(node).source)
+      );
   });
   renderTree();
   fillProperties();
@@ -488,16 +637,23 @@ $("addRoom").onclick = () => add("room");
 $("addProjection").onclick = () => add("projection");
 $("addPanel").onclick = () => add("panel");
 $("addStrip").onclick = () => add("strip");
-$('centerPivot').onclick = () => {
+$("centerPivot").onclick = () => {
   if (!selected || preview) return;
-  try { remember(); select(centerPivot(selected, T)); refresh(); changed(); }
-  catch (error) { message(error.message); }
+  try {
+    remember();
+    select(centerPivot(selected, T));
+    refresh();
+    changed();
+  } catch (error) {
+    message(error.message);
+  }
 };
 $("duplicate").onclick = () => {
   if (!selected) return;
   remember();
   const copy = selected.clone(true);
   copy.traverse((n) => {
+    n.userData.apcEditorId = n.uuid;
     if (n.geometry) n.geometry = n.geometry.clone();
     if (n.material)
       n.material = Array.isArray(n.material)
@@ -528,6 +684,76 @@ $("redo").onclick = () => {
   if (!future.length) return;
   history.push(snapshot());
   restore(future.pop());
+};
+function applySnaps() {
+  const enabled = $("snapEnabled").checked,
+    step = Number($("snapStep").value);
+  if (!Number.isFinite(step) || step < 0.001 || step > 100) return;
+  transform.setTranslationSnap(enabled ? step : null);
+  transform.setRotationSnap(enabled ? Math.PI / 12 : null);
+  transform.setScaleSnap(enabled ? 0.1 : null);
+  storeView();
+}
+$("snapEnabled").onchange = applySnaps;
+$("snapStep").onchange = applySnaps;
+function drawSliceMap() {
+  const canvas = $("sliceMap"),
+    ctx = canvas.getContext("2d"),
+    w = canvas.width,
+    h = canvas.height,
+    source = selected?.userData.apcEditor?.source;
+  ctx.fillStyle = "#080c12";
+  ctx.fillRect(0, 0, w, h);
+  for (const item of fixtures) {
+    if (item.uv?.length !== 4) continue;
+    ctx.strokeStyle = item.sliceUid === source ? "#74e6c1" : "#8194ac";
+    ctx.lineWidth = item.sliceUid === source ? 3 : 1;
+    ctx.beginPath();
+    item.uv.forEach(([u, v], i) =>
+      i ? ctx.lineTo(u * w, (1 - v) * h) : ctx.moveTo(u * w, (1 - v) * h),
+    );
+    ctx.closePath();
+    ctx.stroke();
+  }
+  if (
+    source &&
+    source !== "composition" &&
+    !fixtures.some((f) => f.sliceUid === source)
+  )
+    message("Missing source slice — choose a replacement.");
+}
+$("sliceMap").onclick = (event) => {
+  const box = $("sliceMap").getBoundingClientRect(),
+    u = (event.clientX - box.left) / box.width,
+    v = 1 - (event.clientY - box.top) / box.height;
+  const hit = [...fixtures].reverse().find((item) => {
+    let inside = false;
+    const p = item.uv || [];
+    for (let i = 0, j = p.length - 1; i < p.length; j = i++) {
+      if (
+        p[i][1] > v !== p[j][1] > v &&
+        u <
+          ((p[j][0] - p[i][0]) * (v - p[i][1])) / (p[j][1] - p[i][1]) + p[i][0]
+      )
+        inside = !inside;
+    }
+    return inside;
+  });
+  if (!hit) return;
+  const objects = [];
+  root.traverse((n) => {
+    if (n.userData.apcEditor?.source === hit.sliceUid) objects.push(n);
+  });
+  if (objects.length) select(objects[0]);
+  message(
+    (hit.screen || "Output") +
+      " / " +
+      (hit.slice || hit.sliceUid) +
+      " · " +
+      objects.length +
+      " assigned objects" +
+      (objects.length ? "" : " — assign via Video source slice"),
+  );
 };
 function sourceQuad(id) {
   if (!id || id === "composition") return COMPOSITION;
@@ -595,7 +821,10 @@ function setPreview(value) {
   } else if (selected) transform.attach(selected);
   refresh();
 }
-$("mode").onclick = () => setPreview(!preview);
+$("mode").onclick = async () => {
+  if (!preview) await saveDraft();
+  setPreview(!preview);
+};
 const manager = new T.LoadingManager();
 manager.setURLModifier((url) => {
   if (
@@ -728,8 +957,38 @@ $("apply").onclick = async () => {
   const wasPreview = preview;
   if (wasPreview) setPreview(false);
   try {
+    await saveDraft();
     const glb = await exportGLB();
     await window.apcProjectStore(glb);
+    await window.apcLocalStore("recovery-base", glb);
+    await window.apcLocalStore("recovery-state", sceneState(root));
+    clearTimeout(draftTimer);
+    clearTimeout(viewTimer);
+    try {
+      sessionStorage.setItem(
+        stateKey,
+        JSON.stringify({
+          pos: camera.position.toArray(),
+          target: orbit.target.toArray(),
+          view: viewName.toLowerCase(),
+          span: camera.isOrthographicCamera
+            ? [
+                camera.left,
+                camera.right,
+                camera.top,
+                camera.bottom,
+                camera.zoom,
+              ]
+            : null,
+          snap: $("snapEnabled").checked,
+          step: Number($("snapStep").value),
+          up: camera.up.toArray(),
+          selected: selected?.userData.apcEditorId,
+          mode: sourceMode,
+          time: video.currentTime || 0,
+        }),
+      );
+    } catch {}
     dirty = false;
     location.href = "preview.html" + location.search;
   } catch (error) {
@@ -771,17 +1030,27 @@ async function openVideoFile(file) {
   stopMedia();
   const url = URL.createObjectURL(file);
   videoFileUrl = url;
+  sourceMode = "file";
   video.src = url;
   try {
     await video.play();
     if (videoFileUrl !== url) return;
     sourceUniform.value = videoTexture;
     renderNeeded = true;
-    message('Local video loop connected. No upload; audio is muted.');
+    if (!restoring)
+      window
+        .apcLocalStore("video", file.size <= 128 * 1024 * 1024 ? file : null)
+        .catch(() =>
+          message("Video works, but cannot be kept for the next view."),
+        );
+    storeView();
+    message("Local video loop connected. No upload; audio is muted.");
   } catch (error) {
     if (videoFileUrl !== url) return;
     stopMedia();
-    message('This video cannot play in the browser. Use H.264 MP4 or WebM; DXV needs conversion first.');
+    message(
+      "This video cannot play in the browser. Use H.264 MP4 or WebM; DXV needs conversion first.",
+    );
   }
 }
 function stopMedia() {
@@ -789,14 +1058,15 @@ function stopMedia() {
   media = null;
   video.pause();
   video.srcObject = null;
-  video.removeAttribute('src');
+  video.removeAttribute("src");
   video.load();
   if (videoFileUrl) URL.revokeObjectURL(videoFileUrl);
   videoFileUrl = null;
-  blackContext.fillStyle = '#000';
+  blackContext.fillStyle = "#000";
   blackContext.fillRect(0, 0, black.width, black.height);
   blackTexture.needsUpdate = true;
   testPattern = false;
+  sourceMode = "black";
   sourceUniform.value = blackTexture;
   renderNeeded = true;
 }
@@ -821,6 +1091,8 @@ async function startMedia(screen) {
     video.srcObject = media;
     await video.play();
     sourceUniform.value = videoTexture;
+    sourceMode = screen ? "screen" : "camera";
+    storeView();
     media.getVideoTracks()[0].addEventListener("ended", stopMedia);
     if (!screen) {
       const devices = await navigator.mediaDevices.enumerateDevices();
@@ -844,18 +1116,23 @@ $("test").onclick = () => {
   stopMedia();
   black.width = black.height = 256;
   testPattern = true;
+  sourceMode = "test";
+  storeView();
   sourceUniform.value = blackTexture;
   message("TEST PATTERN · generated input, not Arena output");
 };
 $("camera").onclick = () => startMedia(false);
 $("capture").onclick = () => startMedia(true);
-$('openVideo').onclick = () => $('videoFile').click();
-$('videoFile').onchange = async () => {
-  const file = $('videoFile').files[0];
-  $('videoFile').value = '';
+$("openVideo").onclick = () => $("videoFile").click();
+$("videoFile").onchange = async () => {
+  const file = $("videoFile").files[0];
+  $("videoFile").value = "";
   if (file) await openVideoFile(file);
 };
-$("stop").onclick = stopMedia;
+$("stop").onclick = () => {
+  stopMedia();
+  storeView();
+};
 $("back").onclick = () => $("apply").click();
 window.addEventListener("beforeunload", (event) => {
   if (dirty) {
@@ -945,23 +1222,125 @@ async function loadInitial() {
     const response = await fetch("active-layout.js" + location.search);
     const text = await response.text();
     const layout = JSON.parse(text.slice("window.APC40Layout=".length, -1));
-    const saved = await window.apcProjectStore();
+    restoring = true;
+    let recovery=null,recoveryBase=null,saved=null;
+    try {
+      recovery=await window.apcLocalStore('recovery-state');
+      recoveryBase=recovery?await window.apcLocalStore('recovery-base'):null;
+      saved=recoveryBase||await window.apcProjectStore();
+    } catch(error) { $('recoveryStatus').textContent='Local recovery unavailable — use Save project'; }
     const object = saved
       ? await parseGLB(saved)
       : (await loader.loadAsync(layout.space?.model || "room-current.glb"))
           .scene;
     root.add(object);
     root.traverse((n) => meta(n));
+    if (recoveryBase)
+      try {
+        restoreSceneState(root, recovery);
+        $("recoveryStatus").textContent = "Recovered local scene";
+      } catch (error) {
+        message("Recovery could not apply: " + error.message);
+      }
     refresh();
     frame();
+    draftTopology = recoveryBase ? topology() : "";
+    let view = null;
+    try {
+      view = JSON.parse(sessionStorage.getItem(stateKey) || "null");
+    } catch {}
+    if (
+      view &&
+      view.pos?.length === 3 &&
+      view.target?.length === 3 &&
+      [...view.pos, ...view.target].every(Number.isFinite)
+    ) {
+      setView(
+        ["front", "back", "left", "right", "top", "bottom"].includes(view.view)
+          ? view.view
+          : "perspective",
+      );
+      camera.position.fromArray(view.pos);
+      if (view.up?.length === 3 && view.up.every(Number.isFinite))
+        camera.up.fromArray(view.up);
+      orbit.target.fromArray(view.target);
+      target.copy(orbit.target);
+      orbit.update();
+      if (
+        camera.isOrthographicCamera &&
+        view.span?.length === 5 &&
+        view.span.every(Number.isFinite)
+      ) {
+        [camera.left, camera.right, camera.top, camera.bottom, camera.zoom] =
+          view.span;
+        camera.updateProjectionMatrix();
+      }
+      if (Number.isFinite(view.step) && view.step >= 0.001 && view.step <= 100)
+        $("snapStep").value = view.step;
+      $("snapEnabled").checked = view.snap === true;
+      applySnaps();
+      const nodes = [];
+      root.traverse((n) => {
+        if (n.userData.apcEditorId === view.selected) nodes.push(n);
+      });
+      if (nodes[0]) select(nodes[0]);
+      if (view.mode === "file") {
+        const file = await window.apcLocalStore("video");
+        if (file) {
+          await openVideoFile(file);
+          if (Number.isFinite(view.time)) video.currentTime = view.time;
+        }
+      }
+      if (view.mode === "test") $("test").click();
+      if (view.mode === "camera" || view.mode === "screen")
+        message(
+          "Reconnect the previous live source using Camera or Capture screen.",
+        );
+    }
+    restoring = false;
+    ready = true;
+    drawSliceMap();
+    renderNeeded = true;
   } catch (error) {
+    restoring = false;
+    ready = true;
     message("Start an empty space or import a model. " + error.message);
   }
 }
 loadInitial();
+let statsAt = 0,
+  rendered = 0,
+  sourceFrames = 0;
 function animate(time) {
   requestAnimationFrame(animate);
   if (document.hidden) return;
+  if (time - statsAt >= 1000) {
+    const duration = (time - statsAt) / 1000,
+      total = video.getVideoPlaybackQuality?.().totalVideoFrames || 0;
+    $("inputInfo").textContent =
+      (sourceMode === "file"
+        ? "Local video"
+        : sourceMode === "test"
+          ? "Test pattern"
+          : sourceMode === "black"
+            ? "No input"
+            : sourceMode) +
+      " · " +
+      (video.videoWidth
+        ? video.videoWidth +
+          "×" +
+          video.videoHeight +
+          " · " +
+          Math.max(0, Math.round((total - sourceFrames) / duration)) +
+          " source FPS · "
+        : "") +
+      (rendered
+        ? Math.round(rendered / duration) + " render FPS"
+        : "Static scene");
+    sourceFrames = total;
+    rendered = 0;
+    statsAt = time;
+  }
   const nextFrame = advanceFrame(time, lastFrame);
   if (nextFrame === null) return;
   if (testPattern) {
@@ -974,6 +1353,7 @@ function animate(time) {
   }
   if (renderNeeded || media || testPattern || videoFileUrl) {
     renderer.render(scene, camera);
+    rendered++;
     renderNeeded = false;
     lastFrame = nextFrame;
   }

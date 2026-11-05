@@ -47,10 +47,10 @@ export function advanceFrame(now, last) {
 }
 // A translation-only pivot parent preserves geometry, UVs, skinning and world transforms.
 export function centerPivot(node, T) {
-  if (!node.parent) throw Error('Select a scene object first.');
+  if (!node.parent) throw Error("Select a scene object first.");
   node.updateWorldMatrix(true, true);
   const box = new T.Box3().setFromObject(node);
-  if (box.isEmpty()) throw Error('This object has no geometry to center.');
+  if (box.isEmpty()) throw Error("This object has no geometry to center.");
   const center = box.getCenter(new T.Vector3());
   if (node.userData.apcPivot) {
     const offset = node.worldToLocal(center.clone());
@@ -60,8 +60,9 @@ export function centerPivot(node, T) {
     node.updateWorldMatrix(true, true);
     return node;
   }
-  const parent = node.parent, pivot = new T.Group();
-  pivot.name = (node.name || 'Object') + ' · pivot';
+  const parent = node.parent,
+    pivot = new T.Group();
+  pivot.name = (node.name || "Object") + " · pivot";
   pivot.userData.apcPivot = true;
   pivot.position.copy(parent.worldToLocal(center));
   parent.add(pivot);
@@ -72,35 +73,141 @@ export function centerPivot(node, T) {
 
 export function dimensions(node, T) {
   node.updateWorldMatrix(true, true);
-  const inverse = node.matrixWorld.clone().invert(), box = new T.Box3();
-  node.traverse(child => {
+  const inverse = node.matrixWorld.clone().invert(),
+    box = new T.Box3();
+  node.traverse((child) => {
     if (!child.geometry) return;
     child.geometry.computeBoundingBox();
-    if (child.geometry.boundingBox) box.union(child.geometry.boundingBox.clone().applyMatrix4(inverse.clone().multiply(child.matrixWorld)));
+    if (child.geometry.boundingBox)
+      box.union(
+        child.geometry.boundingBox
+          .clone()
+          .applyMatrix4(inverse.clone().multiply(child.matrixWorld)),
+      );
   });
   if (box.isEmpty()) return new T.Vector3();
-  const size = box.getSize(new T.Vector3()), matrix = new T.Matrix3().setFromMatrix4(node.matrixWorld);
-  for (const [index, axis] of ['x','y','z'].entries()) size[axis] *= new T.Vector3().setComponent(index, 1).applyMatrix3(matrix).length();
+  const size = box.getSize(new T.Vector3()),
+    matrix = new T.Matrix3().setFromMatrix4(node.matrixWorld);
+  for (const [index, axis] of ["x", "y", "z"].entries())
+    size[axis] *= new T.Vector3()
+      .setComponent(index, 1)
+      .applyMatrix3(matrix)
+      .length();
   return size;
 }
 export function resizeDimension(node, axis, meters, T) {
-  if (!['x','y','z'].includes(axis) || !Number.isFinite(meters) || meters < .001 || meters > 10000) throw Error('Dimension must be 0.001–10000 meters.');
+  if (
+    !["x", "y", "z"].includes(axis) ||
+    !Number.isFinite(meters) ||
+    meters < 0.001 ||
+    meters > 10000
+  )
+    throw Error("Dimension must be 0.001–10000 meters.");
   const current = dimensions(node, T)[axis];
-  if (current < 1e-8) throw Error('A flat surface has no thickness on this axis.');
-  node.scale[axis] *= meters/current;
+  if (current < 1e-8)
+    throw Error("A flat surface has no thickness on this axis.");
+  node.scale[axis] *= meters / current;
   node.updateWorldMatrix(true, true);
 }
 export function duplicateRow(node, axis, count, spacing, T) {
-  if (!node.parent || !['x','y','z'].includes(axis) || !Number.isInteger(count) || count < 2 || count > 32 || !Number.isFinite(spacing) || spacing < .001 || spacing > 1000) throw Error('Use 2–32 objects and spacing of 0.001–1000 meters.');
+  if (
+    !node.parent ||
+    !["x", "y", "z"].includes(axis) ||
+    !Number.isInteger(count) ||
+    count < 2 ||
+    count > 32 ||
+    !Number.isFinite(spacing) ||
+    spacing < 0.001 ||
+    spacing > 1000
+  )
+    throw Error("Use 2–32 objects and spacing of 0.001–1000 meters.");
   node.updateWorldMatrix(true, true);
-  const origin=node.getWorldPosition(new T.Vector3());
-  const direction=new T.Vector3().setComponent(['x','y','z'].indexOf(axis),1).transformDirection(node.matrixWorld);
-  const copies=[];
-  for(let index=1;index<count;index++) {
-    const copy=node.clone(true);
-    copy.name=(node.name||'Object')+' '+(index+1);
-    copy.position.copy(node.parent.worldToLocal(origin.clone().addScaledVector(direction,spacing*index)));
-    node.parent.add(copy);copies.push(copy);
+  const origin = node.getWorldPosition(new T.Vector3());
+  const direction = new T.Vector3()
+    .setComponent(["x", "y", "z"].indexOf(axis), 1)
+    .transformDirection(node.matrixWorld);
+  const copies = [];
+  for (let index = 1; index < count; index++) {
+    const copy = node.clone(true);
+    copy.traverse((child) => (child.userData.apcEditorId = child.uuid));
+    copy.name = (node.name || "Object") + " " + (index + 1);
+    copy.position.copy(
+      node.parent.worldToLocal(
+        origin.clone().addScaledVector(direction, spacing * index),
+      ),
+    );
+    node.parent.add(copy);
+    copies.push(copy);
   }
   return copies;
+}
+
+export function sceneState(root) {
+  const objects = [];
+  root.traverse((node) => {
+    if (node === root) return;
+    node.userData.apcEditorId ||= node.uuid;
+    objects.push({
+      id: node.userData.apcEditorId,
+      parent: node.parent === root ? null : node.parent.userData.apcEditorId,
+      name: node.name,
+      position: node.position.toArray(),
+      quaternion: node.quaternion.toArray(),
+      scale: node.scale.toArray(),
+      data: { ...node.userData.apcEditor },
+    });
+  });
+  return { version: 1, objects };
+}
+export function restoreSceneState(root, state) {
+  if (
+    state?.version !== 1 ||
+    !Array.isArray(state.objects) ||
+    state.objects.length > 20000
+  )
+    throw Error("Invalid scene recovery data.");
+  const nodes = new Map();
+  root.traverse((node) => {
+    if (node !== root && node.userData.apcEditorId)
+      nodes.set(node.userData.apcEditorId, node);
+  });
+  const records = new Map();
+  for (const item of state.objects) {
+    if (
+      !nodes.has(item.id) ||
+      records.has(item.id) ||
+      !Array.isArray(item.position) ||
+      !Array.isArray(item.quaternion) ||
+      !Array.isArray(item.scale) ||
+      item.position.length !== 3 ||
+      item.quaternion.length !== 4 ||
+      item.scale.length !== 3 ||
+      ![...item.position, ...item.quaternion, ...item.scale].every(
+        Number.isFinite,
+      )
+    )
+      throw Error("Recovery does not match the model.");
+    records.set(item.id, item);
+  }
+  // Validate the hierarchy before changing any objects.
+  for (const item of state.objects) {
+    const seen = new Set([item.id]);
+    let parent = item.parent;
+    while (parent !== null) {
+      if (seen.has(parent) || !records.has(parent))
+        throw Error("Invalid recovery hierarchy.");
+      seen.add(parent);
+      parent = records.get(parent).parent;
+    }
+  }
+  for (const node of nodes.values()) node.removeFromParent();
+  for (const item of state.objects) {
+    const node = nodes.get(item.id);
+    node.name = String(item.name || "Object");
+    node.position.fromArray(item.position);
+    node.quaternion.fromArray(item.quaternion);
+    node.scale.fromArray(item.scale);
+    node.userData.apcEditor = { ...item.data };
+    (item.parent === null ? root : nodes.get(item.parent)).add(node);
+  }
 }

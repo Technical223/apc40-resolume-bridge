@@ -31,3 +31,17 @@ This branch is experimental. Basic browser editing and GLB export have been chec
 **Dimensions · meters** sets the physical size along the object's local axes, including inherited scale. A plane has no thickness; its zero dimension is disabled. Geometry and UVs are preserved by changing scale.
 
 **Duplicate into a row** creates 2–32 total objects, including the original. Choose the object's X/Y/Z axis and center-to-center spacing in meters. Rotation and parent scale are taken into account. The whole row is one Undo action. Copies share geometry/material resources to avoid multiplying GPU memory; object settings and transforms remain independent.
+
+## View state, recovery and diagnostics
+
+Camera position/orientation, orthographic framing, selection and snap settings are remembered in this browser session per space. Returning to Preview carries the camera orientation and the selected input. A local video of up to **128 MiB** is retained in browser storage and resumes as a muted loop at the previous playback position. Larger files must be selected again. Screen sharing needs another user confirmation; camera/screen input may need reconnecting in the editor. Capture permissions are never bypassed.
+
+**Snap transforms** enables the chosen grid step (local transform units), 15° rotations and 0.1 scale increments. Inherited non-unit parent scales affect the physical distance of local snapping; use Dimensions for exact meters.
+
+Edits automatically keep a local recovery after approximately two seconds of inactivity. Geometry is exported only when the object/geometry structure changes; transform/name/visibility edits save a small state record against that baseline. Recovery reopens automatically in this browser and space. It is not a substitute for a downloaded GLB: browser cleanup or storage limits can remove it. Storage failures show a message; no file folders or uploads are created.
+
+The slice diagram highlights the selected object's source. Click an outline to select its first assigned object, or use **Video source slice** to assign a source. The label reports the saved output/slice and object count. Missing sources show a warning and are excluded from the editor preview instead of silently using the whole composition. This never edits Arena's mapping.
+
+The input readout distinguishes decoded **source FPS** from **render FPS**, displays source dimensions and reports a static scene instead of pretending to render continuously. Browser support determines whether source-frame counts are available. Rendering pauses in hidden tabs.
+
+These changes have automated coverage; a real browser session with production models, camera permissions and storage pressure still needs manual validation before a public release.

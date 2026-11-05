@@ -46,6 +46,38 @@ class ConversionTest(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError,'stopped'):convert.convert_model(b'BLENDER','.blend',executable='fake-blender')
 
 class EditorTest(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('node'),'Node checks local storage keys')
+    def test_local_store_keeps_project_compatibility_and_space_isolation(self):
+        script=r"""
+import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';
+const values=new Map();
+const indexedDB={open(){const open={};queueMicrotask(()=>{open.result={close(){},transaction(){const tx={objectStore(){return {get(key){return request(key,false);},put(value,key){return request(key,true,value);}};}};function request(key,write,value){const req={};queueMicrotask(()=>{if(write)values.set(key,value);req.result=write?key:values.get(key);req.onsuccess();tx.oncomplete();});return req;}return tx;}};open.onsuccess();});return open;}};
+const context={window:{},indexedDB,URLSearchParams,location:{search:'?space=led'}};vm.createContext(context);vm.runInContext(fs.readFileSync('bridge/visualizer/editor-project.js','utf8'),context);
+await context.window.apcProjectStore('legacy-project');assert.equal(values.get('led'),'legacy-project');
+await context.window.apcLocalStore('recovery-state',{version:1});assert.equal((await context.window.apcLocalStore('recovery-state')).version,1);
+context.location.search='?space=projection';assert.equal(await context.window.apcProjectStore(),undefined);assert.equal(await context.window.apcLocalStore('recovery-state'),undefined);
+context.location.search='?space=led';assert.equal(await context.window.apcProjectStore(),'legacy-project');
+"""
+        result=subprocess.run(['node','--input-type=module','-e',script],cwd=ROOT,capture_output=True,text=True,encoding='utf-8',timeout=20)
+        self.assertEqual(result.returncode,0,result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'),'Node checks recovery hierarchy')
+    def test_scene_recovery_keeps_ids_hierarchy_and_transforms(self):
+        script=r"""
+import fs from 'node:fs';import assert from 'node:assert/strict';import {pathToFileURL} from 'node:url';
+const src=fs.readFileSync('bridge/visualizer/editor-model.js');const {sceneState,restoreSceneState,duplicateRow}=await import('data:text/javascript;base64,'+src.toString('base64'));
+const T=await import(pathToFileURL(process.cwd()+'/bridge/visualizer/editor-vendor/three.module.js'));
+const root=new T.Group(),group=new T.Group(),mesh=new T.Mesh(new T.BoxGeometry());root.add(group);group.add(mesh);root.traverse(n=>{n.userData.apcEditorId=n.uuid;n.userData.apcEditor={type:'room',pixels:1,rows:1};});
+mesh.position.set(1,2,3);const state=sceneState(root);const baseline=root.clone(true);mesh.position.x=99;
+restoreSceneState(root,state);assert.equal(mesh.position.x,1);assert.equal(mesh.parent,group);
+const wrapper=new T.Group();wrapper.add(baseline);restoreSceneState(wrapper,state);assert.equal(wrapper.children.length,1);assert.equal(wrapper.children[0].children[0].position.z,3);
+const bad=JSON.parse(JSON.stringify(state));bad.objects[0].parent=bad.objects[1].id;
+assert.throws(()=>restoreSceneState(root,bad));assert.equal(mesh.parent,group);
+const copies=duplicateRow(mesh,'x',3,1,T);const ids=[mesh,...copies].map(n=>n.userData.apcEditorId);assert.equal(new Set(ids).size,3);
+"""
+        result=subprocess.run(['node','--input-type=module','-e',script],cwd=ROOT,capture_output=True,text=True,encoding='utf-8',timeout=20)
+        self.assertEqual(result.returncode,0,result.stderr)
+
     @unittest.skipUnless(shutil.which('node'),'Node checks physical dimensions and array spacing')
     def test_dimensions_and_row_under_transformed_parent(self):
         script=r"""
@@ -121,7 +153,7 @@ assert.equal(centerPivot(pivot,T),pivot);points().forEach((p,i)=>assert.ok(p.dis
         script=r"""
 import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';
 const src=fs.readFileSync('bridge/visualizer/editor.js','utf8');let revoked=0,cleared=0,fail=false;
-const context={URL:{createObjectURL:()=> 'blob:local',revokeObjectURL:()=>revoked++},video:{pause(){},load(){},removeAttribute(){},play(){return fail?Promise.reject(Error('codec')):Promise.resolve();}},videoFileUrl:null,media:null,testPattern:false,sourceUniform:{value:null},videoTexture:{},blackTexture:{},black:{width:256,height:256},blackContext:{fillRect(){cleared++;}},renderNeeded:false,message(){}};
+const context={URL:{createObjectURL:()=> 'blob:local',revokeObjectURL:()=>revoked++},video:{pause(){},load(){},removeAttribute(){},play(){return fail?Promise.reject(Error('codec')):Promise.resolve();}},videoFileUrl:null,media:null,restoring:true,storeView(){},testPattern:false,sourceUniform:{value:null},videoTexture:{},blackTexture:{},black:{width:256,height:256},blackContext:{fillRect(){cleared++;}},renderNeeded:false,message(){}};
 vm.createContext(context);vm.runInContext(src.slice(src.indexOf('async function openVideoFile('),src.indexOf('async function startMedia(')),context);
 await vm.runInContext('openVideoFile({})',context);assert.equal(context.sourceUniform.value,context.videoTexture);
 vm.runInContext('stopMedia()',context);assert.equal(revoked,1);assert.equal(context.sourceUniform.value,context.blackTexture);assert.ok(cleared>0);
