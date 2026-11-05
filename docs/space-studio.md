@@ -64,7 +64,7 @@ The **Scene collections** outliner is on the right, with object properties below
 
 Above the viewport, **Select → LEDs** prevents room geometry from intercepting LED selection. Environment and Surfaces work the same way. Selected objects have an orange outline/bounds, an orange outliner row and a named status label. **H** hides the selected object; **Alt+H** reveals objects in the current selection scope. Undo restores visibility changes. Room walls are pickable from either side. Fog volumes and camera/reference helpers are hidden by default; enable **Show helper volumes / cameras** when needed.
 
-**Solid** is the default editing view: neutral double-sided shading without imported textures or emission. **Materials** shows the model's original materials; Scene preview shows the mapped video. Solid shading does not rewrite UVs, materials or mesh geometry in the exported project. For dense meshes, selection uses an orange bounds box instead of generating expensive edges.
+**Solid** is the default editing view: muted category colors with double-sided shading, without imported textures or emission. Floors are blue-gray, walls/ceiling darker gray, LED/neon geometry teal, surfaces lavender, related decorative heads warm stone, and chains/rigging steel-blue. **Materials** shows the model's original materials; Scene preview shows the mapped video. Solid shading does not rewrite UVs, materials or mesh geometry in the exported project. For dense meshes, selection uses an orange bounds box instead of generating expensive edges.
 
 In Output mapping, thin fixtures have a small screen-space hit tolerance, and selecting an outline never disables it. Enable/disable uses the fixture checkbox. For exact pixels, select a fixture and choose **Edit selected fixture pixels**: the magnified numbered grid makes pixel 1 and the last pixel individually clickable. Use the range selector for long strips. Orange marks the selected fixture/pixel; changes save automatically.
 
@@ -73,3 +73,17 @@ In Output mapping, thin fixtures have a small screen-space hit tolerance, and se
 Use **Pause / Resume** beside the settings panel to hold the current input image while inspecting fixtures or editing the mapping. Camera movement, selection and mapping controls remain available. The output inset and LED/projection sampling use the same frozen frame; Arena and hardware output continue unchanged. Resume returns to live input, or continues the local video. Changing the input while paused keeps the frozen image until Resume.
 
 A single snapshot is limited to 1280×720 to bound memory use. Its canvas and GPU texture are released on Resume. The pause is local to the current Visualizer page; opening the 3D Editor does not pause its separate preview input.
+
+## Scene colors, LED guides and controls
+
+In Solid mode, related objects share a muted color. **LED outlines** adds faint teal contours visible through room objects; turn it off above the viewport for an unobstructed room view. The orange selection stays distinct from these guides. Contours share cached geometry across duplicates and are updated with object transforms. Very dense LED meshes use a simple bounds guide instead of generating expensive edges. Neither category materials nor guide geometry is written into exported projects.
+
+Open or collapse **Controls & colors** in the viewport corner for the palette legend and navigation: middle drag to orbit, right drag to pan, wheel to zoom, left click to select, F to frame, H to hide and Alt+H to reveal. Original Materials and Scene preview retain their own appearance.
+
+## Editing a single cable branch
+
+Choose **Edit chain** on a physical output group, or beside a selected strip's Reverse direction control. The same Visualizer opens a schematic for that output only. Each piece has an IN square on the left and an OUT square on the right. Drag an OUT to a nearby IN: a valid input snaps within the cursor range. Drag an already connected IN into empty space to unplug it. Escape cancels the current drag; Done returns to the normal scene.
+
+Green marks a configured path from the physical output's first piece. Gray marks an unlinked path; modeled pieces without a configured path from the source are black in the preview. Unused pieces are labeled separately. A red snap preview explains an invalid link. Self-connections, cycles, multiple cables on one port and cross-output links are rejected. These are configuration checks, not measurements of electrical power or live data. The first piece remains attached to the physical output source. Connecting a different occupied input replaces that input's previous cable.
+
+Cable links save with the wiring profile and selection export/import. They describe the preview wiring diagram; they do not rewrite Arena channel addresses or automatically reorder video across pieces. Use Reverse direction to flip video sampling along one piece. While the schematic is open, the 3D renderer is suspended; only the lightweight branch diagram is drawn. Wiring view is hidden in Output mapping and fully cleared when switched off.

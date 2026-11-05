@@ -231,3 +231,21 @@ export function objectLabel(node) {
   const prefix = /ceiling|strop/.test(text) ? "Ceiling" : /podlaha|floor/.test(text) ? "Floor" : /stena|wall/.test(text) ? "Wall" : "";
   return (prefix ? prefix + " · " : "") + (node.name || "Object");
 }
+
+export const EDITOR_COLORS = {
+  LEDs: 0x69b6aa, Floor: 0x485565, Walls: 0x515966, Ceiling: 0x3e454f,
+  Surfaces: 0x827590, Decor: 0x918378, Rigging: 0x667f8d, Objects: 0x737786,
+};
+export function editorStyle(node) {
+  const category = objectCategory(node), materials = Array.isArray(node.material) ? node.material : [node.material];
+  const text = [node.name, ...materials.map(m => m?.name || "")].join(" ").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  let kind = category;
+  if (category === "Objects" || category === "Environment") {
+    if (/hlava|head|draci|drap|tesak|tlam|pancir|rohovina/.test(text)) kind = "Decor";
+    else if (/retez|chain|lanko|cable|kovana/.test(text)) kind = "Rigging";
+    else if (/podlaha|floor/.test(text)) kind = "Floor";
+    else if (/strop|ceiling/.test(text)) kind = "Ceiling";
+    else if (category === "Environment") kind = "Walls";
+  }
+  return {kind, color: EDITOR_COLORS[kind] ?? EDITOR_COLORS.Objects};
+}

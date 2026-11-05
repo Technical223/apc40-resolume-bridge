@@ -12,7 +12,29 @@ function validate(data){
  if(!Array.isArray(groups)||groups.length>1000)throw Error('Invalid output groups');
  const keys=new Set();
  for(const g of groups){if(!g||typeof g.key!=='string'||!g.key||g.key.length>300||keys.has(g.key)||!Number.isInteger(g.output)||g.output<0||g.output>16)throw Error('Invalid output group');keys.add(g.key);}
- return {version:1,connections,groups:groups.map(g=>({key:g.key,output:g.output}))};
+ const result={version:1,connections,groups:groups.map(g=>({key:g.key,output:g.output}))};if(data.links!==undefined)result.links=validateLinks(connections,data.links);return result;
+}
+function validateLinks(connections,links){
+ if(!Array.isArray(links)||links.length>10000)throw Error('Invalid cable links');
+ const nodes=new Map(connections.map(c=>[c.uid,c])),outgoing=new Map(),incoming=new Set();
+ const result=links.map(edge=>{
+  const a=nodes.get(edge?.from),b=nodes.get(edge?.to);
+  if(!a||!b||a.uid===b.uid||a.output!==b.output||b.order===1||outgoing.has(a.uid)||incoming.has(b.uid))throw Error('Connection needs a free input in the same output group');
+  outgoing.set(a.uid,b.uid);incoming.add(b.uid);return{from:a.uid,to:b.uid};
+ });
+ for(const start of outgoing.keys()){const seen=new Set();let id=start;while(outgoing.has(id)){if(seen.has(id))throw Error('Cable loops are not allowed');seen.add(id);id=outgoing.get(id);}}
+ return result;
+}
+function cableLinks(data){
+ if(data.links!==undefined)return validateLinks(data.connections,data.links);
+ const sorted=data.connections.slice().sort((a,b)=>a.output-b.output||a.order-b.order),links=[];
+ for(let i=1;i<sorted.length;i++)if(sorted[i].output===sorted[i-1].output&&sorted[i].order===sorted[i-1].order+1)links.push({from:sorted[i-1].uid,to:sorted[i].uid});
+ return links;
+}
+function linkedNodes(data){
+ const edges=new Map(cableLinks(data).map(e=>[e.from,e.to])),linked=new Set();
+ for(const root of data.connections.filter(c=>c.order===1)){let id=root.uid;while(id&&!linked.has(id)){linked.add(id);id=edges.get(id);}}
+ return linked;
 }
 function ordered(data,fixtures){const byId=new Map(fixtures.map(f=>[f.sliceUid,f]));return validate(data).connections.sort((a,b)=>a.output-b.output||a.order-b.order).map(c=>({...c,fixture:byId.get(c.uid)||null}));}
 function groupKey(f){return String(f.screenUid||f.screen||'Unknown output');}
@@ -30,16 +52,16 @@ function reconcile(value,fixtures){
   for(const item of members){const old=data.connections.find(c=>c.uid===item.sliceUid&&c.output===profile.id);if(old&&!reserved.has(old.order)){reserved.add(old.order);connections.push({...old});}}
   for(const item of members){if(connections.some(c=>c.uid===item.sliceUid))continue;const order=Array.from({length:profile.pieces},(_,i)=>i+1).find(n=>!reserved.has(n));reserved.add(order);connections.push({uid:item.sliceUid,output:profile.id,order,reverse:data.connections.find(c=>c.uid===item.sliceUid)?.reverse||false});}
  }
- return validate({...data,connections});
+ const ids=new Map(connections.map(c=>[c.uid,c]));const result={...data,connections};if(data.links!==undefined)result.links=data.links.filter(e=>ids.has(e.from)&&ids.has(e.to)&&ids.get(e.from).output===ids.get(e.to).output&&ids.get(e.to).order!==1);return validate(result);
 }
-scope.APCWiring={outputs,validate,ordered,groupKey,groupsFor,reconcile,install};
+scope.APCWiring={outputs,validate,ordered,groupKey,groupsFor,reconcile,validateLinks,cableLinks,linkedNodes,install};
 function install(api){
  const el=tag=>document.createElement(tag),key=()=> 'apc40-wiring:'+(new URLSearchParams(location.search).get('space')||'default')+':'+api.layout().preset;
- let data={version:1,connections:[]},loadedKey=null,enabled=false,chains=[],focusUid=null;
+ let data={version:1,connections:[]},loadedKey=null,enabled=false,chains=[],focusUid=null,edges=[],linked=new Set(),graphOutput=null,graphDrag=null,graphNodes=[];
  const canvas=el('canvas'),ctx=canvas.getContext('2d');canvas.id='wiringOverlay';canvas.hidden=true;
- canvas.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:3;width:100%;height:100%';document.body.append(canvas);
+ canvas.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:3;width:100%;height:100%;display:none';document.body.append(canvas);
  const toggleLabel=el('label'),toggle=el('input');toggle.id='wiringView';toggle.type='checkbox';toggleLabel.append(toggle,' Wiring view');toggleLabel.style.cssText='margin-left:auto;white-space:nowrap';api.navigation.append(toggleLabel);
- toggle.onchange=()=>{enabled=toggle.checked;canvas.hidden=!enabled&&!focusUid;api.canvas.style.filter=enabled?'grayscale(1) brightness(.45)':'';api.setWiring(enabled);refresh();};
+ toggle.onchange=()=>{enabled=toggle.checked;if(!enabled)clearFocus();setOverlay(enabled||!!focusUid);api.canvas.style.filter=enabled?'grayscale(1) brightness(.45)':'';api.setWiring(enabled);refresh();};
  const box=el('section');box.id='wiringSettings';box.style.cssText='padding:12px 16px;border-top:1px solid #303b4b';
  const title=el('strong'),hint=el('p'),status=el('p');title.textContent='Physical output group';status.id='wiringStatus';status.setAttribute('role','status');
  hint.textContent='The whole group owns one physical output. Use fixture checkboxes or bulk selection to choose pieces in use today. Order and direction stay editable per piece.';
@@ -49,10 +71,10 @@ function install(api){
  box.append(title,hint,controls,status);api.mapper.append(box);
  function option(select,value,text){const o=el('option');o.value=value;o.textContent=text;select.append(o);}
  function load(){if(loadedKey===key())return;loadedKey=key();data={version:1,connections:[]};try{const saved=localStorage.getItem(loadedKey);if(saved)data=validate(JSON.parse(saved));data=reconcile(data,api.layout().outputFixtures||[]);}catch(error){api.message('Wiring could not load: '+error.message);}}
- function save(next){try{next=reconcile(next,api.layout().outputFixtures||[]);localStorage.setItem(key(),JSON.stringify(next));data=next;refresh();api.changed?.();}catch(error){api.message('Wiring was not saved: '+error.message);refresh();}}
+ function save(next){try{next=reconcile(next,api.layout().outputFixtures||[]);localStorage.setItem(key(),JSON.stringify(next));data=next;refresh();api.changed?.();return true;}catch(error){api.message('Wiring was not saved: '+error.message);refresh();return false;}}
  function selected(){return (api.layout().outputFixtures||[]).find(f=>f.sliceUid===api.selected());}
  function refresh(){
-  load();data=reconcile(data,api.layout().outputFixtures||[]);chains=ordered(data,api.layout().outputFixtures||[]);
+  load();data=reconcile(data,api.layout().outputFixtures||[]);chains=ordered(data,api.layout().outputFixtures||[]);edges=cableLinks(data);linked=linkedNodes(data);
   const item=selected(),c=data.connections.find(c=>c.uid===item?.sliceUid),group=item?groupsFor(api.layout().outputFixtures||[],data).find(g=>g.key===groupKey(item)):null;
   const profile=outputs.find(o=>o.id===group?.output);output.textContent=group?.output?'OUT '+group.output:/^DMX\b/i.test(group?.name||'')?group.name+' (separate DMX)':'Not assigned at group level';reverse.checked=c?.reverse||false;order.replaceChildren();
   if(profile)for(let n=1;n<=profile.pieces;n++)option(order,n,n);order.value=c?.order||'';order.disabled=reverse.disabled=!c;
@@ -63,7 +85,7 @@ function install(api){
   load();const group=groupsFor(items,data)[0];if(/^DMX\b/i.test(group.name||'')){const info=el('small');info.textContent='Separate DMX output - 512 channels';return info;}const select=el('select');select.className='physicalGroup';select.setAttribute('aria-label','Physical output for '+group.name);
   option(select,0,'Unassigned group');outputs.forEach(o=>option(select,o.id,'OUT '+o.id+' | '+o.pieces+' x '+o.meters+' m'));
   select.value=group.output;select.onclick=e=>e.stopPropagation();select.onchange=()=>save({...data,groups:[...data.groups.filter(g=>g.key!==group.key),{key:group.key,output:Number(select.value)}]});
-  return select;
+  const wrapper=el('div'),edit=el('button');edit.textContent='Edit chain';edit.disabled=!group.output;edit.onclick=()=>openGraph(group.output);wrapper.style.cssText='display:flex;gap:6px';wrapper.append(select,edit);return wrapper;
  }
  function change(){
   const item=selected(),current=data.connections.find(c=>c.uid===item?.sliceUid);if(!current)return;
@@ -72,44 +94,98 @@ function install(api){
  }
  order.onchange=reverse.onchange=change;api.mapper.addEventListener('click',event=>{if(!box.contains(event.target))refresh();});
  const tool=el('div'),flip=el('button');tool.id='fixtureDirectionTool';tool.hidden=true;tool.style.cssText='position:fixed;z-index:4;padding:6px;background:#101820ee;border:1px solid #ff9b38;border-radius:8px;display:none';
- flip.textContent='Reverse direction';flip.id='reverseFixture';tool.title='Double-click empty space or press Escape to dismiss';tool.append(flip);document.body.append(tool);
+ const editChain=el('button');editChain.textContent='Edit chain';editChain.onclick=()=>{const c=data.connections.find(c=>c.uid===focusUid);if(c)openGraph(c.output);};tool.append(editChain);flip.textContent='Reverse direction';flip.id='reverseFixture';tool.title='Double-click empty space or press Escape to dismiss';tool.append(flip);document.body.append(tool);
+ function setOverlay(show){canvas.hidden=!show;canvas.style.display=show?'block':'none';}
  function showTool(show){tool.hidden=!show;tool.style.display=show?'flex':'none';}
- function clearFocus(){focusUid=null;showTool(false);canvas.hidden=!enabled;ctx.clearRect(0,0,canvas.width,canvas.height);api.select?.(null);}
- document.addEventListener('keydown',event=>{if(event.key==='Escape')clearFocus();});
+ function clearFocus(){closeGraph();focusUid=null;showTool(false);setOverlay(enabled);ctx.clearRect(0,0,canvas.width,canvas.height);api.select?.(null);}
+ document.addEventListener('keydown',event=>{if(event.key==='Escape'){if(graphDrag){save({...data,links:graphDrag.previous});graphDrag=null;}else clearFocus();}});
  flip.onclick=()=>{const current=data.connections.find(c=>c.uid===focusUid);if(current)save({...data,connections:data.connections.map(c=>c.uid===focusUid?{...c,reverse:!c.reverse}:c)});};
  api.canvas.addEventListener('dblclick',event=>{
   if(api.isMapping?.())return;let uid=null,best=14;
   for(const fixture of api.layout().fixtures||[]){if(!api.visible(fixture.sliceUid))continue;const points=api.positions(fixture.sliceUid)||[],stride=Math.max(1,Math.ceil(points.length/100));
    for(let i=0;i<points.length;i+=stride){const point=api.project(points[i]);if(!point)continue;const d=Math.hypot(event.clientX-point[0],event.clientY-point[1]);if(d<best){best=d;uid=fixture.sliceUid;}}
   }
-  if(!uid){clearFocus();return;}focusUid=uid;api.select?.(uid);refresh();canvas.hidden=false;
+  if(!uid){clearFocus();return;}focusUid=uid;api.select?.(uid);refresh();setOverlay(true);
  });
+
+ const graph=el('section'),graphHeader=el('header'),graphTitle=el('strong'),graphDone=el('button'),graphCanvas=el('canvas'),graphStatus=el('p'),gc=graphCanvas.getContext('2d');
+ graph.id='wiringGraph';graph.hidden=true;graph.style.cssText='position:fixed;z-index:18;inset:60px 12px 12px;background:#111922;border:1px solid #3a495a;border-radius:10px;display:none;grid-template-rows:auto minmax(0,1fr) auto;overflow:hidden;font:13px system-ui;color:#dce6ef';
+ graphHeader.style.cssText='display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid #303d4c';graphDone.textContent='Done';graphDone.onclick=()=>closeGraph();graphTitle.style.marginRight='auto';graphHeader.append(graphTitle,graphDone);
+ graphCanvas.id='wiringGraphCanvas';graphCanvas.style.cssText='position:static;display:block;width:100%;height:100%;min-height:0;touch-action:none';graphStatus.style.cssText='margin:0;padding:10px 16px;color:#aebdcc';graph.append(graphHeader,graphCanvas,graphStatus);document.body.append(graph);
+ function openGraph(output){api.leaveMapping?.();graphOutput=output;graphDrag=null;graph.hidden=false;graph.style.display='grid';graphTitle.textContent='Wiring editor | OUT '+output;graphStatus.textContent='Drag an OUT square to an IN square. Drag a connected IN away to unplug. Green = linked, gray = unlinked, red = invalid. Preview configuration only.';drawGraph();}
+ function closeGraph(){if(graphDrag){save({...data,links:graphDrag.previous});graphDrag=null;}graphOutput=null;graph.hidden=true;graph.style.display='none';}
+ function curve(a,b,color,dashed=false){
+  gc.strokeStyle=color;gc.lineWidth=2;gc.setLineDash(dashed?[5,4]:[]);gc.beginPath();gc.moveTo(...a);const bend=Math.max(45,Math.abs(b[0]-a[0])*.45);gc.bezierCurveTo(a[0]+bend,a[1],b[0]-bend,b[1],...b);gc.stroke();gc.setLineDash([]);
+ }
+ function drawGraph(){
+  const r=graphCanvas.getBoundingClientRect(),w=Math.max(1,Math.round(r.width)),h=Math.max(1,Math.round(r.height));if(graphCanvas.width!==w||graphCanvas.height!==h){graphCanvas.width=w;graphCanvas.height=h;}
+  gc.fillStyle='#111922';gc.fillRect(0,0,w,h);gc.strokeStyle='#1c2936';gc.lineWidth=1;for(let x=0;x<w;x+=24){gc.beginPath();gc.moveTo(x,0);gc.lineTo(x,h);gc.stroke();}for(let y=0;y<h;y+=24){gc.beginPath();gc.moveTo(0,y);gc.lineTo(w,y);gc.stroke();}
+  const members=chains.filter(c=>c.output===graphOutput),cols=Math.max(1,Math.min(5,Math.floor((w-70)/210))),rows=Math.ceil(members.length/cols),stepX=(w-80)/cols,stepY=Math.max(90,Math.min(150,(h-110)/Math.max(1,rows)));
+  graphNodes=members.map((c,i)=>({...c,x:40+(i%cols)*stepX,y:100+Math.floor(i/cols)*stepY}));
+  const positions=new Map(graphNodes.map(n=>[n.uid,n])),port=(n,input)=>[n.x+(input?0:160),n.y+28];
+  const root=graphNodes.find(c=>c.order===1);gc.fillStyle='#253c40';gc.fillRect(24,20,130,36);gc.fillStyle='#9fe1cd';gc.font='600 13px system-ui';gc.fillText('OUT '+graphOutput+' | source',35,43);if(root)curve([154,38],port(root,true),'#62bba4');
+  for(const edge of edges){const a=positions.get(edge.from),b=positions.get(edge.to);if(a&&b)curve(port(a,false),port(b,true),linked.has(a.uid)?'#62bba4':'#596877');}
+  for(const n of graphNodes){
+   const used=api.visible(n.uid),active=linked.has(n.uid),color=!used?'#596370':active?'#69bca4':'#a59676';gc.fillStyle=used?'#202e3b':'#18212b';gc.strokeStyle=color;gc.lineWidth=1.5;gc.beginPath();if(gc.roundRect)gc.roundRect(n.x,n.y,160,62,7);else gc.rect(n.x,n.y,160,62);gc.fill();gc.stroke();
+   gc.fillStyle='#e0e7ef';gc.font='600 12px system-ui';gc.fillText('Piece '+n.order,n.x+10,n.y+19);gc.font='10px system-ui';gc.fillStyle='#aebccc';gc.fillText((n.fixture?.slice||n.uid).slice(0,24),n.x+10,n.y+36);gc.fillText(!used?'Not used':active?'Linked':'Unlinked',n.x+10,n.y+51);
+   for(const input of [true,false]){const p=port(n,input);gc.fillStyle=input?(active?'#69bca4':'#657181'):'#d9918c';if(graphDrag?.target===n.uid&&input)gc.fillStyle=graphDrag.valid?'#76e6b5':'#ff6f72';gc.fillRect(p[0]-5,p[1]-5,10,10);gc.fillStyle='#97a8b8';gc.fillText(input?'IN':'OUT',p[0]+(input?-20:8),p[1]-10);}
+  }
+  if(graphDrag){const from=positions.get(graphDrag.from),target=positions.get(graphDrag.target);if(from)curve(port(from,false),target?port(target,true):[graphDrag.x,graphDrag.y],graphDrag.target?(graphDrag.valid?'#76e6b5':'#ff6f72'):'#d9b578',true);}
+ }
+ function graphPoint(event){const r=graphCanvas.getBoundingClientRect();return[event.clientX-r.left,event.clientY-r.top];}
+ function candidate(from,to){const next=edges.filter(e=>e.from!==from&&e.to!==to);next.push({from,to});try{validateLinks(data.connections,next);return{valid:true,links:next};}catch(error){return{valid:false,message:error.message};}}
+ graphCanvas.addEventListener('pointerdown',event=>{
+  if(event.button!==0)return;const [x,y]=graphPoint(event);let hit=null;
+  for(const n of graphNodes)for(const input of [true,false])if(Math.hypot(x-(n.x+(input?0:160)),y-(n.y+28))<13)hit={node:n,input};
+  if(!hit)return;const previous=edges.map(e=>({...e})),old=hit.input?edges.find(e=>e.to===hit.node.uid):edges.find(e=>e.from===hit.node.uid),from=hit.input?old?.from:hit.node.uid;
+  if(!from){graphStatus.textContent=hit.node.order===1?'The first input belongs to the physical output source.':'Start a cable from an OUT square.';return;}
+  if(old&&!save({...data,links:edges.filter(e=>e!==old)}))return;
+  graphDrag={from,x,y,target:null,valid:false,previous};graphCanvas.setPointerCapture(event.pointerId);drawGraph();
+ });
+ graphCanvas.addEventListener('pointermove',event=>{
+  if(!graphDrag)return;const [x,y]=graphPoint(event);Object.assign(graphDrag,{x,y,target:null,valid:false});let best=25;
+  for(const n of graphNodes){const d=Math.hypot(x-n.x,y-(n.y+28));if(d<best){best=d;graphDrag.target=n.uid;}}
+  if(graphDrag.target){const result=candidate(graphDrag.from,graphDrag.target);graphDrag.valid=result.valid;graphDrag.links=result.links;graphStatus.textContent=result.valid?'Release to connect.':result.message;}else graphStatus.textContent='Release in empty space to leave this cable unplugged.';
+  drawGraph();
+ });
+ graphCanvas.addEventListener('pointerup',event=>{
+  if(!graphDrag)return;const drag=graphDrag;graphDrag=null;if(drag.target&&drag.valid)save({...data,links:drag.links});
+  graphStatus.textContent=drag.target&&drag.valid?'Connected. Saved locally.':'Cable left unplugged. Saved locally.';if(graphCanvas.hasPointerCapture(event.pointerId))graphCanvas.releasePointerCapture(event.pointerId);drawGraph();
+ });
+ graphCanvas.addEventListener('pointercancel',()=>{if(graphDrag)save({...data,links:graphDrag.previous});graphDrag=null;drawGraph();});
+
+
  function arrow(a,b,color,dashed=false,head=true){
   if(!a||!b)return;ctx.strokeStyle=ctx.fillStyle=color;ctx.lineWidth=dashed?1.5:3;ctx.setLineDash(dashed?[5,5]:[]);ctx.beginPath();ctx.moveTo(...a);ctx.lineTo(...b);ctx.stroke();ctx.setLineDash([]);if(!head||Math.hypot(b[0]-a[0],b[1]-a[1])<2)return;
   const angle=Math.atan2(b[1]-a[1],b[0]-a[0]);ctx.beginPath();ctx.moveTo(...b);ctx.lineTo(b[0]-9*Math.cos(angle-.45),b[1]-9*Math.sin(angle-.45));ctx.lineTo(b[0]-9*Math.cos(angle+.45),b[1]-9*Math.sin(angle+.45));ctx.closePath();ctx.fill();
  }
  function label(text,p,color){if(!p)return;ctx.font='12px system-ui';const w=ctx.measureText(text).width;ctx.fillStyle='#101820e8';ctx.fillRect(p[0]+5,p[1]-17,w+10,19);ctx.fillStyle=color;ctx.fillText(text,p[0]+10,p[1]-3);}
  function draw(){
+  const mapping=api.isMapping?.();toggleLabel.hidden=!!mapping;toggleLabel.style.display=mapping?'none':'';
+  if(mapping){closeGraph();setOverlay(false);showTool(false);api.canvas.style.filter='';api.setWiring(false);return;}
+  if(graphOutput!==null){setOverlay(false);showTool(false);drawGraph();return;}
+  setOverlay(enabled||!!focusUid);api.canvas.style.filter=enabled?'grayscale(1) brightness(.45)':'';
   if(!enabled&&!focusUid)return;api.setWiring(enabled);const width=innerWidth,height=innerHeight;if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height;}ctx.clearRect(0,0,width,height);
-  let previous=null,drawn=0;
+  const endpoints=new Map();let drawn=0;
   showTool(false);
   for(const c of chains){
    if(!enabled&&c.uid!==focusUid)continue;
-   const positions=api.positions(c.uid),color=c.uid===focusUid?'#ff9b38':'hsl('+((c.output-1)*137.5%360)+' 85% 70%)';
-   if(!c.fixture||!positions||positions.length<2||!api.visible(c.uid)){previous=null;continue;}
+   const positions=api.positions(c.uid),color=c.uid===focusUid?'#ff9b38':!linked.has(c.uid)?'#78838f':'hsl('+((c.output-1)*137.5%360)+' 85% 70%)';
+   if(!c.fixture||!positions||positions.length<2||!api.visible(c.uid)){continue;}
    const points=[],stride=Math.max(1,Math.ceil((positions.length-1)/48));for(let n=0;n<positions.length;n+=stride)points.push(api.project(positions[n]));points.push(api.project(positions[positions.length-1]));if(c.reverse)points.reverse();
-   const first=points[0],last=points[points.length-1];if(previous?.output===c.output&&previous.order+1===c.order)arrow(previous.end,first,color,true);
+   const first=points[0],last=points[points.length-1];endpoints.set(c.uid,{first,last,color});
    for(let n=1;n<points.length;n++)arrow(points[n-1],points[n],color,false,n===Math.floor(points.length/2)||n===points.length-1);
    if(c.uid===focusUid){
     label('IN',first,'#51f29b');label('OUT',last,'#ff6475');
     if(first&&points[1])arrow(first,points[1],'#51f29b');if(last&&points[points.length-2])arrow(points[points.length-2],last,'#ff6475');
     const middle=points[Math.floor(points.length/2)];if(middle){showTool(true);tool.style.left=Math.max(10,Math.min(width-210,middle[0]+10))+'px';tool.style.top=Math.max(60,Math.min(height-50,middle[1]+10))+'px';flip.textContent='Reverse direction'+(c.reverse?' (reversed)':'');}
    }else{label('OUT '+c.output+' | '+c.order+' IN',first,color);label('OUT',last,color);}
-   previous={output:c.output,order:c.order,end:last};drawn++;
+   drawn++;
   }
+  if(enabled)for(const e of edges){const a=endpoints.get(e.from),b=endpoints.get(e.to);if(a&&b)arrow(a.last,b.first,linked.has(e.from)?a.color:'#78838f',true);}
   if(enabled)label(drawn?'WIRING VIEW | configured pixel direction':'WIRING VIEW | assign physical outputs in Output mapping',[340,70],'#edf2f7');
  }
- refresh();return {draw,refresh,groupControl,pixelIndex:(uid,index,count)=>data.connections.find(c=>c.uid===uid)?.reverse?count-1-index:index,export:()=>{load();return validate(data);},import:value=>{const next=reconcile(value,api.layout().outputFixtures||[]);localStorage.setItem(key(),JSON.stringify(next));data=next;refresh();api.changed?.();}};
+ refresh();return {draw,refresh,groupControl,graphEditing:()=>graphOutput!==null,hasSignal:uid=>!data.connections.some(c=>c.uid===uid)||linked.has(uid),pixelIndex:(uid,index,count)=>data.connections.find(c=>c.uid===uid)?.reverse?count-1-index:index,export:()=>{load();return validate(data);},import:value=>{const next=reconcile(value,api.layout().outputFixtures||[]);localStorage.setItem(key(),JSON.stringify(next));data=next;refresh();api.changed?.();}};
 }
 })(typeof window==='undefined'?globalThis:window);
 

@@ -61,6 +61,16 @@ assert.equal(objectCategory({name:'Plane',userData:{apcEditor:{type:'projection'
 assert.equal(objectCategory({name:'Difuzor jemne pletivo'}),'Surfaces');
 assert.equal(objectLabel({name:'STROP',material:{name:'stena'}}),'Ceiling · STROP');
 assert.equal(objectCategory({name:'Imported sculpture'}),'Objects');
+const {editorStyle,EDITOR_COLORS}=await import('data:text/javascript;base64,'+source.toString('base64'));
+assert.equal(editorStyle(wall).color,EDITOR_COLORS.Walls);
+assert.equal(editorStyle({name:'Plane',material:{name:'podlaha'}}).kind,'Floor');
+assert.equal(editorStyle({name:'STROP',material:{name:'stena'}}).kind,'Ceiling');
+assert.equal(editorStyle({name:'Leva hlava'}).color,editorStyle({name:'Prava hlava'}).color);
+assert.equal(editorStyle({name:'Stropni retez'}).kind,'Rigging');
+assert.equal(editorStyle({name:'Neon tube'}).kind,'LEDs');
+assert.notEqual(EDITOR_COLORS.Floor,EDITOR_COLORS.Walls);assert.notEqual(EDITOR_COLORS.Decor,EDITOR_COLORS.LEDs);
+assert.equal(wall.name,'Plane.002');assert.deepEqual(wall.userData,{});
+
 """
         result=subprocess.run(['node','--input-type=module','-e',script],cwd=ROOT,capture_output=True,text=True,encoding='utf-8',timeout=20)
         self.assertEqual(result.returncode,0,result.stderr)

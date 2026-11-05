@@ -18,6 +18,8 @@ import {
   restoreSceneState,
   objectCategory,
   objectLabel,
+  editorStyle,
+  EDITOR_COLORS,
 } from "./editor-model.js";
 const $ = (id) => document.getElementById(id),
   viewport = $("viewport");
@@ -33,8 +35,56 @@ const ownedNodes = new Set();
 const root = new T.Group();
 root.name = "Space";
 scene.add(root);
-const solidMaterial = new T.MeshStandardMaterial({color: 0x89929d, roughness: .85, metalness: 0, side: T.DoubleSide});
-scene.overrideMaterial = solidMaterial;
+const solidMaterials = new Map(), solidRecords = [], ledGuides = new Map(), guideGeometry = new Map();
+const ledGuideMaterial = new T.LineBasicMaterial({color: 0x78c8bb, transparent: true, opacity: .22, depthTest: false, depthWrite: false});
+function dropGuide(node) {
+  const guide = ledGuides.get(node); if (!guide) return;
+  helperScene.remove(guide.line);
+  if (guide.source) { const cached = guideGeometry.get(guide.source); if (--cached.refs === 0) { cached.edges.dispose(); guideGeometry.delete(guide.source); } }
+  else { guide.line.geometry.dispose(); guide.line.material.dispose(); }
+  ledGuides.delete(node);
+}
+function syncEditorStyles() {
+  const alive = new Set(), counted = new Set(); let budget = 0;
+  solidRecords.length = 0;
+  root.traverse(node => {
+    if (!node.isMesh) return;
+    const style = editorStyle(node);
+    if (!solidMaterials.has(style.color)) solidMaterials.set(style.color, new T.MeshStandardMaterial({color: style.color, roughness: .85, metalness: 0, side: T.DoubleSide}));
+    solidRecords.push({node, material: solidMaterials.get(style.color), original: null});
+    if (objectCategory(node) !== "LEDs") return;
+    alive.add(node); const geometry = node.geometry, count = geometry.getAttribute("position")?.count || 0;
+    const existing = ledGuides.get(node); if (existing && existing.geometry !== geometry) dropGuide(node);
+    let precise = count <= 20000 && (counted.has(geometry) || budget + count <= 200000);
+    if (!counted.has(geometry)) { counted.add(geometry); budget += count; }
+    if (!ledGuides.has(node)) {
+      let line;
+      if (precise) {
+        if (!guideGeometry.has(geometry)) guideGeometry.set(geometry, {edges: new T.EdgesGeometry(geometry, 20), refs: 0});
+        const cached = guideGeometry.get(geometry); cached.refs++; line = new T.LineSegments(cached.edges, ledGuideMaterial); line.matrixAutoUpdate = false;
+      } else {
+        // shortcut: very dense LED meshes use bounds; use simplified topology for a detailed contour.
+        line = new T.BoxHelper(node, 0x78c8bb); line.material.transparent = true; line.material.opacity = .25; line.material.depthTest = false;
+      }
+      line.renderOrder = 100; helperScene.add(line); ledGuides.set(node, {line, geometry, source: precise ? geometry : null});
+    }
+  });
+  for (const node of ledGuides.keys()) if (!alive.has(node)) dropGuide(node);
+}
+function updateLedGuides() {
+  root.updateWorldMatrix(true, true);
+  for (const [node, guide] of ledGuides) {
+    guide.line.visible = !preview && $("ledOutlines").checked && effective(node, "editorVisible");
+    if (!guide.line.visible) continue;
+    if (guide.source) guide.line.matrix.copy(node.matrixWorld); else guide.line.setFromObject(node);
+  }
+}
+function renderEditorScene() {
+  const solid = !preview && $("shading").value === "solid";
+  if (solid) for (const record of solidRecords) { record.original = record.node.material; record.node.material = record.material; }
+  try { renderer.render(scene, camera); }
+  finally { if (solid) for (const record of solidRecords) { record.node.material = record.original; record.original = null; } }
+}
 const selectionBox = new T.BoxHelper(undefined, 0xff920a);
 selectionBox.material.depthTest = false; selectionBox.material.transparent = true; selectionBox.renderOrder = 10000; selectionBox.visible = false;
 helperScene.add(selectionBox);
@@ -202,6 +252,7 @@ function pruneResources() {
 }
 function changed() {
   pruneResources();
+  syncEditorStyles();
   dirty = true;
   queueDraft();
   storeView();
@@ -449,9 +500,14 @@ function renderTree() {
   }
 }
 $("treeSearch").oninput = renderTree;
+$("ledOutlines").onchange = () => { renderNeeded = true; };
+for (const [name,color] of Object.entries(EDITOR_COLORS)) {
+  const label = document.createElement("span"), swatch = document.createElement("i");
+  swatch.style.background = "#" + color.toString(16).padStart(6,"0"); label.append(swatch, name); $("editorLegend").append(label);
+}
 $("selectionScope").onchange = () => { if (selected && !selectable(selected)) select(null); renderTree(); };
 $("showHelpers").onchange = () => { refresh(); if (selected && !selectable(selected)) select(null); };
-$("shading").onchange = () => { scene.overrideMaterial = preview || $("shading").value === "materials" ? null : solidMaterial; renderNeeded = true; };
+$("shading").onchange = () => { $("editorLegend").hidden = preview || $("shading").value !== "solid"; renderNeeded = true; };
 for (const property of ["position", "rotation", "scale"]) {
   const label = document.createElement("label");
   label.textContent =
@@ -619,6 +675,7 @@ function refresh() {
         !sourceQuad(meta(node).source)
       );
   });
+  syncEditorStyles();
   renderTree();
   fillProperties();
   renderNeeded = true;
@@ -794,7 +851,7 @@ function clearPreviewMaterials() {
 function setPreview(value) {
   clearPreviewMaterials();
   preview = value;
-  scene.overrideMaterial = preview || $("shading").value === "materials" ? null : solidMaterial;
+  $("editorLegend").hidden = preview || $("shading").value !== "solid";
   updateSelectionOutline();
   transform.detach();
   grid.visible = !preview;
@@ -1170,6 +1227,8 @@ window.addEventListener("beforeunload", (event) => {
 });
 window.addEventListener("pagehide", () => {
   stopMedia();
+  for (const node of [...ledGuides.keys()]) dropGuide(node);
+  ledGuideMaterial.dispose(); for (const material of solidMaterials.values()) material.dispose();
   renderer.dispose();
 });
 renderer.domElement.addEventListener("pointerdown", (event) => {
@@ -1392,7 +1451,8 @@ function animate(time) {
   }
   if (renderNeeded || media || testPattern || videoFileUrl) {
     updateSelectionOutline();
-    renderer.render(scene, camera);
+    updateLedGuides();
+    renderEditorScene();
     if (!preview) {
       renderer.autoClear = false;
       renderer.render(helperScene, camera); renderer.autoClear = true;

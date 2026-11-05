@@ -145,6 +145,14 @@ const unassigned=api.reconcile({...fixed,groups:[{key:'g1',output:0}]},fixturesB
 assert.throws(()=>api.reconcile({...fixed,groups:[{key:'g2',output:1}]},fixturesByGroup));
 assert.equal(api.groupsFor([{screenUid:'dmx',screen:'DMX 1',sliceUid:'d'}],fixed)[0].output,0);
 assert.equal(fixturesByGroup.find(f=>f.sliceUid==='g12p0').pixels,250);
+assert.equal(api.cableLinks(fixed).length,84);assert.equal(api.linkedNodes(fixed).size,100);
+const line=[{uid:'a',output:1,order:1,reverse:false},{uid:'b',output:1,order:2,reverse:false},{uid:'c',output:1,order:3,reverse:false},{uid:'d',output:2,order:1,reverse:false}];
+assert.equal(api.validateLinks(line,[{from:'a',to:'b'},{from:'b',to:'c'}]).length,2);
+const broken={version:1,connections:line,groups:[],links:[{from:'b',to:'c'}]};
+assert(api.linkedNodes(broken).has('a'));assert(!api.linkedNodes(broken).has('b'));assert(!api.linkedNodes(broken).has('c'));
+for(const links of [[{from:'a',to:'a'}],[{from:'b',to:'a'}],[{from:'a',to:'d'}],[{from:'b',to:'c'},{from:'c',to:'b'}],[{from:'a',to:'b'},{from:'a',to:'c'}],[{from:'a',to:'c'},{from:'b',to:'c'}]])assert.throws(()=>api.validateLinks(line,links));
+const noLinks=api.reconcile({...fixed,links:[]},fixturesByGroup);assert.equal(api.cableLinks(noLinks).length,0);assert.equal(api.linkedNodes(noLinks).size,16);
+
 
 """
         subprocess.run(['node','-e',script,str(VIEWER/'wiring.js')],check=True,capture_output=True,text=True,timeout=20)

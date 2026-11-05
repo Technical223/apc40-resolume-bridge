@@ -95,6 +95,12 @@
     .collection > summary { cursor: pointer; padding: 8px 0; color: #dce5ef; font-weight: 600; }
     .collection .tree-row { margin-left: 8px; }
     .tree-row.selected { outline: 1px solid #ff9b38; border-radius: 5px; background: #493423; }
+    #navigationHelp { position:absolute; right:12px; bottom:12px; max-width:250px; padding:8px 11px; border:1px solid #354151; border-radius:8px; background:#101820e8; color:#b9c5d3; font-size:11px; }
+    #navigationHelp summary { cursor:pointer; color:#e1e7ef; }
+    #navigationHelp p { margin:7px 0; }
+    #editorLegend { display:flex; flex-wrap:wrap; gap:5px 10px; margin-top:8px; }
+    #editorLegend span { white-space:nowrap; }
+    #editorLegend i { display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:4px; }
     #selectionBadge { position: absolute; bottom: 38px; left: 14px; color: #ffad5c; background: #101820dd; padding: 4px 8px; pointer-events: none; max-width: calc(100% - 28px); }
     #treeSearch { width: 100%; margin-bottom: 8px; }
     aside {
@@ -160,7 +166,10 @@
       height: 100%;
       touch-action: none;
     }
+    #views > label { display:flex; align-items:center; gap:6px; white-space:nowrap; font-size:12px; }
+    #views button,#views select { font-size:12px; padding:6px 8px; }
     #views {
+      padding:6px; background:#111922eb; border:1px solid #303c4a; border-radius:8px;
       position: absolute;
       left: 14px;
       top: 14px;
@@ -298,6 +307,7 @@
     <section id="viewport" aria-label="3D scene">
       <div id="views">
         <label style="margin:0">Select <select id="selectionScope"><option value="All">All</option><option>Environment</option><option>LEDs</option><option>Surfaces</option><option>Objects</option></select></label>
+        <label style="margin:0"><input id="ledOutlines" type="checkbox" checked>LED outlines</label>
         <label style="margin:0">Shading <select id="shading"><option value="solid">Solid</option><option value="materials">Materials</option></select></label>
         <button data-view="perspective">Perspective</button
         ><button data-view="front">Front</button
@@ -311,6 +321,7 @@
         ><button data-tool="rotate">Rotate</button
         ><button data-tool="scale">Scale</button>
       </div>
+      <details id="navigationHelp" open><summary>Controls &amp; colors</summary><p>Middle drag · Orbit<br>Right drag · Pan<br>Wheel · Zoom<br>Left click · Select<br>F · Frame selection<br>H · Hide · Alt+H · Show</p><div id="editorLegend" aria-label="Object colors"></div></details>
       <div id="selectionBadge" role="status">No object selected</div>
       <div id="viewLabel">Perspective · meters</div>
       <div id="previewBadge" hidden>PREVIEW · no output sent to Arena</div>
