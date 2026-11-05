@@ -46,13 +46,17 @@ The input readout distinguishes decoded **source FPS** from **render FPS**, disp
 
 The browser workflow was checked with a small model and a local H.264 loop. Missing slices show a warning; Stop returns the input to black. Large production models, live camera permissions and storage pressure still need validation before a public release.
 
-## Wiring view
+## Wiring view and physical groups
 
-In **Visualizer**, turn on **Wiring view** for a gray room with colored cable chains, direction arrows and IN / OUT labels. In **Output mapping**, select a fixture by its name, choose its **Physical output**, its **Piece in chain**, and optionally **Reverse IN / OUT**. Changes save automatically. Selecting an occupied piece position swaps the two pieces; the checkbox beside a fixture separately enables/disables it in the preview.
+**Output mapping** keeps each strip inside its physical output group. Groups explicitly named **OUTPUT 1** through **OUTPUT 16** are recognized automatically; Lumiverse IDs are never used as socket numbers. A physical output selector, including Unassigned, belongs to the whole group. Individual pieces show their inherited output and retain editable order and IN / OUT direction.
 
-The included 16-output LED profile has outputs 1–5 with ten 1 m strips each (nominally 60 pixels per piece), 6–11 with five 2 m strips (120), and 12–16 with four 5 m neons (1,250). Actual pixel counts remain those from the saved mapping, including 59/118/119-pixel pieces. Four 512-channel DMX outputs are separate from these pixel sockets.
+The 16-output profile has outputs 1–5 with ten 1 m strips each, 6–11 with five 2 m strips, and 12–16 with four 5 m neons. Actual pixel counts come from the saved mapping, including shorter pieces. DMX outputs are separate. Piece checkboxes specify what is used today: disabling five pieces in a ten-piece group leaves **5 / 10 in use**, without changing physical output ownership or Arena addresses.
 
-A Lumiverse ID does not prove the physical socket or cable order. Assignments start empty. The overlay connects consecutive assigned pieces only; it never invents missing 3D positions or sends a hardware test signal. Fixtures without known positions remain assignable in the mapper; the status reports how many assigned fixtures can be shown in 3D. Export/import selection includes wiring, per preset and space. Browser cleanup can remove local data: keep an export to transfer or back it up.
+Select multiple pieces with a **drag rectangle** over the output diagram, **Ctrl-click** to add/remove, or **Shift-click** for a range in the list. **Use selected / Do not use selected** changes the entire selection. Selection and enabled state are separate; selecting a piece never disables it.
+
+Turn on **Wiring view** for a gray room with colored chains and IN / OUT labels. In the normal Visualizer, **double-click a modeled strip** to highlight it, show green IN / red OUT, and open **Reverse direction** beside it. Reversing updates the arrows and the video sampling along that strip in the preview. It does not reverse Arena's hardware output. Order and direction share the same saved settings as the mapper.
+
+Assignments and direction save locally per preset and space, and are included in selection export/import. Existing direction settings are retained when fixed groups are recognized. Unknown group names can be assigned at group level; missing 3D positions are never invented. Export a selection to transfer or back it up. Original model geometry, actual pixel counts and Arena/DMX addressing are unchanged.
 
 ## Selecting objects and pixels
 

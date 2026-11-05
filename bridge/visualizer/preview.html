@@ -3973,6 +3973,16 @@ function polygonContains(points,x,y){
  const [xi,yi]=points[i],[xj,yj]=points[j];if((yi>y)!==(yj>y)&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)inside=!inside;
  }return inside;
 }
+function fixtureIntersectsRect(fixture,minU,minV,maxU,maxV){
+ const p=fixture.uv;if(p.some(v=>v[0]>=minU&&v[0]<=maxU&&v[1]>=minV&&v[1]<=maxV))return true;
+ if([[minU,minV],[maxU,minV],[maxU,maxV],[minU,maxV]].some(v=>polygonContains(p,...v)))return true;
+ for(let i=0;i<p.length;i++){
+  const a=p[i],b=p[(i+1)%p.length],dx=b[0]-a[0],dy=b[1]-a[1];let lo=0,hi=1,hit=true;
+  for(const [d,q] of [[-dx,a[0]-minU],[dx,maxU-a[0]],[-dy,a[1]-minV],[dy,maxV-a[1]]]){
+   if(d===0){if(q<0){hit=false;break;}}else if(d<0)lo=Math.max(lo,q/d);else hi=Math.min(hi,q/d);
+  }if(hit&&lo<=hi)return true;
+ }return false;
+}
 function fixtureHitDistance(fixture,u,v,width,height){
  if(polygonContains(fixture.uv,u,v))return 0;
  const points=fixture.uv;let distance=Infinity;
@@ -4007,13 +4017,13 @@ material.emissive?.setRGB(0,0,0);material.emissiveIntensity=0;material.emissiveM
       vec2 uv = crop.xy + vUv * crop.zw;
       vec3 c = texture2D(map, uv).rgb * gain;
       c = mix(c, c*1.5, vSel*0.55);
-      gl_FragColor = vec4(c, 1.0); }`}),vr=[],ji=[],qi={metrovka:1,neon:1};function Oc(){let s={metrovka:[],neon:[]};sn.forEach((l,f)=>l.pos.forEach((h,u)=>s[l.kind].push({fi:f,k:u})));let e={metrovka:new Zs(.006,8,6),neon:new Ks(.011,.011,1,10,1,!0)},t=new Oe,n=new Mt,i=new v(0,1,0),r=new v,a=new v,o=new v,c=new v;Object.entries(s).forEach(([l,f])=>{let h=e[l].clone(),u=new si(h,v4,f.length),p=new Float32Array(f.length*2),$=new Float32Array(f.length),g=[];f.forEach(({fi:m,k:d},_)=>{let b=sn[m],A=b.pos;if(r.fromArray(A[d]),l==="neon"){let T=Math.max(0,d-1),y=Math.min(A.length-1,d+1);o.fromArray(A[y]).sub(a.fromArray(A[T]));let B=o.length()/(y-T);n.setFromUnitVectors(i,o.normalize()),c.set(qi.neon,B*(+document.getElementById("neonFill")?.value||.97),qi.neon)}else n.identity(),c.setScalar(qi.metrovka);previewEnabled(b,d)||c.set(0,0,0),t.compose(r,n,c),u.setMatrixAt(_,t),p[_*2]=b.uv[d][0],p[_*2+1]=b.uv[d][1],g.push(m)}),h.setAttribute("aUv",new b0(p,2)),h.setAttribute("aSel",new b0($,1)),u.userData.kind=l,u.frustumCulled=!1,U0.add(u),ji.push(u),vr.push(g)})}Oc();function F4(){ji.forEach(s=>{U0.remove(s),s.geometry.dispose()}),ji.length=0,vr.length=0,Oc(),Qc(Ji)}var hi=192,Vi=108,Xo=document.createElement("canvas");Xo.width=hi;Xo.height=Vi;var xc=Xo.getContext("2d",{willReadFrequently:!0}),M4=sn.map(s=>{let e=new v;s.pos.forEach(r=>e.add(new v().fromArray(r))),e.divideScalar(s.pos.length);let t=new J0(0,0,6,2);t.position.copy(e),(!qo||location.hash.includes("lights"))&&U0.add(t);let n=Math.max(1,Math.floor(s.uv.length/12)),i=s.uv.filter((r,a)=>a%n===0);return{L:t,samples:i,w:s.kind==="neon"?5:1.6,px:s.pixels}}),Vo=new or(0,0);U0.add(Vo);var Tc=new be,ko=1.5;function D4(){if(!M4.length)return null;let s=_0==="test"?ui:At,e=_0==="test"?Cn:At.videoWidth,t=_0==="test"?Bn:At.videoHeight;if(!e||!t)return null;xc.drawImage(s,yt.x*e,yt.y*t,yt.w*e,yt.h*t,0,0,hi,Vi);let n=xc.getImageData(0,0,hi,Vi).data,i=0,r=0,a=0,o=0;return M4.forEach(({L:c,samples:l,w:f,px:h})=>{if(!l.length){c.intensity=0;return;}let u=0,p=0,$=0;l.forEach(([m,d])=>{let _=Math.min(hi-1,Math.floor(m*hi)),A=(Math.min(Vi-1,Math.floor((1-d)*Vi))*hi+_)*4;u+=n[A],p+=n[A+1],$+=n[A+2]});let g=l.length*255;c.color.setRGB(u/g,p/g,$/g,tt),c.intensity=ko*f,i+=c.color.r*h,r+=c.color.g*h,a+=c.color.b*h,o+=h}),Tc.setRGB(o?i/o:0,o?r/o:0,o?a/o:0),Vo.color.copy(Tc),Vo.intensity=ko*.45,!0}var Yi=Ye("inset"),i0=Yi.getContext("2d");function P4(){
+      gl_FragColor = vec4(c, 1.0); }`}),vr=[],ji=[],qi={metrovka:1,neon:1};function Oc(){let s={metrovka:[],neon:[]};sn.forEach((l,f)=>l.pos.forEach((h,u)=>s[l.kind].push({fi:f,k:u})));let e={metrovka:new Zs(.006,8,6),neon:new Ks(.011,.011,1,10,1,!0)},t=new Oe,n=new Mt,i=new v(0,1,0),r=new v,a=new v,o=new v,c=new v;Object.entries(s).forEach(([l,f])=>{let h=e[l].clone(),u=new si(h,v4,f.length),p=new Float32Array(f.length*2),$=new Float32Array(f.length),g=[];f.forEach(({fi:m,k:d},_)=>{let b=sn[m],A=b.pos;if(r.fromArray(A[d]),l==="neon"){let T=Math.max(0,d-1),y=Math.min(A.length-1,d+1);o.fromArray(A[y]).sub(a.fromArray(A[T]));let B=o.length()/(y-T);n.setFromUnitVectors(i,o.normalize()),c.set(qi.neon,B*(+document.getElementById("neonFill")?.value||.97),qi.neon)}else n.identity(),c.setScalar(qi.metrovka);let sourcePixel=window.apcWiring?.pixelIndex(b.sliceUid,d,b.uv.length)??d;previewEnabled(b,sourcePixel)||c.set(0,0,0),t.compose(r,n,c),u.setMatrixAt(_,t),p[_*2]=b.uv[sourcePixel][0],p[_*2+1]=b.uv[sourcePixel][1],g.push(m)}),h.setAttribute("aUv",new b0(p,2)),h.setAttribute("aSel",new b0($,1)),u.userData.kind=l,u.frustumCulled=!1,U0.add(u),ji.push(u),vr.push(g)})}Oc();function F4(){ji.forEach(s=>{U0.remove(s),s.geometry.dispose()}),ji.length=0,vr.length=0,Oc(),Qc(Ji)}var hi=192,Vi=108,Xo=document.createElement("canvas");Xo.width=hi;Xo.height=Vi;var xc=Xo.getContext("2d",{willReadFrequently:!0}),M4=sn.map(s=>{let e=new v;s.pos.forEach(r=>e.add(new v().fromArray(r))),e.divideScalar(s.pos.length);let t=new J0(0,0,6,2);t.position.copy(e),(!qo||location.hash.includes("lights"))&&U0.add(t);let n=Math.max(1,Math.floor(s.uv.length/12)),i=s.uv.filter((r,a)=>a%n===0);return{L:t,samples:i,w:s.kind==="neon"?5:1.6,px:s.pixels}}),Vo=new or(0,0);U0.add(Vo);var Tc=new be,ko=1.5;function D4(){if(!M4.length)return null;let s=_0==="test"?ui:At,e=_0==="test"?Cn:At.videoWidth,t=_0==="test"?Bn:At.videoHeight;if(!e||!t)return null;xc.drawImage(s,yt.x*e,yt.y*t,yt.w*e,yt.h*t,0,0,hi,Vi);let n=xc.getImageData(0,0,hi,Vi).data,i=0,r=0,a=0,o=0;return M4.forEach(({L:c,samples:l,w:f,px:h})=>{if(!l.length){c.intensity=0;return;}let u=0,p=0,$=0;l.forEach(([m,d])=>{let _=Math.min(hi-1,Math.floor(m*hi)),A=(Math.min(Vi-1,Math.floor((1-d)*Vi))*hi+_)*4;u+=n[A],p+=n[A+1],$+=n[A+2]});let g=l.length*255;c.color.setRGB(u/g,p/g,$/g,tt),c.intensity=ko*f,i+=c.color.r*h,r+=c.color.g*h,a+=c.color.b*h,o+=h}),Tc.setRGB(o?i/o:0,o?r/o:0,o?a/o:0),Vo.color.copy(Tc),Vo.intensity=ko*.45,!0}var Yi=Ye("inset"),i0=Yi.getContext("2d");function P4(){
 let w=Yi.width,h=Yi.height,source=_0==="test"?ui:At,sw=_0==="test"?Cn:At.videoWidth,sh=_0==="test"?Bn:At.videoHeight;
 i0.fillStyle="#000";i0.fillRect(0,0,w,h);
 if(sw&&sh)i0.drawImage(source,yt.x*sw,yt.y*sh,yt.w*sw,yt.h*sh,0,0,w,h);
 for(const fixture of (wn.outputFixtures||[])){
  const points=fixture.uv;if(!points.length||(!mappingEditing&&fixtureSelection.disabled[fixture.sliceUid]===true))continue;
- i0.strokeStyle=mappingSelected===fixture.sliceUid?"#ff9b38":fixtureSelection.disabled[fixture.sliceUid]===true?"#ef6972":"rgba(255,255,255,.7)";i0.lineWidth=mappingSelected===fixture.sliceUid?4:1;i0.beginPath();
+ i0.strokeStyle=mappingSelection.has(fixture.sliceUid)?"#ff9b38":fixtureSelection.disabled[fixture.sliceUid]===true?"#ef6972":"rgba(255,255,255,.7)";i0.lineWidth=mappingSelection.has(fixture.sliceUid)?4:1;i0.beginPath();
  points.forEach(([u,v],index)=>index?i0.lineTo(u*w,(1-v)*h):i0.moveTo(u*w,(1-v)*h));
  i0.closePath();i0.stroke();i0.fillStyle="#0f0";i0.fillRect(points[0][0]*w-1,(1-points[0][1])*h-1,2,2);
 }drawMappingPixelOverlay();}
@@ -4154,6 +4164,7 @@ mappingEditor.innerHTML='<header><div><strong>Output editor</strong><p>Select th
 document.body.append(mappingEditor);
 const editMapping=document.createElement("button");editMapping.textContent="Edit output mapping";Ye("panel").querySelector(".body").prepend(editMapping);
 let mappingEditing=false,mappingSelected=null,pixelEditing=false,mappingPixelPage=0,mappingPixelSelected=-1;
+let mappingSelection=new Set(),mappingAnchor=null,suppressMappingClick=false;
 const pixelControls=document.createElement("section");pixelControls.hidden=true;pixelControls.id="mappingPixelControls";
 pixelControls.innerHTML='<strong>Pixel selection · magnified</strong><p>Click a numbered pixel to enable or disable it. Pixel numbers start at 1.</p><label>Pixels <select id="mappingPixelPage" aria-label="Pixel range"></select></label><div id="mappingPixelGrid" style="display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px;margin-top:8px"></div><p id="mappingPixelStatus"></p>';
 mappingEditor.append(pixelControls);
@@ -4173,6 +4184,22 @@ function renderPixelGrid(){
  }
  Ye("mappingPixelStatus").textContent=mappingPixelSelected>=0?'Pixel '+(mappingPixelSelected+1)+' selected':'Choose a numbered pixel';
 }
+function selectMapping(uid,event={}){
+ if(event.shiftKey&&mappingAnchor){
+  const ids=[...Ye("mappingList").querySelectorAll('.fixtureRow')].map(row=>row.dataset.uid),a=ids.indexOf(mappingAnchor),b=ids.indexOf(uid);
+  if(a>=0&&b>=0){if(!event.ctrlKey&&!event.metaKey)mappingSelection.clear();for(const id of ids.slice(Math.min(a,b),Math.max(a,b)+1))mappingSelection.add(id);}
+ }else if(event.ctrlKey||event.metaKey){if(mappingSelection.has(uid))mappingSelection.delete(uid);else mappingSelection.add(uid);mappingAnchor=uid;}
+ else {mappingSelection=new Set(uid?[uid]:[]);mappingAnchor=uid;}
+ mappingSelected=mappingSelection.has(uid)?uid:[...mappingSelection].at(-1)||null;mappingPixelPage=0;renderMappingList();window.apcWiring?.refresh();
+}
+function paintMappingSelection(){
+ for(const row of Ye('mappingList').querySelectorAll('.fixtureRow')){const selected=mappingSelection.has(row.dataset.uid);row.classList.toggle('selected',selected);row.setAttribute('aria-selected',String(selected));}
+ Ye('mappingSelectionCount').textContent=mappingSelection.size+' selected';Ye('mappingEnableSelected').disabled=Ye('mappingDisableSelected').disabled=!mappingSelection.size;
+}
+const bulkTools=document.createElement('div');bulkTools.className='mappingTools';bulkTools.innerHTML='<strong id="mappingSelectionCount">0 selected</strong><button id="mappingEnableSelected">Use selected</button><button id="mappingDisableSelected">Do not use selected</button><button id="mappingClearSelected">Clear selection</button><small>Drag a rectangle, Ctrl-click to add/remove, Shift-click for a range.</small>';
+mappingEditor.insertBefore(bulkTools,Ye('mappingInfo'));
+for(const [id,disabled] of [['mappingEnableSelected',false],['mappingDisableSelected',true]])Ye(id).onclick=()=>{for(const uid of mappingSelection)fixtureSelection.disabled[uid]=disabled;saveFixtureSelection();};
+Ye('mappingClearSelected').onclick=()=>selectMapping(null);
 function saveFixtureSelection(){
  try{localStorage.setItem("apc40-fixtures:"+wn.preset,JSON.stringify(fixtureSelection));}
  catch(error){di("Could not save preview selection: "+error.message);}
@@ -4183,6 +4210,9 @@ function fixtureTitle(item){return item.slice||"Fixture "+item.sliceUid;}
 function renderMappingList(){
  const list=Ye("mappingList");list.replaceChildren();
  const query=Ye("mappingSearch").value.toLocaleLowerCase(),items=wn.outputFixtures||[];
+ const known=new Set(items.map(f=>f.sliceUid));mappingSelection=new Set([...mappingSelection].filter(id=>known.has(id)));
+ Ye('mappingSelectionCount').textContent=mappingSelection.size+' selected';
+ Ye('mappingEnableSelected').disabled=Ye('mappingDisableSelected').disabled=!mappingSelection.size;
  const enabled=items.filter(item=>fixtureSelection.disabled[item.sliceUid]!==true).length;
  Ye("mappingInfo").textContent=wn.preset+" · "+enabled+" / "+items.length+" enabled · saved automatically";
  const grouped=new Map();for(const item of items){const key=item.screenUid||item.screen;if(!grouped.has(key))grouped.set(key,[]);grouped.get(key).push(item);}
@@ -4192,13 +4222,13 @@ function renderMappingList(){
   const heading=document.createElement("summary"),check=document.createElement("input");check.type="checkbox";
   const count=group.filter(item=>fixtureSelection.disabled[item.sliceUid]!==true).length;check.checked=count===group.length;check.indeterminate=count>0&&count<group.length;
   check.onclick=event=>event.stopPropagation();check.onchange=()=>{for(const item of group)fixtureSelection.disabled[item.sliceUid]=!check.checked;saveFixtureSelection();};
-  const title=document.createElement("span");title.textContent=group[0].screen+(group[0].lumiverse!==""?" · Lumiverse ID "+group[0].lumiverse:"");heading.append(check,title);section.append(heading);
+  const title=document.createElement("span");title.textContent=group[0].screen+(group[0].lumiverse!==""?" · Lumiverse ID "+group[0].lumiverse:"");title.textContent+=" | "+count+" / "+group.length+" in use";heading.append(check,title);section.append(heading);if(window.apcWiring)section.append(window.apcWiring.groupControl(group));
   for(const item of visible){
-   const row=document.createElement("div");row.className="fixtureRow"+(mappingSelected===item.sliceUid?" selected":"");
+   const row=document.createElement("div");row.dataset.uid=item.sliceUid;row.className="fixtureRow"+(mappingSelection.has(item.sliceUid)?" selected":"");row.setAttribute("aria-selected",String(mappingSelection.has(item.sliceUid)));
    const checkbox=document.createElement("input");checkbox.type="checkbox";checkbox.setAttribute("aria-label","Enable "+fixtureTitle(item));checkbox.checked=fixtureSelection.disabled[item.sliceUid]!==true;
-   checkbox.onchange=()=>{mappingSelected=item.sliceUid;fixtureSelection.disabled[item.sliceUid]=!checkbox.checked;saveFixtureSelection();};
+   checkbox.onchange=()=>{mappingSelected=item.sliceUid;if(!mappingSelection.has(item.sliceUid))mappingSelection=new Set([item.sliceUid]);fixtureSelection.disabled[item.sliceUid]=!checkbox.checked;saveFixtureSelection();};
    const name=document.createElement("button");name.className="fixtureName";name.textContent=fixtureTitle(item);const meta=document.createElement("small");meta.textContent=item.pixels?item.pixels+" pixels":"Video slice";
-   row.append(checkbox,name,meta);row.onclick=event=>{if(event.target===checkbox)return;mappingSelected=item.sliceUid;renderMappingList();window.apcWiring?.refresh();};section.append(row);
+   row.append(checkbox,name,meta);row.onclick=event=>{if(event.target===checkbox)return;selectMapping(item.sliceUid,event);};section.append(row);
   }list.append(section);
  }
  renderPixelGrid();
@@ -4209,16 +4239,29 @@ Ye("mappingSearch").oninput=renderMappingList;
 for(const [id,disabled] of [["mappingAll",false],["mappingNone",true]])Ye(id).onclick=()=>{for(const item of wn.outputFixtures||[])fixtureSelection.disabled[item.sliceUid]=disabled;saveFixtureSelection();};
 Ye("mappingPixels").onclick=()=>{const item=(wn.outputFixtures||[]).find(f=>f.sliceUid===mappingSelected);if(!item||!item.pixels||item.pixels>4096){Ye("mappingHint").textContent="Select a fixture with 1–4096 pixels first.";return;}pixelEditing=!pixelEditing;mappingPixelPage=0;renderPixelGrid();};
 Yi.addEventListener("click",event=>{
- if(!mappingEditing)return;const rect=Yi.getBoundingClientRect(),u=(event.clientX-rect.left)/rect.width,v=1-(event.clientY-rect.top)/rect.height;
+ if(!mappingEditing)return;if(suppressMappingClick){suppressMappingClick=false;return;}const rect=Yi.getBoundingClientRect(),u=(event.clientX-rect.left)/rect.width,v=1-(event.clientY-rect.top)/rect.height;
  const items=wn.outputFixtures||[],selected=items.find(f=>f.sliceUid===mappingSelected);
  if(pixelEditing&&selected){
   let nearest=-1,distance=Infinity;for(let i=0;i<selected.pixels;i++){const p=fixturePixelUV(selected,i),d=(p[0]-u)**2*rect.width**2+(p[1]-v)**2*rect.height**2;if(d<distance){distance=d;nearest=i;}}
   if(nearest>=0&&distance<144){const mask=fixtureSelection.pixels[selected.sliceUid]||(fixtureSelection.pixels[selected.sliceUid]={});mask[nearest]=!mask[nearest];mappingPixelSelected=nearest;mappingPixelPage=Math.floor(nearest/64);saveFixtureSelection();}return;
  }
- const hits=items.filter(f=>fixtureHitDistance(f,u,v,rect.width,rect.height)<=7);if(!hits.length)return;
+ const hits=items.filter(f=>fixtureHitDistance(f,u,v,rect.width,rect.height)<=7);if(!hits.length){if(!event.ctrlKey&&!event.shiftKey)selectMapping(null);return;}
  hits.sort((a,b)=>{const area=f=>Math.abs(f.uv.reduce((sum,p,i)=>{const q=f.uv[(i+1)%f.uv.length];return sum+p[0]*q[1]-q[0]*p[1];},0));return fixtureHitDistance(a,u,v,rect.width,rect.height)-fixtureHitDistance(b,u,v,rect.width,rect.height)||area(a)-area(b);});
- const item=hits[0];mappingSelected=item.sliceUid;mappingPixelPage=0;renderMappingList();window.apcWiring?.refresh();
+ const item=hits[0];selectMapping(item.sliceUid,event);
 });
+const marquee=document.createElement('div');marquee.id='mappingMarquee';marquee.hidden=true;marquee.style.cssText='position:fixed;pointer-events:none;z-index:8;border:1px solid #ff9b38;background:#ff9b3828';document.body.append(marquee);
+let mappingDrag=null;
+Yi.addEventListener('pointerdown',event=>{if(!mappingEditing||pixelEditing||event.button!==0)return;mappingDrag={x:event.clientX,y:event.clientY,add:event.ctrlKey||event.metaKey||event.shiftKey,seed:new Set(mappingSelection),dragged:false};Yi.setPointerCapture(event.pointerId);});
+Yi.addEventListener('pointermove',event=>{
+ if(!mappingDrag)return;const d=mappingDrag;if(Math.hypot(event.clientX-d.x,event.clientY-d.y)<4&&!d.dragged)return;d.dragged=true;
+ const r=Yi.getBoundingClientRect(),left=Math.max(r.left,Math.min(d.x,event.clientX)),right=Math.min(r.right,Math.max(d.x,event.clientX)),top=Math.max(r.top,Math.min(d.y,event.clientY)),bottom=Math.min(r.bottom,Math.max(d.y,event.clientY));
+ marquee.hidden=false;Object.assign(marquee.style,{left:left+'px',top:top+'px',width:Math.max(0,right-left)+'px',height:Math.max(0,bottom-top)+'px'});
+ mappingSelection=d.add?new Set(d.seed):new Set();
+ for(const item of wn.outputFixtures||[])if(fixtureIntersectsRect(item,(left-r.left)/r.width,1-(bottom-r.top)/r.height,(right-r.left)/r.width,1-(top-r.top)/r.height))mappingSelection.add(item.sliceUid);
+ mappingSelected=[...mappingSelection].at(-1)||null;paintMappingSelection();
+});
+Yi.addEventListener('pointerup',event=>{if(!mappingDrag)return;suppressMappingClick=mappingDrag.dragged;mappingDrag=null;marquee.hidden=true;setTimeout(()=>suppressMappingClick=false,0);renderPixelGrid();window.apcWiring?.refresh();if(Yi.hasPointerCapture(event.pointerId))Yi.releasePointerCapture(event.pointerId);});
+Yi.addEventListener('pointercancel',()=>{mappingDrag=null;marquee.hidden=true;});
 function drawMappingPixelOverlay(){
  if(!mappingEditing||!pixelEditing)return;const item=(wn.outputFixtures||[]).find(f=>f.sliceUid===mappingSelected);if(!item)return;
  for(let i=0;i<item.pixels;i++){const [u,v]=fixturePixelUV(item,i);i0.fillStyle=previewEnabled(item,i)?"#67e8bd":"#ef6972";i0.fillRect(u*Yi.width-2,(1-v)*Yi.height-2,4,4);}
@@ -4303,10 +4346,12 @@ const viewTabs=document.createElement('nav');viewTabs.setAttribute('aria-label',
 const wiringPositions=new Map(sn.map(f=>[f.sliceUid,f.pos])),wiringPoint=new v;
 window.apcWiring=window.APCWiring.install({
  layout:()=>wn,selected:()=>mappingSelected,navigation:viewTabs,mapper:mappingEditor,canvas:c0.domElement,message:di,
+ isMapping:()=>mappingEditing,select:uid=>selectMapping(uid),changed:()=>{F4();renderMappingList();},
  positions:uid=>wiringPositions.get(uid),visible:uid=>fixtureSelection.disabled[uid]!==true,
  project:point=>{const p=wiringPoint.fromArray(point).project(R0);return p.z>=-1&&p.z<=1&&Number.isFinite(p.x)&&Number.isFinite(p.y)?[(p.x+1)*innerWidth/2,(1-p.y)*innerHeight/2]:null;},
  setWiring:active=>{ji.forEach(mesh=>mesh.visible=!active);}
 });
+renderMappingList();F4();
 Ye('mappingTab').onclick=()=>editMapping.click();
 if(location.hash==='#mapping')setMappingEditing(true);
 viewTabs.querySelector('a').onclick=event=>{event.preventDefault();if(mappingEditing)Ye('mappingDone').click();};

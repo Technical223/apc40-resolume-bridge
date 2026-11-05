@@ -79,9 +79,16 @@ const thin={uv:[[0,1],[.001,1],[.001,0],[0,0]]};
 assert(state.fixtureHitDistance(thin,.005,.5,1000,500)<7);
 assert(state.fixtureHitDistance(thin,.02,.5,1000,500)>7);
 assert.strictEqual(state.fixtureHitDistance(thin,.0005,.5,1000,500),0);
+assert(state.fixtureIntersectsRect(thin,-.01,.2,.01,.4));
+assert(!state.fixtureIntersectsRect(thin,.1,.2,.2,.4));
+assert(state.fixtureIntersectsRect(item,.2,.2,.3,.3));
+const diagonal={uv:[[0,0],[.01,0],[1,1],[.99,1]]};
+assert(state.fixtureIntersectsRect(diagonal,.45,.45,.55,.55));
+assert(!state.fixtureIntersectsRect(diagonal,.1,.8,.2,.9));
+
 
 assert.strictEqual(state.fixturePixelUV(item,0)[1],.75);assert.strictEqual(state.fixturePixelUV(item,1)[1],.25);
-assert(html.includes('previewEnabled(b,d)||c.set(0,0,0)'));
+assert(html.includes('previewEnabled(b,sourcePixel)||c.set(0,0,0)'));
 assert(html.includes('drawMappingPixelOverlay();'));
 console.log('Selection checks passed');
 '''
@@ -109,6 +116,17 @@ for(const bad of [null,{}, {version:1,connections:[null]}, {version:1,connection
  {version:1,connections:[{...a,order:0}]}, {version:1,connections:[{...a,output:12,order:5}]},
  {version:1,connections:[{...a,reverse:'false'}]}, {version:1,connections:[{...a,uid:''}]}])assert.throws(()=>api.validate(bad));
 assert.equal(api.validate({version:1,connections:[]}).connections.length,0);
+const fixturesByGroup=api.outputs.flatMap(o=>Array.from({length:o.pieces},(_,i)=>({screenUid:'g'+o.id,screen:'OUTPUT '+o.id+' LED',sliceUid:'g'+o.id+'p'+i,pixels:o.id>=12?250:59,lumiverse:o.id===5?'8':'0'})));
+let fixed=api.reconcile({version:1,connections:[]},fixturesByGroup);
+assert.equal(fixed.connections.length,100);assert.equal(fixed.connections.find(c=>c.uid==='g5p0').output,5);
+assert.equal(fixed.connections.find(c=>c.uid==='g6p0').output,6);assert.equal(fixed.connections.find(c=>c.uid==='g11p4').output,11);assert.equal(fixed.connections.find(c=>c.uid==='g16p3').output,16);
+fixed.connections.find(c=>c.uid==='g1p0').reverse=true;
+assert.equal(api.reconcile(fixed,fixturesByGroup).connections.find(c=>c.uid==='g1p0').reverse,true);
+const unassigned=api.reconcile({...fixed,groups:[{key:'g1',output:0}]},fixturesByGroup);assert.equal(unassigned.connections.length,90);
+assert.throws(()=>api.reconcile({...fixed,groups:[{key:'g2',output:1}]},fixturesByGroup));
+assert.equal(api.groupsFor([{screenUid:'dmx',screen:'DMX 1',sliceUid:'d'}],fixed)[0].output,0);
+assert.equal(fixturesByGroup.find(f=>f.sliceUid==='g12p0').pixels,250);
+
 """
         subprocess.run(['node','-e',script,str(VIEWER/'wiring.js')],check=True,capture_output=True,text=True,timeout=20)
 
