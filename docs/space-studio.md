@@ -1,6 +1,6 @@
 # Space Studio — experimental scene editor
 
-Open **Visualizer → Open Space Studio**. The editor stays in the same browser tab.
+Open **APC40 Bridge → Visualizer → 3D Editor**. **Preview** returns to the same visualizer; no second application or installation is required. Both views load from the same `visualizer` folder. The editor stays in the same browser tab.
 It edits a local preview project, never Arena, Advanced Output or DMX.
 
 ## Build a space

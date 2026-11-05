@@ -4245,7 +4245,7 @@ function setupProjection(){
  for(const node of shells){const board=new node.constructor(flatBoard(node),boardMaterial);board.userData.board=true;board.position.copy(node.position);board.quaternion.copy(node.quaternion);board.scale.copy(node.scale);node.parent.add(board);node.visible=false;boards.push(board);}
  Ye("projStatus").textContent=boards.length?boards.length+" flat boards replace the mesh shells. Preview only.":"No mesh shells in this room model to turn into boards.";
 }
-const studioLink=document.createElement('a');studioLink.href='editor.html'+location.search;studioLink.textContent='Open Space Studio · experimental';studioLink.style.cssText='display:block;color:#74e6c1;padding:12px 0';Ye('panel').querySelector('.body').prepend(studioLink);
+const viewTabs=document.createElement('nav');viewTabs.setAttribute('aria-label','Visualizer views');viewTabs.style.cssText='position:fixed;z-index:20;top:0;left:0;right:0;height:48px;background:#101820;border-bottom:1px solid #303b4b;display:flex;align-items:center;gap:24px;padding:0 20px;font:13px system-ui;color:#edf2f7';viewTabs.innerHTML='<strong>APC40 Visualizer</strong><a aria-current="page" style="color:#74e6c1" href="preview.html'+location.search+'">Preview</a><a style="color:#cad7e2" href="editor.html'+location.search+'">3D Editor <small>Preview build</small></a>';document.body.prepend(viewTabs);Ye('panel').style.top='62px';Ye('panel').style.maxHeight='calc(100vh - 90px)';
 Ko();window.__preview={FIX:sn,scene:U0,camera:R0,setView:jo,frame:Ko};})();
 </script>
 </body>
