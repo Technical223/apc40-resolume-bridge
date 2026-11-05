@@ -46,6 +46,28 @@ class ConversionTest(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError,'stopped'):convert.convert_model(b'BLENDER','.blend',executable='fake-blender')
 
 class EditorTest(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('node'),'Node checks explicit outliner fold state')
+    def test_selected_object_does_not_expand_closed_collection(self):
+        script=r"""
+import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';
+const source=fs.readFileSync('bridge/visualizer/editor.js','utf8');
+const code=source.slice(source.indexOf('const collectionStateKey ='),source.indexOf('$("treeSearch").oninput'));
+class Element {constructor(){this.children=[];this.style={};this.value='';}append(...items){this.children.push(...items);}replaceChildren(){this.children=[];}setAttribute(){} }
+const controls={tree:new Element(),treeSearch:{value:''},selectionScope:{value:'All'}};
+const node={isMesh:true,name:'Wall',userData:{apcEditor:{editorVisible:true,active:true}}};
+let saved=JSON.stringify({Environment:false});
+const context={URLSearchParams,location:{search:''},localStorage:{getItem(){return saved;},setItem(key,value){saved=value;}},document:{createElement(){return new Element();}},$:id=>controls[id],root:{traverse(fn){fn(node);}},selected:node,objectCategory(){return 'Environment';},objectLabel(){return 'Wall';},meta:n=>n.userData.apcEditor,effective:()=>true,select(){},remember(){},changed(){}};
+vm.createContext(context);vm.runInContext(code,context);context.refresh=()=>context.renderTree();context.renderTree();
+assert.equal(controls.tree.children[0].open,false);
+controls.treeSearch.value='Wall';context.renderTree();assert.equal(controls.tree.children[0].open,false);
+const summary=controls.tree.children[0].children[0];summary.children[0].onclick({preventDefault(){},stopPropagation(){}});
+assert.equal(controls.tree.children[0].open,false);
+summary.onclick({target:{closest(){return null;}},preventDefault(){}});
+context.renderTree();assert.equal(controls.tree.children[0].open,true);assert.equal(JSON.parse(saved).Environment,true);
+"""
+        result=subprocess.run(['node','--input-type=module','-e',script],cwd=ROOT,capture_output=True,text=True,encoding='utf-8',timeout=20)
+        self.assertEqual(result.returncode,0,result.stderr)
+
     @unittest.skipUnless(shutil.which('node'),'Node checks object collections')
     def test_object_collections_preserve_model_metadata(self):
         script=r"""

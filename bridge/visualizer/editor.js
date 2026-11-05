@@ -461,7 +461,9 @@ function select(node) {
   storeView();
   renderNeeded = true;
 }
-const openCollections = new Set(["Environment", "LEDs", "Surfaces"]);
+const collectionStateKey = "apc40-tree-folds:" + (new URLSearchParams(location.search).get("space") || "default");
+let collectionState = {Environment:true, LEDs:true, Surfaces:true};
+try { const saved=JSON.parse(localStorage.getItem(collectionStateKey)||"null");if(saved&&typeof saved==="object")for(const key of ["Environment","LEDs","Surfaces","Objects","Helpers"])if(typeof saved[key]==="boolean")collectionState[key]=saved[key]; } catch {}
 function selectable(node) {
   return effective(node, "editorVisible") &&
     ($("showHelpers").checked || objectCategory(node) !== "Helpers") &&
@@ -478,13 +480,13 @@ function renderTree() {
     const visible = members.filter(node => !query || (objectLabel(node) + " " + category + " " + (Array.isArray(node.material) ? node.material : [node.material]).map(m => m?.name || "").join(" ")).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().includes(query));
     if (!visible.length) continue;
     const section = document.createElement("details"), summary = document.createElement("summary");
-    section.className = "collection"; section.open = !!query || openCollections.has(category) || visible.includes(selected);
+    section.className = "collection"; section.open = collectionState[category] === true;
     summary.textContent = category + " · " + members.length;
     const hide = document.createElement("button"); hide.textContent = "Eye"; hide.title = "Show / hide " + category;
     hide.style.cssText = "float:right;padding:0 5px;font-size:11px";
     hide.onclick = event => { event.preventDefault(); event.stopPropagation(); remember(); const show = !members.some(n => effective(n,"editorVisible")); for (const n of members) meta(n).editorVisible = show; refresh(); changed(); };
     summary.append(hide); section.append(summary);
-    section.ontoggle = () => section.open ? openCollections.add(category) : openCollections.delete(category);
+    summary.onclick = event => { if(event.target.closest("button,input,select"))return;event.preventDefault();section.open=!section.open;collectionState[category]=section.open;try{localStorage.setItem(collectionStateKey,JSON.stringify(collectionState));}catch{} };
     for (const node of visible) {
       const data = meta(node), row = document.createElement("div");
       row.className = "tree-row" + (selected === node ? " selected" : ""); row.setAttribute("role","treeitem"); row.setAttribute("aria-selected",String(selected === node));
