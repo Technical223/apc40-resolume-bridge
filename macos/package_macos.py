@@ -32,6 +32,13 @@ def build(destination, require_native=False):
         "TESTER.md": ROOT / "macos/TESTER.md",
         "LICENSE": ROOT / "LICENSE",
     }
+    for file in (ROOT / "bridge/visualizer").glob("editor*"):
+        if file.is_file():
+            files[APP + "Resources/visualizer/" + file.name] = file
+    files[APP + "Resources/visualizer/model_convert.py"] = ROOT / "bridge/visualizer/model_convert.py"
+    for file in (ROOT / "bridge/visualizer/editor-vendor").iterdir():
+        if file.is_file():
+            files[APP + "Resources/visualizer/editor-vendor/" + file.name] = file
     revision = subprocess.run(["git", "rev-parse", "HEAD"], cwd=ROOT,
                               capture_output=True, text=True, check=True).stdout.strip()
     plist = dict(CFBundleName="APC40 Bridge macOS Preview", CFBundleDisplayName="APC40 Bridge macOS Preview",
@@ -40,7 +47,7 @@ def build(destination, require_native=False):
                  LSUIElement=False, NSHighResolutionCapable=True,
                  NSAppTransportSecurity={"NSAllowsLocalNetworking":True})
     payloads = {name: path.read_bytes() for name, path in files.items()}
-    for name in ("preview.html","prepare.py","launcher.py","physical-layout.json","room-current.glb","THIRD-PARTY-NOTICES.txt"):
+    for name in ("workspace.js","preview.html","wiring.js","prepare.py","launcher.py","physical-layout.json","room-current.glb","THIRD-PARTY-NOTICES.txt"):
         payloads[APP+"Resources/visualizer/"+name]=(ROOT/"bridge/visualizer"/name).read_bytes()
     native=False
     if sys.platform=="darwin":

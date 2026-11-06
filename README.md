@@ -28,9 +28,17 @@ Click a control in **Controller Studio**. Choose its color, blink speed, source 
 
 *Simulate a value to try a rule, or switch to Live bridge feedback to see the bridge’s output.*
 
+## In development: one Bridge workspace
+
+The development branch embeds **Visualizer → Output mapping → 3D Editor** inside the Windows Bridge window. No Chrome tab or separate editor app. **Workspace** exports/imports saved scenes, mapping, appearance and cached video between the old browser and Bridge; original browser data stays intact.
+
+This is a development preview, **not included in the stable download above**. Windows uses Microsoft WebView2. The same WebGL renderer is retained; embedding it does not guarantee higher FPS. [Setup, migration and renderer roadmap](docs/native-visualizer.md).
+
+**Want to build this together?** I'm looking for collaborators in graphics, C#/WebView2, Spout, macOS and real-world testing. AI-assisted contributors are welcome too: readable changes and honest tests matter. [Join the development](CONTRIBUTING.md#build-the-next-version-together).
+
 ## Open your stage
 
-Click **Visualizer** on the dashboard to open the optional browser preview. Adjust the room, camera and lighting without changing Arena’s outputs.
+In the stable release, click **Visualizer** on the dashboard to open the optional browser preview. Adjust the room, camera and lighting without changing Arena’s outputs.
 
 ![Red and blue LED content on the stage in the browser visualizer](docs/media/showcase/13_stage-red-blue.gif)
 

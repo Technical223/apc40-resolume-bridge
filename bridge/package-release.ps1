@@ -5,12 +5,13 @@ $Repo=Split-Path $PSScriptRoot -Parent
 $stage=Join-Path $WorkDirectory ('apc40-package-' + [guid]::NewGuid().ToString('N'))
 $app=Join-Path $stage 'APC40 Bridge'
 New-Item -ItemType Directory -Path $app -Force | Out-Null
-$files=@('APC40 Bridge.exe','APC40 Bridge.vbs','apc_bridge.py','config.json','setup.ps1','runtime.ps1','manage.ps1','stop_bridge.ps1','build-ui.ps1','package-release.ps1','START.bat','STOP.bat','AUTOSTART_ON.bat','AUTOSTART_OFF.bat','DEBUG.bat','RESTORE_RESOLUME.bat','AUTOSTART_ZAPNOUT.bat','AUTOSTART_VYPNOUT.bat','LADENI.bat','VRATIT_RESOLUME.bat')
+$files=@('Microsoft.Web.WebView2.Core.dll','Microsoft.Web.WebView2.WinForms.dll','WebView2Loader.dll','WebView2-SDK-LICENSE.txt','offline-dependencies.lock.json','APC40 Bridge.exe','APC40 Bridge.vbs','apc_bridge.py','config.json','setup.ps1','runtime.ps1','manage.ps1','stop_bridge.ps1','build-ui.ps1','package-release.ps1','START.bat','STOP.bat','AUTOSTART_ON.bat','AUTOSTART_OFF.bat','DEBUG.bat','RESTORE_RESOLUME.bat','AUTOSTART_ZAPNOUT.bat','AUTOSTART_VYPNOUT.bat','LADENI.bat','VRATIT_RESOLUME.bat')
 foreach ($name in $files) { Copy-Item -LiteralPath (Join-Path $PSScriptRoot $name) -Destination (Join-Path $app $name) }
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'ui') -Destination (Join-Path $app 'ui') -Recurse
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'profiles') -Destination (Join-Path $app 'profiles') -Recurse
 New-Item -ItemType Directory -Path (Join-Path $app 'visualizer') -Force | Out-Null
-foreach ($name in @('preview.html','prepare.py','launcher.py','install_camera.py','physical-layout.json','room-current.glb','THIRD-PARTY-NOTICES.txt')) { Copy-Item -LiteralPath (Join-Path $PSScriptRoot ('visualizer/'+$name)) -Destination (Join-Path $app 'visualizer') }
+foreach ($name in @('workspace.js','preview.html','wiring.js','editor.html','editor.js','editor-project.js','editor-model.js','model_convert.py','prepare.py','launcher.py','install_camera.py','physical-layout.json','room-current.glb','THIRD-PARTY-NOTICES.txt')) { Copy-Item -LiteralPath (Join-Path $PSScriptRoot ('visualizer/'+$name)) -Destination (Join-Path $app 'visualizer') }
+Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'visualizer/editor-vendor') -Destination (Join-Path $app 'visualizer/editor-vendor') -Recurse
 foreach ($folder in @('docs','resolume')) { Copy-Item -LiteralPath (Join-Path $Repo $folder) -Destination (Join-Path $app $folder) -Recurse }
 foreach ($name in @('README.md','README.cs.md','LICENSE','CLAUDE.md')) { Copy-Item -LiteralPath (Join-Path $Repo $name) -Destination (Join-Path $app $name) }
 New-Item -ItemType Directory -Path $OutputDirectory -Force | Out-Null

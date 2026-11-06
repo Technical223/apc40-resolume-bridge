@@ -2,8 +2,9 @@
 
 [Home](../README.md)
 
-Open **Visualizer** from the dashboard. It runs locally in your browser and is
-optional. Keep automatic opening disabled unless you want the preview at startup.
+Open **Visualizer** from the dashboard. In the Windows development preview it runs inside Bridge through WebView2; the stable release and macOS preview use a browser. It is optional. Keep automatic opening disabled unless you want the preview at startup.
+
+See [embedded setup and workspace migration](native-visualizer.md) when moving from Chrome.
 
 ## Input and mapping
 
@@ -84,6 +85,10 @@ The file is written by the local viewer helper; nothing is uploaded. If that fol
 is not writable (for example Windows Controlled Folder Access blocks the bundled
 Python), the browser downloads the PNG to Downloads instead.
 
+## Experimental space editing
+
+The development branch adds **Open Space Studio** for model import, orthographic views and object editing. See the [short editor guide](space-studio.md) for supported formats, optional BLEND conversion and current limitations.
+
 ## Room and performance
 
 The public package includes a small generic open-front room. **Import room model**
@@ -102,3 +107,7 @@ hidden tab. The loopback helper serves only viewer assets at `127.0.0.1:18741` a
 exits about 90 seconds after its last tab heartbeat. A browser-suspended tab may
 also expire; reopen Visualizer from Bridge. Large imported models still use GPU
 memory, so close the preview if Arena needs those resources.
+
+## Direction in the preview
+
+**Reverse direction** changes sampled pixel order in the 3D visualizer and the mapper's green IN / red OUT markers, arrow and numbered pixel grid. Pixel 1 follows the configured physical input end. Selection masks remain tied to source pixels, so reversing does not erase or rewrite them. The composition image behind the mapping stays unchanged. These are local preview settings: they do not change Arena's Advanced Output, DMX addresses or hardware output.

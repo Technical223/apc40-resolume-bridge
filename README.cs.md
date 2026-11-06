@@ -4,6 +4,12 @@
 
 Windows aplikace pro osvětlení APC40 mkII a MIDI zpětnou vazbu z Resolume Areny. Pady ukazují odstín Colorize, změny myší se mohou přenášet na kontroler a Controller Studio umožňuje nastavit světla a resety bez úprav kódu. Rozhraní aplikace je anglicky.
 
+## Vývojová verze: vše v jednom okně
+
+Aktuální vývojová větev otevírá **Visualizer / Output mapping / 3D Editor** přímo v Bridge přes Microsoft WebView2. Stabilní stažení níže tuto změnu zatím neobsahuje. **Workspace** umožní přenést lokální projekty z původního prohlížeče; původní data zůstanou zachována. [Postup a plán rendereru (anglicky)](docs/native-visualizer.md).
+
+Hledám spolupracovníky na grafiku, Spout, C#, macOS a testování; vítaný je i vývoj s pomocí AI. [Jak se zapojit](CONTRIBUTING.md#build-the-next-version-together).
+
 ## Stažení a spuštění
 
 1. Stáhni **[APC40-Bridge-Setup.exe](https://github.com/Technical223/apc40-resolume-bridge/releases/latest)**. Při první instalaci zavři Arenu, při aktualizaci i bridge aplikaci.

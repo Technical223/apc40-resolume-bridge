@@ -23,7 +23,7 @@ Zavření okna nemění běh bridge. Přepínač autostartu vytváří zástupce
 
 Nastavení zachovává neznámé klíče configu, kontroluje porty a číselné rozsahy a ukládá atomicky přes File.Replace se zálohou. Hodnoty načte až restart watcheru. Logy jsou čteny sdíleně, pouze z posledních 64 KB. Obnova MIDI je výslovná akce s potvrzením; odmítne běžící Arenu a bez nalezené zálohy nic nezastaví.
 
-Příprava používá původní instalační postup Python/mido/python-rtmidi/loopMIDI. Vytvoření virtuálních portů zůstává ruční krok v loopMIDI. Při jejich absenci se vrátí konkrétní pokyn, místo neviditelného pětiminutového čekání. Kompletní instalace na čistém Windows nebyla při této změně testována.
+Příprava používá původní instalační postup Python/mido/python-rtmidi/loopMIDI. Porty se připraví automaticky a ostatní se zachovají. Pokud loopMIDI už běželo, je potřeba ho jednou znovu otevřít. Při jejich absenci se vrátí konkrétní pokyn, místo neviditelného pětiminutového čekání. Kompletní instalace na čistém Windows nebyla při této změně testována.
 
 ## Sestavení
 
@@ -36,3 +36,7 @@ py -3 tests/test_stop_process.py
 ```
 
 Výchozí výstup balíčku je `dist/APC40-Bridge-Windows.zip`. Pro další sestavení použij jiný výstupní adresář nebo původní ZIP nejprve přesuň. Balíček obsahuje čistý výchozí config z repozitáře, nikoli lokální stav, PID, logy nebo cache. Při aktualizaci existující instalace zachovej vlastní config.json a state.json.
+
+## Integrovaný Visualizer · vývojová větev
+
+Visualizer se otevírá přímo v dashboardu přes Microsoft WebView2. Pro tento volitelný pohled je nutný WebView2 Runtime. MIDI engine zůstává oddělený. [Instalace, přenos pracovního prostoru a omezení (anglicky)](native-visualizer.md).

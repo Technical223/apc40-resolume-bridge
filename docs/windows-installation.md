@@ -34,3 +34,7 @@ Remove the app through **Windows Installed Apps**. Configuration, state, profile
 From a source ZIP, open **bridge/APC40 Bridge.vbs** to build the dashboard. Source setup may download dependencies; it is separate from the bundled-runtime release.
 
 For developers, **bridge/build-offline.py** builds and verifies the setup EXE, portable ZIP and checksums on Windows with Python 3.12+. Dependencies and hashes are recorded in **bridge/offline-dependencies.lock.json**. Runtime checks do not replace testing Arena with your composition and hardware.
+
+## Embedded Visualizer · development branch
+
+This optional Windows view requires Microsoft WebView2 Runtime. Bundled-runtime builds include the full Microsoft x64 installer in the installed `dependencies` folder; if missing on the PC, run it manually and choose Retry in Bridge. Source ZIPs require the [official Runtime download](https://developer.microsoft.com/microsoft-edge/webview2/). MIDI-only use does not require it. The stable release has not yet been replaced. [Move existing browser projects into Bridge](native-visualizer.md#first-use-and-existing-projects).

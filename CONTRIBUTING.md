@@ -11,10 +11,18 @@ By taking part you agree to follow the [Code of Conduct](CODE_OF_CONDUCT.md).
 - **Bugs and ideas:** open an issue with your Windows/macOS version, Arena version, the steps you took, and what happened.
 - **Security problems:** do not open a public issue. See [SECURITY.md](SECURITY.md).
 
+## Build the next version together
+
+I'm looking for people who want to help turn this into a reliable tool for real shows: graphics/rendering, direct Spout input, C#/WebView2 integration, macOS parity, UI and hardware testing. AI-assisted development is welcome; explain your changes, review the generated code and include reproducible checks.
+
+Start with a small bug or propose an approach in an [issue](https://github.com/Technical223/apc40-resolume-bridge/issues/new/choose). Include what you would like to work on. No private show files are needed. The [renderer roadmap](docs/native-visualizer.md#next-renderer) describes the next steps and their validation gates.
+
+The current project remains MIT licensed. A future professional package, support or paid additions are possibilities to discuss with collaborators, not a change to existing users' rights or a promised commercial release.
+
 ## Before you open a pull request
 
 1. Open an issue first for anything larger than a small fix, so we can agree on the approach.
-2. Keep the bridge simple. Do not add a web server, REST/OSC or new runtime dependencies without discussing it first.
+2. Keep the bridge simple. Keep MIDI routing independent of the optional local visualizer and its WebView2 host. Discuss additional services, REST/OSC control or runtime dependencies before adding them.
 3. Do not change the user-verified Arena MIDI routing (physical APC40 Input **and** Output on, APC VIRT A input, APC VIRT B output, Alternate Ableton Live Mode). See [docs/navod.md](docs/navod.md).
 4. Preserve user data on updates: `config.json`, `state.json`, custom ports, mappings and controller profiles. Unknown config keys must survive a save.
 5. Do not rename MIDI ports, preset identifiers, configuration keys or the original Czech batch filenames.

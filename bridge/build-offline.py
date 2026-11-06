@@ -62,13 +62,14 @@ def build(output, cache, visualizer=None):
     names = ("APC40-Bridge-Setup.exe", "APC40-Bridge-Portable.zip")
     if any((output / name).exists() for name in names):
         raise FileExistsError("Choose an empty output directory")
-    run(["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ROOT / "bridge/build-ui.ps1"])
+    run(["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", ROOT / "bridge/build-ui.ps1", "-DependencyCache", cache])
     with tempfile.TemporaryDirectory(prefix="APC40-build-") as tmp:
         stage = Path(tmp) / "app"
         stage.mkdir()
-        files = ["APC40 Bridge.exe", "APC40 Bridge.vbs", "apc_bridge.py", "config.json", "setup.ps1",
+        files = ["offline-dependencies.lock.json", "APC40 Bridge.exe", "APC40 Bridge.vbs", "apc_bridge.py", "config.json", "setup.ps1",
                  "runtime.ps1", "manage.ps1", "stop_bridge.ps1", "build-ui.ps1", "START.bat", "STOP.bat",
                  "AUTOSTART_ON.bat", "AUTOSTART_OFF.bat", "DEBUG.bat", "RESTORE_RESOLUME.bat"]
+        files += ["Microsoft.Web.WebView2.Core.dll", "Microsoft.Web.WebView2.WinForms.dll", "WebView2Loader.dll", "WebView2-SDK-LICENSE.txt"]
         for name in files:
             shutil.copy2(ROOT / "bridge" / name, stage / name)
         for name in ("ui", "profiles"):
@@ -84,6 +85,9 @@ def build(output, cache, visualizer=None):
             if visualizer is None:
                 excluded.append("SpoutCam64.ax")
             shutil.copytree(viewer, stage / "visualizer", ignore=shutil.ignore_patterns(*excluded))
+        dependency_folder = stage / "dependencies"
+        dependency_folder.mkdir()
+        shutil.copy2(download(LOCK["webview2_runtime"], cache), dependency_folder / LOCK["webview2_runtime"]["file"])
         runtime = stage / "runtime"
         runtime.mkdir()
         extract_safe(download(LOCK["python"], cache), runtime)

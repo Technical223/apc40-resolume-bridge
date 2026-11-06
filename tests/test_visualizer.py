@@ -10,6 +10,44 @@ ROOT=Path(__file__).resolve().parents[1]
 VIEWER=ROOT/'bridge/visualizer'
 
 class MappingTest(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('node'),'Node checks light-spill sampling')
+    def test_light_spill_averages_all_pixels_and_smooths_only_reflected_light(self):
+        script=r"""
+import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';import {pathToFileURL} from 'node:url';import path from 'node:path';
+const T=await import(pathToFileURL(path.resolve('bridge/visualizer/editor-vendor/three.module.js')));
+const html=fs.readFileSync('bridge/visualizer/preview.html','utf8');
+const sample=html.slice(html.indexOf('function D4()'),html.indexOf('var Yi=',html.indexOf('function D4()')));
+let clock=0,linked=true,reads=0;const data=new Uint8ClampedArray(64*4);
+const fixture={sliceUid:'a',uv:Array.from({length:64},(_,i)=>[(i+.5)/64,.5])};
+const light={color:new T.Color(0,0,0),intensity:0};
+const context={previewPaused:false,_0:'test',testPatternEnabled:true,ui:{},At:{videoWidth:0,videoHeight:0},Cn:64,Bn:1,hi:64,Vi:1,
+ yt:{x:0,y:0,w:1,h:1},performance:{now:()=>clock},lastSpillTime:null,ko:2,
+ fixtureSelection:{disabled:{},pixels:{}},window:{apcWiring:{hasSignal:()=>linked}},
+ M4:[{L:light,fixture,w:1.6,px:64}],Vo:{color:new T.Color(0,0,0),intensity:0},Tc:new T.Color(),spillTarget:new T.Color(),tt:T.SRGBColorSpace,
+ xc:{clearRect(){},drawImage(){},getImageData(){reads++;return {data};}}};
+vm.createContext(context);vm.runInContext(sample,context);
+const update=()=>vm.runInContext('D4()',context);
+// A traveling lit pixel has constant total energy; skipping every fifth pixel caused false flashes.
+let expected;
+for(let i=0;i<64;i++){data.fill(0);data[i*4]=255;clock+=1000/30;update();expected??=light.color.r;assert(Math.abs(light.color.r-expected)<1e-10);}
+assert(expected>0);assert.equal(light.color.g,0);assert.equal(light.intensity,3.2);
+const filtered=(fps)=>{data.fill(0);context.lastSpillTime=null;update();data.fill(255);for(let i=1;i<=fps/5;i++){clock+=1000/fps;update();}return light.color.r;};
+const at30=filtered(30),at60=filtered(60);assert(Math.abs(at30-at60)<1e-10);assert(Math.abs(at30-(1-Math.exp(-2)))<1e-10);
+// Pause is an exact snapshot, not a continuing fade of reflected light.
+context.previewPaused=true;context.pausedFrame={width:64,height:1};data.fill(128);update();const frozen=light.color.r;clock+=30;update();assert.equal(light.color.r,frozen);context.previewPaused=false;data.fill(255);
+// Masked pixels, a disabled fixture, or a disconnected cable cannot keep spilling light.
+context.fixtureSelection.pixels.a=Object.fromEntries(fixture.uv.map((_,i)=>[i,true]));update();assert.equal(light.intensity,0);assert.equal(context.Vo.intensity,0);
+context.fixtureSelection.pixels={};context.fixtureSelection.disabled.a=true;update();assert.equal(light.intensity,0);
+context.fixtureSelection.disabled={};linked=false;update();assert.equal(light.intensity,0);linked=true;
+// UVs outside the source clamp to its edges instead of producing NaN colors.
+fixture.uv=[[-1,-1],[2,2]];context.lastSpillTime=null;update();assert(Number.isFinite(light.color.r));assert.equal(light.color.r,1);
+context.testPatternEnabled=false;update();assert.equal(light.intensity,0);assert.equal(context.Vo.intensity,0);
+context.testPatternEnabled=true;update();context._0='video';update();assert.equal(light.intensity,0);assert.equal(context.Vo.intensity,0);
+context._0='test';context.ko=0;const before=reads;update();assert.equal(reads,before);assert.equal(light.intensity,0);
+"""
+        result=subprocess.run(['node','--input-type=module','-e',script],cwd=ROOT,capture_output=True,text=True,encoding='utf-8',timeout=20)
+        self.assertEqual(result.returncode,0,result.stderr)
+
     def test_output_names_lumiverse_and_changed_counts(self):
         spec=importlib.util.spec_from_file_location('viewer_prepare',VIEWER/'prepare.py')
         module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
@@ -75,11 +113,137 @@ const item={sliceUid:'a',width:1,height:2,uv:[[0,1],[1,1],[1,0],[0,0]]};
 assert(state.previewEnabled(item,0));state.fixtureSelection.disabled.a=true;assert(!state.previewEnabled(item,0));
 state.fixtureSelection.disabled.a=false;state.fixtureSelection.pixels.a={0:true};assert(!state.previewEnabled(item,0));assert(state.previewEnabled(item,1));
 assert(state.polygonContains(item.uv,.5,.5));assert(!state.polygonContains(item.uv,2,.5));
+const thin={uv:[[0,1],[.001,1],[.001,0],[0,0]]};
+assert(state.fixtureHitDistance(thin,.005,.5,1000,500)<7);
+assert(state.fixtureHitDistance(thin,.02,.5,1000,500)>7);
+assert.strictEqual(state.fixtureHitDistance(thin,.0005,.5,1000,500),0);
+assert(state.fixtureIntersectsRect(thin,-.01,.2,.01,.4));
+assert(!state.fixtureIntersectsRect(thin,.1,.2,.2,.4));
+assert(state.fixtureIntersectsRect(item,.2,.2,.3,.3));
+const diagonal={uv:[[0,0],[.01,0],[1,1],[.99,1]]};
+assert(state.fixtureIntersectsRect(diagonal,.45,.45,.55,.55));
+assert(!state.fixtureIntersectsRect(diagonal,.1,.8,.2,.9));
+
+
 assert.strictEqual(state.fixturePixelUV(item,0)[1],.75);assert.strictEqual(state.fixturePixelUV(item,1)[1],.25);
-assert(html.includes('previewEnabled(b,d)||c.set(0,0,0)'));
+assert(html.includes('previewEnabled(b,sourcePixel)||c.set(0,0,0)'));
 assert(html.includes('drawMappingPixelOverlay();'));
 console.log('Selection checks passed');
 '''
         subprocess.run(['node','-e',script,str(VIEWER/'preview.html')],check=True,capture_output=True,text=True)
+
+
+class DirectionTest(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('node'), 'Node checks physical pixel order in both preview views')
+    def test_reversal_swaps_3d_samples_mapper_endpoints_and_grid_masks(self):
+        script=r"""
+import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';import path from 'node:path';import {pathToFileURL} from 'node:url';
+const T=await import(pathToFileURL(path.resolve('bridge/visualizer/editor-vendor/three.module.js'))),html=fs.readFileSync('bridge/visualizer/preview.html','utf8');
+let reverse=false;const drawn=[];const fixture={sliceUid:'a',width:1,height:3,pixels:3,uv:[[0,1],[1,1],[1,0],[0,0]]};
+const window={apcWiring:{hasSignal:()=>true,pixelIndex:(uid,i,count)=>reverse?count-1-i:i}};
+const state={window,wn:{preset:'test'},localStorage:{getItem(){return null}},mappingEditing:true,mappingSelection:new Set(['a']),
+ i0:{fillRect(...args){drawn.push({color:this.fillStyle,xy:args.slice(0,2)});},save(){},restore(){},strokeText(){},fillText(){},beginPath(){},moveTo(){},lineTo(){},stroke(){}}};
+vm.createContext(state);vm.runInContext(html.slice(html.indexOf('var fixtureSelection='),html.indexOf('var Ye=s=>')),state);
+vm.runInContext(html.slice(html.indexOf('function drawMappingDirection('),html.indexOf('function P4(){')),state);
+state.drawMappingDirection(fixture,100,300);const normal=drawn.splice(0);reverse=true;state.drawMappingDirection(fixture,100,300);
+assert.deepEqual(normal[0].xy,drawn[1].xy);assert.deepEqual(normal[1].xy,drawn[0].xy);assert.equal(drawn[0].color,'#51f29b');
+// The 3D geometry stays put; only sampled source UVs and source-indexed masks reverse.
+const physical={kind:'metrovka',sliceUid:'a',pos:[[0,0,0],[1,0,0],[2,0,0]],uv:[[.1,.2],[.3,.4],[.5,.6]]};
+Object.assign(state,{sn:[physical],vr:[],ji:[],qi:{metrovka:1,neon:1},Zs:T.SphereGeometry,Ks:T.CylinderGeometry,Oe:T.Matrix4,Mt:T.Quaternion,v:T.Vector3,si:T.InstancedMesh,b0:T.InstancedBufferAttribute,v4:new T.MeshBasicMaterial(),U0:new T.Group(),Ji:-1,Qc(){}});
+reverse=false;vm.runInContext(html.slice(html.indexOf('function Oc(){'),html.indexOf('var hi=',html.indexOf('function Oc(){'))),state);
+const matrices=Array.from(state.ji[0].instanceMatrix.array),uvs=Array.from(state.ji[0].geometry.getAttribute('aUv').array);
+reverse=true;state.F4();const reversed=Array.from(state.ji[0].geometry.getAttribute('aUv').array);assert.deepEqual(reversed,[...uvs.slice(4,6),...uvs.slice(2,4),...uvs.slice(0,2)]);assert.deepEqual(Array.from(state.ji[0].instanceMatrix.array),matrices);
+// A tiny DOM runs the actual paginated grid, including its click handler.
+const controls={};const element=()=>({children:[],hidden:false,style:{},replaceChildren(){this.children=[]},append(v){this.children.push(v)},setAttribute(){}});
+for(const id of ['mappingPixelPage','mappingPixelGrid','mappingHint','mappingPixelStatus'])controls[id]=element();
+Object.assign(state,{document:{createElement:element},pixelControls:{querySelector:()=>element()},pixelEditing:true,mappingSelected:'a',mappingPixelPage:0,mappingPixelSelected:-1,fixtureTitle:()=> 'Strip',Ye:id=>controls[id],saveFixtureSelection(){}});state.wn.outputFixtures=[fixture];
+vm.runInContext(html.slice(html.indexOf('function renderPixelGrid(){'),html.indexOf('function selectMapping(')),state);
+state.renderPixelGrid();let buttons=controls.mappingPixelGrid.children;assert.equal(buttons[0].textContent,1);buttons[0].onclick();assert.equal(state.fixtureSelection.pixels.a[2],true);assert.equal(state.mappingPixelSelected,2);
+reverse=false;state.renderPixelGrid();assert(controls.mappingPixelStatus.textContent.includes('Pixel 3 selected'));assert.equal(state.fixtureSelection.pixels.a[2],true);
+const tall={...fixture,pixels:1250,height:1250};assert.equal(state.fixtureSourcePixel(tall,0),0);reverse=true;assert.equal(state.fixtureSourcePixel(tall,0),1249);assert.equal(Math.floor(state.fixtureSourcePixel(tall,1249)/64),0);
+state.U0.traverse(o=>{o.geometry?.dispose();o.material?.dispose();});
+"""
+        result=subprocess.run(['node','--input-type=module','-e',script],cwd=ROOT,capture_output=True,text=True,encoding='utf-8',timeout=20)
+        self.assertEqual(result.returncode,0,result.stderr)
+
+
+class PauseTest(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('node'), 'Node checks pause snapshot lifecycle')
+    def test_snapshot_stops_video_and_releases_texture_on_resume(self):
+        script=r"""
+const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
+const html=fs.readFileSync(process.argv[1],'utf8'),code=html.slice(html.indexOf('var previewPaused=false'),html.indexOf('const pausePreviewButton='));
+let time=4,paused=0,played=0,disposed=0;
+const context={document:{createElement(){return {width:0,height:0,getContext(){return {fillRect(){},drawImage(){}}}};}},
+ _0:'video',Cn:1920,Bn:1080,ui:{},At:{videoWidth:1920,videoHeight:1080,pause(){paused++;},play(){played++;return Promise.resolve();}},
+ Xs:class{dispose(){disposed++;}},tt:'srgb',pi:{map:{value:'live'}},Yo:'video texture',Tr:'test texture',R4:{getElapsedTime(){return time;}},pausePreviewButton:{setAttribute(){}},di(message){throw Error(message);}};
+vm.createContext(context);vm.runInContext(code,context);context.setPreviewPaused(true);
+assert.equal(context.previewPaused,true);assert.equal(context.pausePreviewButton.textContent,'Resume');assert.equal(paused,1);
+assert.equal(vm.runInContext('pausedFrame.width',context),1280);assert.equal(vm.runInContext('pausedFrame.height',context),720);
+const frozen=context.pi.map.value;context.setPreviewPaused(true);assert.equal(context.pi.map.value,frozen);
+time=9;context.setPreviewPaused(false);assert.equal(context.previewPaused,false);assert.equal(context.previewPauseOffset,5);assert.equal(context.pi.map.value,'video texture');assert.equal(played,1);assert.equal(disposed,1);assert.equal(context.pausePreviewButton.textContent,'Pause');assert.equal(vm.runInContext('pausedFrame.width',context),1);
+context._0='test';context.setPreviewPaused(true);context.setPreviewPaused(false);assert.equal(context.pi.map.value,'test texture');assert.equal(played,1);
+"""
+        subprocess.run(['node','-e',script,str(VIEWER/'preview.html')],check=True,capture_output=True,text=True,timeout=20)
+
+class WiringTest(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('node'),'Node checks isolated chain display and restoration')
+    def test_chain_isolation_preserves_selection_and_original_room_visibility(self):
+        script=r"""
+const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
+const html=fs.readFileSync(process.argv[1],'utf8');let builds=0;
+const state={window:{},document:{body:{classList:{toggle(){}}}},ki:{visible:true},F4(){builds++;}};vm.createContext(state);
+vm.runInContext(html.slice(html.indexOf('var fixtureSelection='),html.indexOf('var Ye=s=>')),state);
+vm.runInContext(html.slice(html.indexOf('function applyChainRoom()'),html.indexOf('const wiringPositions=')),state);
+const a={sliceUid:'a'},b={sliceUid:'b'};state.fixtureSelection.pixels.a={1:true};const saved=JSON.stringify(state.fixtureSelection);
+state.setChainIsolation(['a']);assert.equal(state.ki.visible,false);assert.equal(state.previewEnabled(a,0),true);assert.equal(state.previewEnabled(a,1),false);assert.equal(state.previewEnabled(b,0),false);
+state.setChainIsolation(null);assert.equal(state.ki.visible,true);assert.equal(state.previewEnabled(b,0),true);assert.equal(JSON.stringify(state.fixtureSelection),saved);assert.equal(builds,2);
+state.ki.visible=false;state.setChainIsolation(['b']);state.setChainIsolation(null);assert.equal(state.ki.visible,false);
+// A room arriving after chain editing starts must also be hidden and restored correctly.
+state.ki=null;state.setChainIsolation(['a']);state.ki={visible:true};state.applyChainRoom();assert.equal(state.ki.visible,false);state.setChainIsolation(null);assert.equal(state.ki.visible,true);
+"""
+        subprocess.run(['node','-e',script,str(VIEWER/'preview.html')],check=True,capture_output=True,text=True,timeout=20)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node checks physical wiring validation')
+    def test_profile_order_and_invalid_connections(self):
+        script=r"""
+const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
+const scope={};vm.createContext(scope);vm.runInContext(fs.readFileSync(process.argv[1],'utf8'),scope);
+const api=scope.APCWiring;
+assert.equal(api.outputs.length,16);
+assert.equal(api.outputs.slice(0,5).reduce((s,o)=>s+o.pieces,0),50);
+assert.equal(api.outputs[5].pieces,5);assert.equal(api.outputs[5].nominalPixels,120);
+assert.equal(api.outputs[11].pieces,4);assert.equal(api.outputs[11].meters,5);assert.equal(api.outputs[11].nominalPixels,1250);
+const a={uid:'a',output:1,order:1,reverse:false},b={uid:'b',output:1,order:2,reverse:true};
+const original={version:1,connections:[b,a]},fixtures=[{sliceUid:'a',pixels:59}];
+const result=api.ordered(original,fixtures);
+assert.equal(result[0].uid,'a');assert.equal(result[0].fixture.pixels,59);assert.equal(result[1].reverse,true);assert.equal(result[1].fixture,null);
+assert.equal(original.connections[0].uid,'b');
+for(const bad of [null,{}, {version:1,connections:[null]}, {version:1,connections:[a,a]},
+ {version:1,connections:[a,{...b,order:1}]}, {version:1,connections:[{...a,output:17}]},
+ {version:1,connections:[{...a,order:0}]}, {version:1,connections:[{...a,output:12,order:5}]},
+ {version:1,connections:[{...a,reverse:'false'}]}, {version:1,connections:[{...a,uid:''}]}])assert.throws(()=>api.validate(bad));
+assert.equal(api.validate({version:1,connections:[]}).connections.length,0);
+const fixturesByGroup=api.outputs.flatMap(o=>Array.from({length:o.pieces},(_,i)=>({screenUid:'g'+o.id,screen:'OUTPUT '+o.id+' LED',sliceUid:'g'+o.id+'p'+i,pixels:o.id>=12?250:59,lumiverse:o.id===5?'8':'0'})));
+let fixed=api.reconcile({version:1,connections:[]},fixturesByGroup);
+assert.equal(fixed.connections.length,100);assert.equal(fixed.connections.find(c=>c.uid==='g5p0').output,5);
+assert.equal(fixed.connections.find(c=>c.uid==='g6p0').output,6);assert.equal(fixed.connections.find(c=>c.uid==='g11p4').output,11);assert.equal(fixed.connections.find(c=>c.uid==='g16p3').output,16);
+fixed.connections.find(c=>c.uid==='g1p0').reverse=true;
+assert.equal(api.reconcile(fixed,fixturesByGroup).connections.find(c=>c.uid==='g1p0').reverse,true);
+const unassigned=api.reconcile({...fixed,groups:[{key:'g1',output:0}]},fixturesByGroup);assert.equal(unassigned.connections.length,90);
+assert.throws(()=>api.reconcile({...fixed,groups:[{key:'g2',output:1}]},fixturesByGroup));
+assert.equal(api.groupsFor([{screenUid:'dmx',screen:'DMX 1',sliceUid:'d'}],fixed)[0].output,0);
+assert.equal(fixturesByGroup.find(f=>f.sliceUid==='g12p0').pixels,250);
+assert.equal(api.cableLinks(fixed).length,84);assert.equal(api.linkedNodes(fixed).size,100);
+const line=[{uid:'a',output:1,order:1,reverse:false},{uid:'b',output:1,order:2,reverse:false},{uid:'c',output:1,order:3,reverse:false},{uid:'d',output:2,order:1,reverse:false}];
+assert.equal(api.validateLinks(line,[{from:'a',to:'b'},{from:'b',to:'c'}]).length,2);
+const broken={version:1,connections:line,groups:[],links:[{from:'b',to:'c'}]};
+assert(api.linkedNodes(broken).has('a'));assert(!api.linkedNodes(broken).has('b'));assert(!api.linkedNodes(broken).has('c'));
+for(const links of [[{from:'a',to:'a'}],[{from:'b',to:'a'}],[{from:'a',to:'d'}],[{from:'b',to:'c'},{from:'c',to:'b'}],[{from:'a',to:'b'},{from:'a',to:'c'}],[{from:'a',to:'c'},{from:'b',to:'c'}]])assert.throws(()=>api.validateLinks(line,links));
+const noLinks=api.reconcile({...fixed,links:[]},fixturesByGroup);assert.equal(api.cableLinks(noLinks).length,0);assert.equal(api.linkedNodes(noLinks).size,16);
+
+
+"""
+        subprocess.run(['node','-e',script,str(VIEWER/'wiring.js')],check=True,capture_output=True,text=True,timeout=20)
 
 if __name__=='__main__':unittest.main()

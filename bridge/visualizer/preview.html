@@ -38,13 +38,21 @@
   @media (max-width:600px){#panel{width:calc(100vw - 52px)}#inset{width:192px;height:108px}}
 
   button,input,select{font:inherit}button{transition:background .12s,border-color .12s}button:hover{border-color:#67e8bd}
-  #mappingEditor{position:fixed;z-index:5;inset:16px auto 16px 16px;width:330px;background:#10151d;border:1px solid #303b4d;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;box-sizing:border-box}
+  #mappingEditor{position:fixed;z-index:5;inset:62px auto 16px 16px;overflow:auto;width:330px;background:#10151d;border:1px solid #303b4d;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;box-sizing:border-box}
   #mappingEditor[hidden]{display:none}#mappingEditor header{display:flex;gap:12px;justify-content:space-between}#mappingEditor header p{font-size:12px;color:#9aaabd;margin:6px 0}
   .mappingTools{display:flex;gap:6px;flex-wrap:wrap}.mappingTools button{font-size:12px}.mappingTools input{width:100%;box-sizing:border-box;padding:10px;background:#1c2430;color:#eee;border:1px solid #354359;border-radius:7px}
-  #mappingInfo,#mappingHint{font-size:11px;color:#a0b4ca}#mappingList{overflow:auto;flex:1;min-height:0}#mappingList summary{display:flex;gap:8px;padding:10px 0;color:#dce6f2;cursor:pointer}
-  .fixtureRow{display:flex;align-items:center;gap:8px;padding:8px;border-radius:6px;cursor:pointer}.fixtureRow:hover,.fixtureRow.selected{background:#263342}.fixtureRow span{flex:1}.fixtureRow small{color:#9dafc3}#mappingEditor input[type=checkbox]{accent-color:#67e8bd}
-  .editingMapping #panel{display:none}.editingMapping #inset{left:370px!important;top:90px!important;bottom:auto!important;right:20px!important;width:calc(100vw - 400px)!important;max-width:none!important;max-height:calc(100vh - 160px);height:auto!important;object-fit:contain}
+  #mappingInfo,#mappingHint{font-size:11px;color:#a0b4ca}#mappingEditor>*{flex-shrink:0}#mappingList{overflow:auto;flex:none;max-height:32vh;min-height:100px}#mappingList summary{display:flex;gap:8px;padding:10px 0;color:#dce6f2;cursor:pointer}
+  .fixtureRow{display:flex;align-items:center;gap:8px;padding:8px;border-radius:6px;cursor:pointer}.fixtureRow:hover,.fixtureRow.selected{background:#263342}.fixtureRow.selected{outline:1px solid #ff9b38;background:#493423}.fixtureRow .fixtureName{flex:1;text-align:left;border:0;background:transparent;color:inherit}.fixtureRow small{color:#9dafc3}#mappingEditor input[type=checkbox]{accent-color:#67e8bd}
+  .editingMapping #panel{display:none}.editingMapping #inset{left:370px!important;top:90px!important;bottom:auto!important;right:20px!important;width:min(calc(100vw - 400px),calc((100vh - 160px)*var(--mapping-aspect,1.77778)))!important;max-width:none!important;max-height:none;height:auto!important;object-fit:fill}
+
+  #visualizerNav a,#visualizerNav button { font:600 12px/1.3 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;text-decoration:none;color:#c7d2df!important;padding:8px 11px;border:1px solid transparent;border-radius:7px;background:transparent;white-space:nowrap;cursor:pointer; }
+  #visualizerNav a:hover,#visualizerNav button:hover { background:#202c3a; }
+  #visualizerNav a[aria-current="page"],#visualizerNav button[aria-pressed="true"] { background:#203b35;border-color:#356454;color:#91dfc7!important; }
+  #visualizerNav label { font:12px system-ui; }
 </style>
+<script src="editor-project.js"></script>
+<script src="workspace.js"></script>
+<script src="wiring.js"></script>
 </head>
 <body>
 <div id="loading">Loading room model…</div>
@@ -3957,12 +3965,15 @@ void main() {
 
 		}`};var Cr=class extends jt{constructor(){super();let e=yc;this.uniforms=K0.clone(e.uniforms),this.material=new er({name:e.name,uniforms:this.uniforms,vertexShader:e.vertexShader,fragmentShader:e.fragmentShader}),this.fsQuad=new tn(this.material),this._outputColorSpace=null,this._toneMapping=null}render(e,t,n){this.uniforms.tDiffuse.value=n.texture,this.uniforms.toneMappingExposure.value=e.toneMappingExposure,(this._outputColorSpace!==e.outputColorSpace||this._toneMapping!==e.toneMapping)&&(this._outputColorSpace=e.outputColorSpace,this._toneMapping=e.toneMapping,this.material.defines={},qe.getTransfer(this._outputColorSpace)===et&&(this.material.defines.SRGB_TRANSFER=""),this._toneMapping===Ka?this.material.defines.LINEAR_TONE_MAPPING="":this._toneMapping===Za?this.material.defines.REINHARD_TONE_MAPPING="":this._toneMapping===eo?this.material.defines.CINEON_TONE_MAPPING="":this._toneMapping===to?this.material.defines.ACES_FILMIC_TONE_MAPPING="":this._toneMapping===no&&(this.material.defines.AGX_TONE_MAPPING=""),this.material.needsUpdate=!0),this.renderToScreen===!0?(e.setRenderTarget(null),this.fsQuad.render(e)):(e.setRenderTarget(t),this.clear&&e.clear(e.autoClearColor,e.autoClearDepth,e.autoClearStencil),this.fsQuad.render(e))}dispose(){this.material.dispose(),this.fsQuad.dispose()}};var wn=window.APC40Layout||{"comp": [1920, 1080], "camera": {"pos": [3, 2, 6], "target": [3, 2, 0], "fovV": 45}, "fixtures": [], "outputFixtures": [], "preset": ""};
 var fixtureSelection={disabled:{},pixels:{}};
+var chainIsolation=null,chainRoom=null;
 function loadFixtureSelection(){
  try{const data=JSON.parse(localStorage.getItem("apc40-fixtures:"+wn.preset)||"{}");
  fixtureSelection={disabled:data.disabled&&typeof data.disabled==="object"?data.disabled:{},pixels:data.pixels&&typeof data.pixels==="object"?data.pixels:{}};
  }catch{fixtureSelection={disabled:{},pixels:{}};}
 }
 function previewEnabled(fixture,pixel){
+ if(chainIsolation!==null&&!chainIsolation.has(fixture.sliceUid))return false;
+ if(typeof window!=="undefined"&&window.apcWiring?.hasSignal(fixture.sliceUid)===false)return false;
  const id=fixture.sliceUid;
  return fixtureSelection.disabled[id]!==true&&!(fixtureSelection.pixels[id]&&fixtureSelection.pixels[id][pixel]===true);
 }
@@ -3971,6 +3982,28 @@ function polygonContains(points,x,y){
  const [xi,yi]=points[i],[xj,yj]=points[j];if((yi>y)!==(yj>y)&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)inside=!inside;
  }return inside;
 }
+function fixtureIntersectsRect(fixture,minU,minV,maxU,maxV){
+ const p=fixture.uv;if(p.some(v=>v[0]>=minU&&v[0]<=maxU&&v[1]>=minV&&v[1]<=maxV))return true;
+ if([[minU,minV],[maxU,minV],[maxU,maxV],[minU,maxV]].some(v=>polygonContains(p,...v)))return true;
+ for(let i=0;i<p.length;i++){
+  const a=p[i],b=p[(i+1)%p.length],dx=b[0]-a[0],dy=b[1]-a[1];let lo=0,hi=1,hit=true;
+  for(const [d,q] of [[-dx,a[0]-minU],[dx,maxU-a[0]],[-dy,a[1]-minV],[dy,maxV-a[1]]]){
+   if(d===0){if(q<0){hit=false;break;}}else if(d<0)lo=Math.max(lo,q/d);else hi=Math.min(hi,q/d);
+  }if(hit&&lo<=hi)return true;
+ }return false;
+}
+function fixtureHitDistance(fixture,u,v,width,height){
+ if(polygonContains(fixture.uv,u,v))return 0;
+ const points=fixture.uv;let distance=Infinity;
+ for(let i=0;i<points.length;i++){
+  const a=points[i],b=points[(i+1)%points.length],x=(u-a[0])*width,y=(v-a[1])*height,dx=(b[0]-a[0])*width,dy=(b[1]-a[1])*height;
+  const t=Math.max(0,Math.min(1,(x*dx+y*dy)/(dx*dx+dy*dy||1)));distance=Math.min(distance,Math.hypot(x-t*dx,y-t*dy));
+ }return distance;
+}
+// Masks stay indexed by source pixel; displayed numbers follow physical IN / OUT.
+function fixtureSourcePixel(fixture,index){
+ return typeof window!=="undefined"&&window.apcWiring?window.apcWiring.pixelIndex(fixture.sliceUid,index,fixture.pixels):index;
+}
 function fixturePixelUV(fixture,index){
  const w=Math.max(1,fixture.width||1),h=Math.max(1,fixture.height||1),u=(index%w+.5)/w,v=(Math.floor(index/w)+.5)/h,p=fixture.uv;
  return [(1-u)*(1-v)*p[0][0]+u*(1-v)*p[1][0]+u*v*p[2][0]+(1-u)*v*p[3][0],
@@ -3978,15 +4011,15 @@ function fixturePixelUV(fixture,index){
 }
 loadFixtureSelection();
 
-var Ye=s=>document.getElementById(s),[Cn,Bn]=wn.comp,sn=wn.fixtures,qo=location.hash.includes("test"),c0=new Mi({antialias:!1,powerPreference:"high-performance"});c0.localClippingEnabled=true;c0.setPixelRatio(.75);c0.setSize(innerWidth,innerHeight);c0.toneMapping=p0;document.body.prepend(c0.domElement);var U0=new ii;U0.background=new be(328967);var C4=new ni(c0);U0.environment=C4.fromScene(new _r(c0),.04).texture;var R0=new dt(wn.camera.fovV,innerWidth/innerHeight,.02,200),yr=new $r(R0,c0.domElement);yr.enableDamping=!0;var B4={publikum:{pos:wn.camera.pos,target:wn.camera.target,fov:Math.max(wn.camera.fovV,45)},dj:{pos:[2.6,1.75,-3.3],target:[2.6,2.2,2.5],fov:75},shora:{pos:[2.6,9.5,.2],target:[2.6,0,-.4],fov:50},bok:{pos:[-2.2,2.2,.6],target:[2.6,2,-.8],fov:55}},y4=[new Gt(new v(0,-1,0),3.3)];function Fc(s){c0.clippingPlanes=s?y4:[];let e=document.getElementById("clip");e&&(e.checked=s)}function jo(s){let e=B4[s];Fc(s==="shora"),R0.position.fromArray(e.pos),yr.target.fromArray(e.target),R0.fov=e.fov,R0.updateProjectionMatrix(),yr.update()}jo("publikum");var Mc=new sr(8425632,1052688,.25);U0.add(Mc);var Dc=[],Pc=new br;Pc.setMeshoptDecoder(Cc);var ki=null;function openAudienceFront(root){}
+var Ye=s=>document.getElementById(s),[Cn,Bn]=wn.comp,sn=wn.fixtures,qo=location.hash.includes("test"),c0=new Mi({antialias:!1,powerPreference:"high-performance"});c0.localClippingEnabled=true;c0.setPixelRatio(.75);c0.setSize(innerWidth,innerHeight);c0.toneMapping=p0;document.body.prepend(c0.domElement);var U0=new ii;U0.background=new be(328967);var C4=new ni(c0);U0.environment=C4.fromScene(new _r(c0),.04).texture;var R0=new dt(wn.camera.fovV,innerWidth/innerHeight,.02,200),yr=new $r(R0,c0.domElement);yr.enableDamping=!0;var B4={publikum:{pos:wn.camera.pos,target:wn.camera.target,fov:Math.max(wn.camera.fovV,45)},dj:{pos:[2.6,1.75,-3.3],target:[2.6,2.2,2.5],fov:75},shora:{pos:[2.6,9.5,.2],target:[2.6,0,-.4],fov:50},bok:{pos:[-2.2,2.2,.6],target:[2.6,2,-.8],fov:55}},y4=[new Gt(new v(0,-1,0),3.3)];function Fc(s){c0.clippingPlanes=s?y4:[];let e=document.getElementById("clip");e&&(e.checked=s)}function jo(s){let e=B4[s];Fc(s==="shora"),R0.position.fromArray(e.pos),yr.target.fromArray(e.target),R0.fov=e.fov,R0.updateProjectionMatrix(),yr.update()}jo("publikum");var Mc=new sr(8425632,1052688,.25);U0.add(Mc);var Dc=[],Pc=new br;Pc.setMeshoptDecoder(Cc);var ki=null;function openAudienceFront(root){window.apcOpenFront?.(root,wn.frontCut,{Vector3:v});}
 function mountRoom(s){ki=s.scene,openAudienceFront(ki),
 ki.traverse(node=>{if(!node.isMesh)return;
 const materials=Array.isArray(node.material)?node.material:[node.material];
 // Blender volume materials become opaque boxes in glTF; they are not room walls.
-if(/mlha|opar|fog|volume/i.test(node.name)||materials.some(m=>/mlha|opar|fog|volume/i.test(m?.name||""))){node.visible=false;return;}
+if(/mlha|opar|fog|volume/i.test(node.name)||materials.some(m=>/mlha|opar|fog|volume/i.test(m?.name||""))){node.visible=false;node.userData.apcPreviewExcluded=true;return;}
 for(const material of materials){if(!material)continue;
 material.emissive?.setRGB(0,0,0);material.emissiveIntensity=0;material.emissiveMap=null;material.clippingPlanes=null;}
-}),ki.traverse(e=>{e.isMesh&&(Array.isArray(e.material)?e.material:[e.material]).forEach(n=>{n.envMapIntensity=1,Dc.push(n),/pletivo|Difuzni/i.test(n.name)&&(n.transparent=!0,n.opacity=/Difuzni/i.test(n.name)?.18:.28,n.depthWrite=!1,n.transmission=0,n.sheen=0,n.side=Wt)})}),U0.add(ki),Lc(),applyRoomMaterials(),setupProjection(),document.getElementById("loading")?.remove()}Pc.load(wn.space?.model||"room-current.glb",mountRoom,undefined,s=>di("Model load failed. Reopen Visualizer from Bridge: "+s));var ui=document.createElement("canvas");ui.width=Cn;ui.height=Bn;var nn=ui.getContext("2d");function x4(s){if(!testPatternEnabled){nn.fillStyle="#000";nn.fillRect(0,0,Cn,Bn);return;}nn.fillStyle="#000",nn.fillRect(0,0,Cn,Bn);for(let e=0;e<4;e++){let t=(s*.25+e*.25)%1*Bn,n=nn.createLinearGradient(0,t-90,0,t+90),i=(s*40+e*90)%360;n.addColorStop(0,"rgba(0,0,0,0)"),n.addColorStop(.5,`hsl(${i},100%,55%)`),n.addColorStop(1,"rgba(0,0,0,0)"),nn.fillStyle=n,nn.fillRect(0,t-90,Cn,180)}for(let e=0;e<3;e++){let t=(s*.35+e/3)%1*Cn,n=nn.createLinearGradient(t-160,0,t+160,0),i=(200+e*120+s*25)%360;n.addColorStop(0,"rgba(0,0,0,0)"),n.addColorStop(.5,`hsl(${i},100%,60%)`),n.addColorStop(1,"rgba(0,0,0,0)"),nn.fillStyle=n,nn.fillRect(t-160,0,320,Bn)}}var At=document.createElement("video");At.muted=!0;At.playsInline=!0;At.loop=!0;var testPatternEnabled=false;var _0="test",Br=null,Tr=new Xs(ui);Tr.colorSpace=tt;var Yo=new Js(At);Yo.colorSpace=tt;var yt={x:0,y:0,w:1,h:1};function Jo(){Br&&Br.getTracks().forEach(s=>s.stop()),Br=null}async function Hc(s,e){Jo(),Br=s,At.srcObject=s,At.removeAttribute("src"),await At.play(),_0="video",pi.map.value=Yo,di(e),s.getVideoTracks()[0].addEventListener("ended",()=>{xr()})}function xr(explicit=false){testPatternEnabled=explicit;Jo(),At.pause(),At.srcObject=null,_0="test",pi.map.value=Tr,di(explicit?"Test pattern":"No input — black output"),Ye("src").value=explicit?"test":"black"}function di(s){Ye("status").textContent=s}async function T4(){let s=(await navigator.mediaDevices.enumerateDevices()).filter(t=>t.kind==="videoinput"),e=Ye("cam");return e.innerHTML="",s.forEach((t,n)=>{let i=document.createElement("option");i.value=t.deviceId,i.textContent=t.label||`Camera ${n+1}`,e.appendChild(i)}),s}async function Rc(s){let e={video:{width:{ideal:Cn},height:{ideal:Bn},frameRate:{ideal:30,max:30}},audio:!1};s&&(e.video.deviceId={exact:s});let t=await navigator.mediaDevices.getUserMedia(e),n=t.getVideoTracks()[0],i=n.getSettings();await Hc(t,`${n.label} \u2014 ${i.width}\xD7${i.height}@${Math.round(i.frameRate||0)}`),await T4(),Ye("cam").value=i.deviceId||s||""}Ye("src").addEventListener("change",async s=>{let e=s.target.value;Ye("camrow").hidden=e!=="cam";try{if(e==="test"||e==="black")xr(e==="test");else if(e==="cam")await Rc(Ye("cam").value||void 0);else if(e==="screen"){let t=await navigator.mediaDevices.getDisplayMedia({video:{frameRate:{ideal:30,max:30}},audio:!1}),n=t.getVideoTracks()[0].getSettings();await Hc(t,`Capture \u2014 ${n.width}\xD7${n.height}`)}else e==="file"&&Ye("file").click()}catch(t){di("Error: "+t.message),xr()}});Ye("cam").addEventListener("change",s=>Rc(s.target.value).catch(e=>di("Error: "+e.message)));Ye("file").addEventListener("change",async s=>{let e=s.target.files[0];if(!e){xr();return}Jo(),At.srcObject=null,At.src=URL.createObjectURL(e),await At.play(),_0="video",pi.map.value=Yo,di("Video: "+e.name)});["cx","cy","cw","ch"].forEach(s=>Ye(s).addEventListener("input",()=>{yt.x=+Ye("cx").value/100,yt.y=+Ye("cy").value/100,yt.w=+Ye("cw").value/100,yt.h=+Ye("ch").value/100,pi.crop.value.set(yt.x,1-yt.y-yt.h,yt.w,yt.h)}));var pi={map:{value:Tr},gain:{value:1.6},crop:{value:new Ke(0,0,1,1)}},v4=new ht({uniforms:pi,vertexShader:`
+}),ki.traverse(e=>{e.isMesh&&(Array.isArray(e.material)?e.material:[e.material]).forEach(n=>{n.envMapIntensity=1,Dc.push(n),/pletivo|Difuzni/i.test(n.name)&&(n.transparent=!0,n.opacity=/Difuzni/i.test(n.name)?.18:.28,n.depthWrite=!1,n.transmission=0,n.sheen=0,n.side=Wt)})}),U0.add(ki),Lc(),applyRoomMaterials(),setupProjection(),document.getElementById("loading")?.remove();window.applyAPCEditorProject?.(ki,{Material:ht,Vector2:pe,side:Wt,map:pi.map,crop:pi.crop,fixtures:wn.outputFixtures});applyChainRoom()}Pc.load(wn.space?.model||"room-current.glb",async loaded=>{try{const saved=await window.apcProjectStore?.();if(saved)loaded=await new Promise((resolve,reject)=>Pc.parse(saved,"",resolve,reject));}catch(error){di("Saved editor project could not load: "+error.message);}mountRoom(loaded);},undefined,s=>di("Model load failed. Reopen Visualizer from Bridge: "+s));var ui=document.createElement("canvas");ui.width=Cn;ui.height=Bn;var nn=ui.getContext("2d");function x4(s){if(!testPatternEnabled){nn.fillStyle="#000";nn.fillRect(0,0,Cn,Bn);return;}nn.fillStyle="#000",nn.fillRect(0,0,Cn,Bn);for(let e=0;e<4;e++){let t=(s*.25+e*.25)%1*Bn,n=nn.createLinearGradient(0,t-90,0,t+90),i=(s*40+e*90)%360;n.addColorStop(0,"rgba(0,0,0,0)"),n.addColorStop(.5,`hsl(${i},100%,55%)`),n.addColorStop(1,"rgba(0,0,0,0)"),nn.fillStyle=n,nn.fillRect(0,t-90,Cn,180)}for(let e=0;e<3;e++){let t=(s*.35+e/3)%1*Cn,n=nn.createLinearGradient(t-160,0,t+160,0),i=(200+e*120+s*25)%360;n.addColorStop(0,"rgba(0,0,0,0)"),n.addColorStop(.5,`hsl(${i},100%,60%)`),n.addColorStop(1,"rgba(0,0,0,0)"),nn.fillStyle=n,nn.fillRect(t-160,0,320,Bn)}}var At=document.createElement("video");At.muted=!0;At.playsInline=!0;At.loop=!0;var testPatternEnabled=false;var _0="test",Br=null,Tr=new Xs(ui);Tr.colorSpace=tt;var Yo=new Js(At);Yo.colorSpace=tt;var yt={x:0,y:0,w:1,h:1};function Jo(){Br&&Br.getTracks().forEach(s=>s.stop()),Br=null}async function Hc(s,e){Jo(),Br=s,At.srcObject=s,At.removeAttribute("src"),await At.play(),_0="video",pi.map.value=Yo,di(e),s.getVideoTracks()[0].addEventListener("ended",()=>{xr()})}function xr(explicit=false){testPatternEnabled=explicit;Jo(),At.pause(),At.srcObject=null,_0="test",pi.map.value=Tr,di(explicit?"Test pattern":"No input — black output"),Ye("src").value=explicit?"test":"black"}function di(s){Ye("status").textContent=s}async function T4(){let s=(await navigator.mediaDevices.enumerateDevices()).filter(t=>t.kind==="videoinput"),e=Ye("cam");return e.innerHTML="",s.forEach((t,n)=>{let i=document.createElement("option");i.value=t.deviceId,i.textContent=t.label||`Camera ${n+1}`,e.appendChild(i)}),s}async function Rc(s){let e={video:{width:{ideal:Cn},height:{ideal:Bn},frameRate:{ideal:30,max:30}},audio:!1};s&&(e.video.deviceId={exact:s});let t=await navigator.mediaDevices.getUserMedia(e),n=t.getVideoTracks()[0],i=n.getSettings();await Hc(t,`${n.label} \u2014 ${i.width}\xD7${i.height}@${Math.round(i.frameRate||0)}`),await T4(),Ye("cam").value=i.deviceId||s||""}Ye("src").addEventListener("change",async s=>{let e=s.target.value;Ye("camrow").hidden=e!=="cam";try{if(e==="test"||e==="black")xr(e==="test");else if(e==="cam")await Rc(Ye("cam").value||void 0);else if(e==="screen"){let t=await navigator.mediaDevices.getDisplayMedia({video:{frameRate:{ideal:30,max:30}},audio:!1}),n=t.getVideoTracks()[0].getSettings();await Hc(t,`Capture \u2014 ${n.width}\xD7${n.height}`)}else e==="file"&&Ye("file").click()}catch(t){di("Error: "+t.message),xr()}});Ye("cam").addEventListener("change",s=>Rc(s.target.value).catch(e=>di("Error: "+e.message)));Ye("file").addEventListener("change",async s=>{let e=s.target.files[0];if(!e){xr();return}Jo(),At.srcObject=null,At.src=URL.createObjectURL(e),await At.play(),_0="video",pi.map.value=Yo,di("Video: "+e.name)});["cx","cy","cw","ch"].forEach(s=>Ye(s).addEventListener("input",()=>{yt.x=+Ye("cx").value/100,yt.y=+Ye("cy").value/100,yt.w=+Ye("cw").value/100,yt.h=+Ye("ch").value/100,pi.crop.value.set(yt.x,1-yt.y-yt.h,yt.w,yt.h)}));var pi={map:{value:Tr},gain:{value:1.6},crop:{value:new Ke(0,0,1,1)}},v4=new ht({uniforms:pi,vertexShader:`
     attribute vec2 aUv; attribute float aSel;
     varying vec2 vUv; varying float vSel;
     void main(){ vUv = aUv; vSel = aSel;
@@ -3997,20 +4030,96 @@ material.emissive?.setRGB(0,0,0);material.emissiveIntensity=0;material.emissiveM
       vec2 uv = crop.xy + vUv * crop.zw;
       vec3 c = texture2D(map, uv).rgb * gain;
       c = mix(c, c*1.5, vSel*0.55);
-      gl_FragColor = vec4(c, 1.0); }`}),vr=[],ji=[],qi={metrovka:1,neon:1};function Oc(){let s={metrovka:[],neon:[]};sn.forEach((l,f)=>l.pos.forEach((h,u)=>s[l.kind].push({fi:f,k:u})));let e={metrovka:new Zs(.006,8,6),neon:new Ks(.011,.011,1,10,1,!0)},t=new Oe,n=new Mt,i=new v(0,1,0),r=new v,a=new v,o=new v,c=new v;Object.entries(s).forEach(([l,f])=>{let h=e[l].clone(),u=new si(h,v4,f.length),p=new Float32Array(f.length*2),$=new Float32Array(f.length),g=[];f.forEach(({fi:m,k:d},_)=>{let b=sn[m],A=b.pos;if(r.fromArray(A[d]),l==="neon"){let T=Math.max(0,d-1),y=Math.min(A.length-1,d+1);o.fromArray(A[y]).sub(a.fromArray(A[T]));let B=o.length()/(y-T);n.setFromUnitVectors(i,o.normalize()),c.set(qi.neon,B*(+document.getElementById("neonFill")?.value||.97),qi.neon)}else n.identity(),c.setScalar(qi.metrovka);previewEnabled(b,d)||c.set(0,0,0),t.compose(r,n,c),u.setMatrixAt(_,t),p[_*2]=b.uv[d][0],p[_*2+1]=b.uv[d][1],g.push(m)}),h.setAttribute("aUv",new b0(p,2)),h.setAttribute("aSel",new b0($,1)),u.userData.kind=l,u.frustumCulled=!1,U0.add(u),ji.push(u),vr.push(g)})}Oc();function F4(){ji.forEach(s=>{U0.remove(s),s.geometry.dispose()}),ji.length=0,vr.length=0,Oc(),Qc(Ji)}var hi=192,Vi=108,Xo=document.createElement("canvas");Xo.width=hi;Xo.height=Vi;var xc=Xo.getContext("2d",{willReadFrequently:!0}),M4=sn.map(s=>{let e=new v;s.pos.forEach(r=>e.add(new v().fromArray(r))),e.divideScalar(s.pos.length);let t=new J0(0,0,6,2);t.position.copy(e),(!qo||location.hash.includes("lights"))&&U0.add(t);let n=Math.max(1,Math.floor(s.uv.length/12)),i=s.uv.filter((r,a)=>a%n===0);return{L:t,samples:i,w:s.kind==="neon"?5:1.6,px:s.pixels}}),Vo=new or(0,0);U0.add(Vo);var Tc=new be,ko=1.5;function D4(){if(!M4.length)return null;let s=_0==="test"?ui:At,e=_0==="test"?Cn:At.videoWidth,t=_0==="test"?Bn:At.videoHeight;if(!e||!t)return null;xc.drawImage(s,yt.x*e,yt.y*t,yt.w*e,yt.h*t,0,0,hi,Vi);let n=xc.getImageData(0,0,hi,Vi).data,i=0,r=0,a=0,o=0;return M4.forEach(({L:c,samples:l,w:f,px:h})=>{if(!l.length){c.intensity=0;return;}let u=0,p=0,$=0;l.forEach(([m,d])=>{let _=Math.min(hi-1,Math.floor(m*hi)),A=(Math.min(Vi-1,Math.floor((1-d)*Vi))*hi+_)*4;u+=n[A],p+=n[A+1],$+=n[A+2]});let g=l.length*255;c.color.setRGB(u/g,p/g,$/g,tt),c.intensity=ko*f,i+=c.color.r*h,r+=c.color.g*h,a+=c.color.b*h,o+=h}),Tc.setRGB(o?i/o:0,o?r/o:0,o?a/o:0),Vo.color.copy(Tc),Vo.intensity=ko*.45,!0}var Yi=Ye("inset"),i0=Yi.getContext("2d");function P4(){
-let w=Yi.width,h=Yi.height,source=_0==="test"?ui:At,sw=_0==="test"?Cn:At.videoWidth,sh=_0==="test"?Bn:At.videoHeight;
+      gl_FragColor = vec4(c, 1.0); }`}),vr=[],ji=[],qi={metrovka:1,neon:1};function Oc(){let s={metrovka:[],neon:[]};sn.forEach((l,f)=>l.pos.forEach((h,u)=>s[l.kind].push({fi:f,k:u})));let e={metrovka:new Zs(.006,8,6),neon:new Ks(.011,.011,1,10,1,!0)},t=new Oe,n=new Mt,i=new v(0,1,0),r=new v,a=new v,o=new v,c=new v;Object.entries(s).forEach(([l,f])=>{let h=e[l].clone(),u=new si(h,v4,f.length),p=new Float32Array(f.length*2),$=new Float32Array(f.length),g=[];f.forEach(({fi:m,k:d},_)=>{let b=sn[m],A=b.pos;if(r.fromArray(A[d]),l==="neon"){let T=Math.max(0,d-1),y=Math.min(A.length-1,d+1);o.fromArray(A[y]).sub(a.fromArray(A[T]));let B=o.length()/(y-T);n.setFromUnitVectors(i,o.normalize()),c.set(qi.neon,B*(+document.getElementById("neonFill")?.value||.97),qi.neon)}else n.identity(),c.setScalar(qi.metrovka);let sourcePixel=window.apcWiring?.pixelIndex(b.sliceUid,d,b.uv.length)??d;previewEnabled(b,sourcePixel)||c.set(0,0,0),t.compose(r,n,c),u.setMatrixAt(_,t),p[_*2]=b.uv[sourcePixel][0],p[_*2+1]=b.uv[sourcePixel][1],g.push(m)}),h.setAttribute("aUv",new b0(p,2)),h.setAttribute("aSel",new b0($,1)),u.userData.kind=l,u.frustumCulled=!1,U0.add(u),ji.push(u),vr.push(g)})}Oc();function F4(){ji.forEach(s=>{U0.remove(s),s.geometry.dispose()}),ji.length=0,vr.length=0,Oc(),Qc(Ji)}var hi=384,Vi=216,Xo=document.createElement("canvas");Xo.width=hi;Xo.height=Vi;
+var xc=Xo.getContext("2d",{willReadFrequently:true});xc.imageSmoothingEnabled=true;xc.imageSmoothingQuality="high";
+var M4=sn.map(fixture=>{
+ const center=new v;fixture.pos.forEach(point=>center.add(new v().fromArray(point)));center.divideScalar(fixture.pos.length);
+ const light=new J0(0,0,6,2);light.position.copy(center);if(!qo||location.hash.includes("lights"))U0.add(light);
+ return {L:light,fixture,w:fixture.kind==="neon"?5:1.6,px:fixture.pixels};
+}),Vo=new or(0,0);U0.add(Vo);
+var Tc=new be,spillTarget=new be,ko=1.5,lastSpillTime=null;
+function D4(){
+ const source=previewPaused?pausedFrame:_0==="test"?ui:At;
+ const width=previewPaused?pausedFrame.width:_0==="test"?Cn:At.videoWidth;
+ const height=previewPaused?pausedFrame.height:_0==="test"?Bn:At.videoHeight;
+ if(!M4.length||ko<=0||!width||!height||(!previewPaused&&_0==="test"&&!testPatternEnabled)){
+  M4.forEach(({L})=>{L.intensity=0;L.color.setRGB(0,0,0);});Vo.intensity=0;Vo.color.setRGB(0,0,0);lastSpillTime=null;return false;
+ }
+ xc.clearRect(0,0,hi,Vi);xc.drawImage(source,yt.x*width,yt.y*height,yt.w*width,yt.h*height,0,0,hi,Vi);
+ const data=xc.getImageData(0,0,hi,Vi).data,now=performance.now();
+ // Only reflected light is filtered; LED pixels and video keep their original timing.
+ const blend=previewPaused||lastSpillTime===null?1:-Math.expm1(-Math.max(0,now-lastSpillTime)/100);lastSpillTime=now;
+ let red=0,green=0,blue=0,total=0;
+ for(const {L,fixture,w,px} of M4){
+  const id=fixture.sliceUid,uv=fixture.uv;
+  if(!uv.length||fixtureSelection.disabled[id]===true||window.apcWiring?.hasSignal(id)===false){L.intensity=0;L.color.setRGB(0,0,0);continue;}
+  let r=0,g=0,b=0,active=0;const disabled=fixtureSelection.pixels[id]||{};
+  uv.forEach(([u,v],pixel)=>{
+   if(disabled[pixel]===true)return;active++;
+   const x=Math.max(0,Math.min(hi-1,Math.floor(u*hi))),y=Math.max(0,Math.min(Vi-1,Math.floor((1-v)*Vi))),offset=(y*hi+x)*4;
+   r+=data[offset];g+=data[offset+1];b+=data[offset+2];
+  });
+  if(!active){L.intensity=0;L.color.setRGB(0,0,0);continue;}
+  const divisor=uv.length*255;spillTarget.setRGB(r/divisor,g/divisor,b/divisor,tt);if(blend===1)L.color.copy(spillTarget);else L.color.lerp(spillTarget,blend);L.intensity=ko*w;
+  red+=L.color.r*px;green+=L.color.g*px;blue+=L.color.b*px;total+=px;
+ }
+ Tc.setRGB(total?red/total:0,total?green/total:0,total?blue/total:0);Vo.color.copy(Tc);Vo.intensity=total?ko*.45:0;return true;
+}
+var Yi=Ye("inset"),i0=Yi.getContext("2d");function drawMappingDirection(fixture,w,h){
+ if(!fixture.pixels)return;
+ const start=fixturePixelUV(fixture,fixtureSourcePixel(fixture,0)),end=fixturePixelUV(fixture,fixtureSourcePixel(fixture,fixture.pixels-1));
+ const a=[start[0]*w,(1-start[1])*h],b=[end[0]*w,(1-end[1])*h],selected=mappingSelection.has(fixture.sliceUid);
+ i0.fillStyle="#51f29b";i0.fillRect(a[0]-2,a[1]-2,4,4);
+ if(fixture.pixels>1){i0.fillStyle="#ff6475";i0.fillRect(b[0]-2,b[1]-2,4,4);}
+ if(!mappingEditing||!selected)return;
+ i0.save();i0.font="bold 11px Segoe UI,system-ui";i0.lineWidth=3;i0.strokeStyle="#10141b";
+ const label=(text,p,color)=>{i0.strokeText(text,p[0]+5,p[1]-5);i0.fillStyle=color;i0.fillText(text,p[0]+5,p[1]-5);};
+ label("IN 1",a,"#51f29b");if(fixture.pixels>1)label("OUT "+fixture.pixels,b,"#ff6475");
+ const dx=b[0]-a[0],dy=b[1]-a[1],length=Math.hypot(dx,dy);
+ if(length>18){const x=(a[0]+b[0])/2,y=(a[1]+b[1])/2,ux=dx/length,uy=dy/length;
+  i0.strokeStyle="#ff9b38";i0.lineWidth=2;i0.beginPath();i0.moveTo(x-ux*8,y-uy*8);i0.lineTo(x+ux*8,y+uy*8);i0.lineTo(x+ux*2-uy*4,y+uy*2+ux*4);i0.moveTo(x+ux*8,y+uy*8);i0.lineTo(x+ux*2+uy*4,y+uy*2-ux*4);i0.stroke();
+ }
+ i0.restore();
+}
+function P4(){
+let w=Yi.width,h=Yi.height,source=previewPaused?pausedFrame:_0==="test"?ui:At,sw=previewPaused?pausedFrame.width:_0==="test"?Cn:At.videoWidth,sh=previewPaused?pausedFrame.height:_0==="test"?Bn:At.videoHeight;
 i0.fillStyle="#000";i0.fillRect(0,0,w,h);
 if(sw&&sh)i0.drawImage(source,yt.x*sw,yt.y*sh,yt.w*sw,yt.h*sh,0,0,w,h);
 for(const fixture of (wn.outputFixtures||[])){
  const points=fixture.uv;if(!points.length||(!mappingEditing&&fixtureSelection.disabled[fixture.sliceUid]===true))continue;
- i0.strokeStyle=mappingSelected===fixture.sliceUid?"#67e8bd":fixtureSelection.disabled[fixture.sliceUid]===true?"#ef6972":"rgba(255,255,255,.7)";i0.lineWidth=mappingSelected===fixture.sliceUid?2:1;i0.beginPath();
+ i0.strokeStyle=mappingSelection.has(fixture.sliceUid)?"#ff9b38":fixtureSelection.disabled[fixture.sliceUid]===true?"#ef6972":"rgba(255,255,255,.7)";i0.lineWidth=mappingSelection.has(fixture.sliceUid)?4:1;i0.beginPath();
  points.forEach(([u,v],index)=>index?i0.lineTo(u*w,(1-v)*h):i0.moveTo(u*w,(1-v)*h));
- i0.closePath();i0.stroke();i0.fillStyle="#0f0";i0.fillRect(points[0][0]*w-1,(1-points[0][1])*h-1,2,2);
+ i0.closePath();i0.stroke();drawMappingDirection(fixture,w,h);
 }drawMappingPixelOverlay();}
-var Go=new lr,vc=new pe,Ji=-1;function Qc(s){ji.forEach((e,t)=>{let n=e.geometry.getAttribute("aSel");vr[t].forEach((i,r)=>{n.array[r]=i===s?1:0}),n.needsUpdate=!0})}c0.domElement.addEventListener("pointermove",s=>{vc.set(s.clientX/innerWidth*2-1,-(s.clientY/innerHeight)*2+1),Go.setFromCamera(vc,R0),Go.params.Mesh={};let e=null;ji.forEach((i,r)=>{let a=Go.intersectObject(i,!1)[0];a&&(!e||a.distance<e.d)&&(e={d:a.distance,fi:vr[r][a.instanceId]})});let t=e?e.fi:-1,n=Ye("tip");if(t!==Ji&&(Ji=t,Qc(t)),t>=0){let i=sn[t];n.hidden=!1,n.style.left=s.clientX+14+"px",n.style.top=s.clientY+14+"px",n.innerHTML=`<b>${i.screen.trim()}</b> \xB7 ${i.slice.trim()}<br>start ch ${i.startChannel} \xB7 ${i.pixels} px \xB7 ${i.lengthM} m<br><span>${i.object}</span>`}else n.hidden=!0});var H4=new Bt(innerWidth,innerHeight,{type:Vt,samples:0}),Xi=new Ar(c0,H4);Xi.addPass(new wr(U0,R0));var Ic=new fi(new pe(innerWidth,innerHeight),1.2,.8,.3);Xi.addPass(Ic);Xi.addPass(new Cr);function Lc(){let s=+Ye("amb").value/100;Mc.intensity=s*.9,Dc.forEach(e=>{e.envMapIntensity=s*.6})}Ye("amb").addEventListener("input",Lc);Ye("gain").addEventListener("input",s=>{pi.gain.value=+s.target.value/100});Ye("bloom").addEventListener("input",s=>{Ic.strength=+s.target.value/100});Ye("spill").addEventListener("input",s=>{ko=+s.target.value/100});Ye("size").addEventListener("input",s=>{let e=+s.target.value/100;qi.metrovka=e,qi.neon=e,F4()});Ye("clip").addEventListener("change",s=>Fc(s.target.checked));Ye("room").addEventListener("change",s=>{ki&&(ki.visible=s.target.checked)});Ye("showInset").addEventListener("change",s=>{Yi.hidden=!s.target.checked});document.querySelectorAll("[data-view]").forEach(s=>s.addEventListener("click",()=>jo(s.dataset.view)));Ye("collapse").addEventListener("click",()=>Ye("panel").classList.toggle("min"));addEventListener("resize",()=>{R0.aspect=innerWidth/innerHeight,R0.updateProjectionMatrix(),c0.setSize(innerWidth,innerHeight),Xi.setSize(innerWidth,innerHeight)});var R4=new ai,Wo=0,zo=0;var lastPreviewFrame=0;function Ko(){let now=performance.now();if(document.hidden||now-lastPreviewFrame<1000/30){qo||requestAnimationFrame(Ko);return;}lastPreviewFrame=now;let s=R4.getElapsedTime();_0==="test"&&(x4(s),Tr.needsUpdate=!0),D4(),Yi.hidden||P4(),yr.update(),Xi.render(),Wo++,s-zo>1&&(Ye("fps").textContent=`${Math.round(Wo/(s-zo))} fps`,Wo=0,zo=s),qo||requestAnimationFrame(Ko)}Ye("stats").textContent=`${sn.length} fixtures \xB7 ${sn.reduce((s,e)=>s+e.pixels,0)} px`;di("No input — black output");async function connectSpout(){let devices=await T4(),cam=devices.find(d=>/^spoutcam/i.test(d.label))||devices.find(d=>/spoutcam/i.test(d.label));if(!cam){di("Enable Arena Spout output and allow camera access.");return false;}Ye("src").value="cam";Ye("camrow").hidden=false;await Rc(cam.deviceId);return true;}
+var Go=new lr,vc=new pe,Ji=-1;function Qc(s){ji.forEach((e,t)=>{let n=e.geometry.getAttribute("aSel");vr[t].forEach((i,r)=>{n.array[r]=i===s?1:0}),n.needsUpdate=!0})}c0.domElement.addEventListener("pointermove",s=>{vc.set(s.clientX/innerWidth*2-1,-(s.clientY/innerHeight)*2+1),Go.setFromCamera(vc,R0),Go.params.Mesh={};let e=null;ji.forEach((i,r)=>{let a=Go.intersectObject(i,!1)[0];a&&(!e||a.distance<e.d)&&(e={d:a.distance,fi:vr[r][a.instanceId]})});let t=e?e.fi:-1,n=Ye("tip");if(t!==Ji&&(Ji=t,Qc(t)),t>=0){let i=sn[t];n.hidden=!1,n.style.left=s.clientX+14+"px",n.style.top=s.clientY+14+"px",n.innerHTML=`<b>${i.screen.trim()}</b> \xB7 ${i.slice.trim()}<br>start ch ${i.startChannel} \xB7 ${i.pixels} px \xB7 ${i.lengthM} m<br><span>${i.object}</span>`}else n.hidden=!0});var H4=new Bt(innerWidth,innerHeight,{type:Vt,samples:0}),Xi=new Ar(c0,H4);Xi.addPass(new wr(U0,R0));var Ic=new fi(new pe(innerWidth,innerHeight),1.2,.8,.3);Xi.addPass(Ic);Xi.addPass(new Cr);function Lc(){let s=+Ye("amb").value/100;Mc.intensity=s*.9,Dc.forEach(e=>{e.envMapIntensity=s*.6})}Ye("amb").addEventListener("input",Lc);Ye("gain").addEventListener("input",s=>{pi.gain.value=+s.target.value/100});Ye("bloom").addEventListener("input",s=>{Ic.strength=+s.target.value/100});Ye("spill").addEventListener("input",s=>{ko=+s.target.value/100});Ye("size").addEventListener("input",s=>{let e=+s.target.value/100;qi.metrovka=e,qi.neon=e,F4()});Ye("clip").addEventListener("change",s=>Fc(s.target.checked));Ye("room").addEventListener("change",s=>{ki&&(ki.visible=s.target.checked);if(chainRoom)chainRoom.visible=s.target.checked;applyChainRoom()});Ye("showInset").addEventListener("change",s=>{Yi.hidden=!s.target.checked});document.querySelectorAll("[data-view]").forEach(s=>s.addEventListener("click",()=>jo(s.dataset.view)));Ye("collapse").addEventListener("click",()=>Ye("panel").classList.toggle("min"));addEventListener("resize",()=>{R0.aspect=innerWidth/innerHeight,R0.updateProjectionMatrix(),c0.setSize(innerWidth,innerHeight),Xi.setSize(innerWidth,innerHeight)});var R4=new ai,Wo=0,zo=0;var lastPreviewFrame=0;function Ko(){let now=performance.now();if(document.hidden||document.body.classList.contains("apc-panel-focused")||now-lastPreviewFrame+0.001<1000/30){qo||requestAnimationFrame(Ko);return;}lastPreviewFrame+=Math.floor((now-lastPreviewFrame+0.001)/(1000/30))*(1000/30);let s=R4.getElapsedTime();previewPaused?pi.map.value=pausedTexture:(_0==="test"&&(x4(s-previewPauseOffset),Tr.needsUpdate=!0)),D4(),Yi.hidden||chainIsolation!==null||P4(),yr.update(),window.apcWiring?.draw(),Xi.render(),Wo++,s-zo>1&&(Ye("fps").textContent=`${Math.round(Wo/(s-zo))} fps`,Wo=0,zo=s),qo||requestAnimationFrame(Ko)}Ye("stats").textContent=`${sn.length} fixtures \xB7 ${sn.reduce((s,e)=>s+e.pixels,0)} px`;di("No input — black output");async function connectSpout(){let devices=await T4(),cam=devices.find(d=>/^spoutcam/i.test(d.label))||devices.find(d=>/spoutcam/i.test(d.label));if(!cam){di("Enable Arena Spout output and allow camera access.");return false;}Ye("src").value="cam";Ye("camrow").hidden=false;await Rc(cam.deviceId);return true;}
 let access=document.createElement("button");access.textContent="Allow camera access and connect SpoutCam";Ye("panel").prepend(access);
 access.onclick=async()=>{try{let devices=await T4();if(!devices.some(d=>d.label)){let permission=await navigator.mediaDevices.getUserMedia({video:true,audio:false});permission.getTracks().forEach(t=>t.stop());}access.hidden=await connectSpout();}catch(e){di(e.message);}};
-connectSpout().then(ok=>access.hidden=ok).catch(e=>di(e.message));
+
+const sharedViewKey='apc40-view:'+(new URLSearchParams(location.search).get('space')||'default');
+function readSharedView(){try{return JSON.parse(sessionStorage.getItem(sharedViewKey)||'null');}catch{return null;}}
+async function restoreSharedInput(){
+ const state=readSharedView();if(!state)return false;
+ if(state.pos?.length===3&&state.target?.length===3&&[...state.pos,...state.target].every(Number.isFinite)){R0.position.fromArray(state.pos);yr.target.fromArray(state.target);if(state.up?.length===3&&state.up.every(Number.isFinite))R0.up.fromArray(state.up);yr.update();}
+ try{
+  if(state.mode==='test'){xr(true);return true;}
+  if(state.mode==='black'){xr(false);return true;}
+  if(state.mode==='file'){
+   const blob=await window.apcLocalStore('video');if(!blob){di('Choose the video again; the local copy is unavailable.');return true;}
+   Jo();At.srcObject=null;At.loop=true;At.muted=true;At.src=URL.createObjectURL(blob);await At.play();if(Number.isFinite(state.time))At.currentTime=state.time;_0='video';pi.map.value=Yo;Ye('src').value='file';di('Local video loop · restored');return true;
+  }
+  if(state.mode==='screen'){di('Choose Capture again to resume screen sharing.');return true;}
+ }catch(error){di('Input could not resume: '+error.message);return true;}
+ return false;
+}
+window.apcPrepareToLeave=()=>saveSharedPreviewState();
+async function saveSharedPreviewState(){
+ const previous=readSharedView()||{};
+ const file=Ye('file')?.files?.[0];
+ if(file&&file.size<=128*1024*1024)await window.apcLocalStore('video',file);
+ const mode=_0==='test'?(testPatternEnabled?'test':'black'):(At.srcObject?(At.srcObject.getVideoTracks()[0]?.getSettings().displaySurface?'screen':'camera'):'file');
+ sessionStorage.setItem(sharedViewKey,JSON.stringify({...previous,pos:R0.position.toArray(),target:yr.target.toArray(),up:R0.up.toArray(),mode,time:At.currentTime||0}));
+}
+restoreSharedInput().then(restored=>restored||connectSpout()).then(ok=>access.hidden=ok).catch(e=>di(e.message));
 let presetLabel=document.createElement("p");presetLabel.textContent="Saved output: "+(wn.preset||"Legacy layout")+" / "+sn.length+" modeled fixtures. Saved output changes are detected automatically.";Ye("panel").prepend(presetLabel);
 let modelButton=document.createElement("button");modelButton.textContent="Import room model (.glb)";
 let modelInput=document.createElement("input");modelInput.type="file";modelInput.accept=".glb";modelInput.hidden=true;
@@ -4088,13 +4197,13 @@ const reset=document.createElement("button");reset.textContent="Reset visualizer
 reset.onclick=()=>{try{localStorage.removeItem(settingsKey);}catch{}location.reload();};extra.append(reset);
 function applyInsetLayout(layout){
 if(!Array.isArray(layout.outputFixtures)||!Array.isArray(layout.comp)||layout.comp.some(x=>!Number.isFinite(x)||x<=0))throw Error("Invalid mapping dimensions");
-const presetChanged=wn.preset!==layout.preset;wn.outputFixtures=layout.outputFixtures;wn.preset=layout.preset;if(presetChanged)loadFixtureSelection();if(mappingEditorReady)renderMappingList();
-const [w,h]=layout.comp;Yi.width=Math.max(1,Math.round(768*Math.min(1,w/h)));Yi.height=Math.max(1,Math.round(768*Math.min(1,h/w)));
+const presetChanged=wn.preset!==layout.preset;wn.outputFixtures=layout.outputFixtures;wn.preset=layout.preset;if(presetChanged)loadFixtureSelection();if(mappingEditorReady){renderMappingList();window.apcWiring?.refresh();}
+const [w,h]=layout.comp;Yi.style.setProperty("--mapping-aspect",w/h);Yi.width=Math.max(1,Math.round(768*Math.min(1,w/h)));Yi.height=Math.max(1,Math.round(768*Math.min(1,h/w)));
 Yi.style.width="384px";Yi.style.maxWidth="45vw";Yi.style.height="auto";
 Yi.title=layout.preset+" — "+layout.outputFixtures.length+" output slices";
 insetCaption.textContent=layout.outputFixtures.length+" output slices · saved mapping";
 }
-const insetCaption=document.createElement("div");insetCaption.style.cssText="position:fixed;right:16px;bottom:16px;padding:2px 6px;background:#000b;color:#ddd;font-size:11px;pointer-events:none";document.body.append(insetCaption);
+const insetCaption=document.createElement("div");insetCaption.id="outputInsetCaption";insetCaption.style.cssText="position:fixed;right:16px;bottom:16px;padding:2px 6px;background:#000b;color:#ddd;font-size:11px;pointer-events:none";document.body.append(insetCaption);
 Ye("showInset").addEventListener("change",()=>insetCaption.hidden=!Ye("showInset").checked);insetCaption.hidden=!Ye("showInset").checked;
 applyInsetLayout(wn);
 let outputVersion=null,heartbeatBusy=false;
@@ -4116,62 +4225,119 @@ addEventListener("pagehide",()=>{Jo();At.pause();});
 
 var mappingEditorReady=false;
 const mappingEditor=document.createElement("section");mappingEditor.id="mappingEditor";
-mappingEditor.innerHTML='<header><div><strong>Output editor</strong><p>Select the fixtures used in this preview. Arena mapping is unchanged.</p></div><button id="mappingDone">Done</button></header><div class="mappingTools"><input id="mappingSearch" placeholder="Search output, fixture or Lumiverse" aria-label="Search fixtures"><button id="mappingAll">Enable all</button><button id="mappingNone">Disable all</button><button id="mappingExport">Export selection</button><button id="mappingImport">Import selection</button></div><div id="mappingInfo"></div><div id="mappingList"></div><div class="mappingTools"><button id="mappingPixels">Edit selected fixture pixels</button><span id="mappingHint">Click an outline to select a fixture. Click again to toggle it.</span></div>';
+mappingEditor.innerHTML='<header><div><strong>Output editor</strong><p>Select the fixtures used in this preview. Arena mapping is unchanged.</p></div><button id="mappingDone">Done</button></header><div class="mappingTools"><input id="mappingSearch" placeholder="Search output, fixture or Lumiverse" aria-label="Search fixtures"><button id="mappingAll">Enable all</button><button id="mappingNone">Disable all</button><button id="mappingExport">Export selection</button><button id="mappingImport">Import selection</button></div><div id="mappingInfo"></div><div id="mappingList"></div><div class="mappingTools"><button id="mappingPixels">Edit selected fixture pixels</button><span id="mappingHint">Click an outline to select a fixture. Use its checkbox to enable or disable it.</span></div>';
 document.body.append(mappingEditor);
 const editMapping=document.createElement("button");editMapping.textContent="Edit output mapping";Ye("panel").querySelector(".body").prepend(editMapping);
-let mappingEditing=false,mappingSelected=null,pixelEditing=false;
+let mappingEditing=false,mappingSelected=null,pixelEditing=false,mappingPixelPage=0,mappingPixelSelected=-1;
+let mappingSelection=new Set(),mappingAnchor=null,suppressMappingClick=false;
+const pixelControls=document.createElement("section");pixelControls.hidden=true;pixelControls.id="mappingPixelControls";
+pixelControls.innerHTML='<strong>Pixel selection · magnified</strong><p>Click a numbered pixel to enable or disable it. Pixel numbers start at 1.</p><label>Pixels <select id="mappingPixelPage" aria-label="Pixel range"></select></label><div id="mappingPixelGrid" style="display:grid;grid-template-columns:repeat(8,minmax(0,1fr));gap:4px;margin-top:8px"></div><p id="mappingPixelStatus"></p>';
+mappingEditor.append(pixelControls);
+function renderPixelGrid(){
+ const item=(wn.outputFixtures||[]).find(f=>f.sliceUid===mappingSelected);pixelControls.hidden=!pixelEditing||!item;
+ if(!item)return;
+ pixelControls.querySelector("strong").textContent=fixtureTitle(item)+" · magnified pixels";
+ Ye("mappingHint").textContent='Selected: '+fixtureTitle(item)+' · '+item.pixels+' pixels. '+(pixelEditing?'Use the numbered grid for precise selection.':'Checkboxes enable/disable fixtures.');
+ if(!pixelEditing)return;
+ const pages=Ye("mappingPixelPage"),grid=Ye("mappingPixelGrid");pages.replaceChildren();grid.replaceChildren();
+ mappingPixelPage=Math.min(mappingPixelPage,Math.max(0,Math.ceil(item.pixels/64)-1));
+ for(let i=0;i<Math.ceil(item.pixels/64);i++){const option=document.createElement("option");option.value=i;option.textContent=(i*64+1)+'–'+Math.min(item.pixels,(i+1)*64);pages.append(option);}pages.value=mappingPixelPage;
+ pages.onchange=()=>{mappingPixelPage=Number(pages.value);renderPixelGrid();};
+ for(let physical=mappingPixelPage*64;physical<Math.min(item.pixels,(mappingPixelPage+1)*64);physical++){
+  const i=fixtureSourcePixel(item,physical);
+  const button=document.createElement("button"),active=previewEnabled(item,i);button.textContent=physical+1;button.style.cssText='padding:7px 1px;border:1px solid '+(mappingPixelSelected===i?'#ff9b38':'#455368')+';background:'+(active?'#20483c':'#502c34');button.setAttribute('aria-label','Pixel '+(physical+1)+(active?': enabled':': disabled'));button.setAttribute('aria-pressed',String(active));
+  button.onclick=()=>{const mask=fixtureSelection.pixels[item.sliceUid]||(fixtureSelection.pixels[item.sliceUid]={});mask[i]=!mask[i];mappingPixelSelected=i;saveFixtureSelection();};grid.append(button);
+ }
+ Ye("mappingPixelStatus").textContent=mappingPixelSelected>=0?'Pixel '+(fixtureSourcePixel(item,mappingPixelSelected)+1)+' selected':'Choose a numbered pixel';
+}
+function selectMapping(uid,event={}){
+ if(event.shiftKey&&mappingAnchor){
+  const ids=[...Ye("mappingList").querySelectorAll('.fixtureRow')].map(row=>row.dataset.uid),a=ids.indexOf(mappingAnchor),b=ids.indexOf(uid);
+  if(a>=0&&b>=0){if(!event.ctrlKey&&!event.metaKey)mappingSelection.clear();for(const id of ids.slice(Math.min(a,b),Math.max(a,b)+1))mappingSelection.add(id);}
+ }else if(event.ctrlKey||event.metaKey){if(mappingSelection.has(uid))mappingSelection.delete(uid);else mappingSelection.add(uid);mappingAnchor=uid;}
+ else {mappingSelection=new Set(uid?[uid]:[]);mappingAnchor=uid;}
+ mappingSelected=mappingSelection.has(uid)?uid:[...mappingSelection].at(-1)||null;mappingPixelPage=0;renderMappingList();window.apcWiring?.refresh();
+}
+function paintMappingSelection(){
+ for(const row of Ye('mappingList').querySelectorAll('.fixtureRow')){const selected=mappingSelection.has(row.dataset.uid);row.classList.toggle('selected',selected);row.setAttribute('aria-selected',String(selected));}
+ Ye('mappingSelectionCount').textContent=mappingSelection.size+' selected';Ye('mappingEnableSelected').disabled=Ye('mappingDisableSelected').disabled=!mappingSelection.size;
+}
+const bulkTools=document.createElement('div');bulkTools.className='mappingTools';bulkTools.innerHTML='<strong id="mappingSelectionCount">0 selected</strong><button id="mappingEnableSelected">Use selected</button><button id="mappingDisableSelected">Do not use selected</button><button id="mappingClearSelected">Clear selection</button><small>Drag a rectangle, Ctrl-click to add/remove, Shift-click for a range.</small>';
+mappingEditor.insertBefore(bulkTools,Ye('mappingInfo'));
+for(const [id,disabled] of [['mappingEnableSelected',false],['mappingDisableSelected',true]])Ye(id).onclick=()=>{for(const uid of mappingSelection)fixtureSelection.disabled[uid]=disabled;saveFixtureSelection();};
+Ye('mappingClearSelected').onclick=()=>selectMapping(null);
 function saveFixtureSelection(){
  try{localStorage.setItem("apc40-fixtures:"+wn.preset,JSON.stringify(fixtureSelection));}
  catch(error){di("Could not save preview selection: "+error.message);}
- F4();M4.forEach((item,index)=>{let step=Math.max(1,Math.floor(sn[index].uv.length/12));item.samples=sn[index].uv.filter((uv,pixel)=>pixel%step===0&&previewEnabled(sn[index],pixel));});
- renderMappingList();
+ F4();
+ renderMappingList();window.apcWiring?.refresh();
 }
 function fixtureTitle(item){return item.slice||"Fixture "+item.sliceUid;}
+const mappingFoldKey=()=>"apc40-output-folds:"+(new URLSearchParams(location.search).get("space")||"default")+":"+wn.preset;
+let mappingFoldPreset=null,mappingFolds={};
 function renderMappingList(){
+ if(mappingFoldPreset!==mappingFoldKey()){mappingFoldPreset=mappingFoldKey();mappingFolds={};try{const saved=JSON.parse(localStorage.getItem(mappingFoldPreset)||"{}");if(saved&&typeof saved==="object")mappingFolds=saved;}catch{}}
  const list=Ye("mappingList");list.replaceChildren();
  const query=Ye("mappingSearch").value.toLocaleLowerCase(),items=wn.outputFixtures||[];
+ const known=new Set(items.map(f=>f.sliceUid));mappingSelection=new Set([...mappingSelection].filter(id=>known.has(id)));
+ Ye('mappingSelectionCount').textContent=mappingSelection.size+' selected';
+ Ye('mappingEnableSelected').disabled=Ye('mappingDisableSelected').disabled=!mappingSelection.size;
  const enabled=items.filter(item=>fixtureSelection.disabled[item.sliceUid]!==true).length;
  Ye("mappingInfo").textContent=wn.preset+" · "+enabled+" / "+items.length+" enabled · saved automatically";
  const grouped=new Map();for(const item of items){const key=item.screenUid||item.screen;if(!grouped.has(key))grouped.set(key,[]);grouped.get(key).push(item);}
  for(const group of grouped.values()){
   const visible=group.filter(item=>(item.screen+" "+fixtureTitle(item)+" Lumiverse "+item.lumiverse).toLocaleLowerCase().includes(query));if(!visible.length)continue;
-  const section=document.createElement("details");section.open=true;
+  const section=document.createElement("details"),foldId=String(group[0].screenUid||group[0].screen);section.open=mappingFolds[foldId]!==false;
   const heading=document.createElement("summary"),check=document.createElement("input");check.type="checkbox";
   const count=group.filter(item=>fixtureSelection.disabled[item.sliceUid]!==true).length;check.checked=count===group.length;check.indeterminate=count>0&&count<group.length;
   check.onclick=event=>event.stopPropagation();check.onchange=()=>{for(const item of group)fixtureSelection.disabled[item.sliceUid]=!check.checked;saveFixtureSelection();};
-  const title=document.createElement("span");title.textContent=group[0].screen+(group[0].lumiverse!==""?" · Lumiverse ID "+group[0].lumiverse:"");heading.append(check,title);section.append(heading);
+  const title=document.createElement("span");title.textContent=group[0].screen+(group[0].lumiverse!==""?" · Lumiverse ID "+group[0].lumiverse:"");title.textContent+=" | "+count+" / "+group.length+" in use";heading.onclick=event=>{if(event.target.closest('input,button,select'))return;event.preventDefault();section.open=!section.open;mappingFolds[foldId]=section.open;try{localStorage.setItem(mappingFoldPreset,JSON.stringify(mappingFolds));}catch{}};heading.append(check,title);section.append(heading);if(window.apcWiring)section.append(window.apcWiring.groupControl(group));
   for(const item of visible){
-   const row=document.createElement("label");row.className="fixtureRow"+(mappingSelected===item.sliceUid?" selected":"");
-   const checkbox=document.createElement("input");checkbox.type="checkbox";checkbox.checked=fixtureSelection.disabled[item.sliceUid]!==true;
-   checkbox.onchange=()=>{mappingSelected=item.sliceUid;fixtureSelection.disabled[item.sliceUid]=!checkbox.checked;saveFixtureSelection();};
-   const name=document.createElement("span");name.textContent=fixtureTitle(item);const meta=document.createElement("small");meta.textContent=item.pixels?item.pixels+" pixels":"Video slice";
-   row.append(checkbox,name,meta);row.onclick=()=>{mappingSelected=item.sliceUid;};section.append(row);
+   const row=document.createElement("div");row.dataset.uid=item.sliceUid;row.className="fixtureRow"+(mappingSelection.has(item.sliceUid)?" selected":"");row.setAttribute("aria-selected",String(mappingSelection.has(item.sliceUid)));
+   const checkbox=document.createElement("input");checkbox.type="checkbox";checkbox.setAttribute("aria-label","Enable "+fixtureTitle(item));checkbox.checked=fixtureSelection.disabled[item.sliceUid]!==true;
+   checkbox.onchange=()=>{mappingSelected=item.sliceUid;if(!mappingSelection.has(item.sliceUid))mappingSelection=new Set([item.sliceUid]);fixtureSelection.disabled[item.sliceUid]=!checkbox.checked;saveFixtureSelection();};
+   const name=document.createElement("button");name.className="fixtureName";name.textContent=fixtureTitle(item);const meta=document.createElement("small");meta.textContent=item.pixels?item.pixels+" pixels":"Video slice";
+   row.append(checkbox,name,meta);row.onclick=event=>{if(event.target===checkbox)return;selectMapping(item.sliceUid,event);};section.append(row);
   }list.append(section);
  }
+ renderPixelGrid();
 }
-function setMappingEditing(value){mappingEditing=value;pixelEditing=false;document.body.classList.toggle("editingMapping",value);mappingEditor.hidden=!value;Yi.style.cursor=value?"crosshair":"default";renderMappingList();}
+function setMappingEditing(value){mappingEditing=value;Ye('mappingTab')?.setAttribute('aria-pressed',String(value));const link=Ye('visualizerNav')?.querySelector('a');if(link){if(value)link.removeAttribute('aria-current');else link.setAttribute('aria-current','page');}pixelEditing=false;document.body.classList.toggle("editingMapping",value);mappingEditor.hidden=!value;Yi.style.cursor=value?"pointer":"default";renderMappingList();if(Ye('pausePreview'))placePausePreview();}
 mappingEditor.hidden=true;editMapping.onclick=()=>setMappingEditing(true);Ye("mappingDone").onclick=()=>setMappingEditing(false);
 Ye("mappingSearch").oninput=renderMappingList;
 for(const [id,disabled] of [["mappingAll",false],["mappingNone",true]])Ye(id).onclick=()=>{for(const item of wn.outputFixtures||[])fixtureSelection.disabled[item.sliceUid]=disabled;saveFixtureSelection();};
-Ye("mappingPixels").onclick=()=>{const item=(wn.outputFixtures||[]).find(f=>f.sliceUid===mappingSelected);if(!item||!item.pixels||item.pixels>4096){Ye("mappingHint").textContent="Select a fixture with 1–4096 pixels first.";return;}pixelEditing=!pixelEditing;Ye("mappingHint").textContent=pixelEditing?"Click individual pixels in the selected fixture to toggle them.":"Click a fixture outline to select it.";};
+Ye("mappingPixels").onclick=()=>{const item=(wn.outputFixtures||[]).find(f=>f.sliceUid===mappingSelected);if(!item||!item.pixels||item.pixels>4096){Ye("mappingHint").textContent="Select a fixture with 1–4096 pixels first.";return;}pixelEditing=!pixelEditing;mappingPixelPage=0;renderPixelGrid();};
 Yi.addEventListener("click",event=>{
- if(!mappingEditing)return;const rect=Yi.getBoundingClientRect(),u=(event.clientX-rect.left)/rect.width,v=1-(event.clientY-rect.top)/rect.height;
+ if(!mappingEditing)return;if(suppressMappingClick){suppressMappingClick=false;return;}const rect=Yi.getBoundingClientRect(),u=(event.clientX-rect.left)/rect.width,v=1-(event.clientY-rect.top)/rect.height;
  const items=wn.outputFixtures||[],selected=items.find(f=>f.sliceUid===mappingSelected);
  if(pixelEditing&&selected){
   let nearest=-1,distance=Infinity;for(let i=0;i<selected.pixels;i++){const p=fixturePixelUV(selected,i),d=(p[0]-u)**2*rect.width**2+(p[1]-v)**2*rect.height**2;if(d<distance){distance=d;nearest=i;}}
-  if(nearest>=0&&distance<144){const mask=fixtureSelection.pixels[selected.sliceUid]||(fixtureSelection.pixels[selected.sliceUid]={});mask[nearest]=!mask[nearest];saveFixtureSelection();}return;
+  if(nearest>=0&&distance<144){const mask=fixtureSelection.pixels[selected.sliceUid]||(fixtureSelection.pixels[selected.sliceUid]={});mask[nearest]=!mask[nearest];mappingPixelSelected=nearest;mappingPixelPage=Math.floor(fixtureSourcePixel(selected,nearest)/64);saveFixtureSelection();}return;
  }
- const hits=items.filter(f=>polygonContains(f.uv,u,v));if(!hits.length)return;
- hits.sort((a,b)=>{const area=f=>Math.abs(f.uv.reduce((sum,p,i)=>{const q=f.uv[(i+1)%f.uv.length];return sum+p[0]*q[1]-q[0]*p[1];},0));return area(a)-area(b);});
- const item=hits[0];if(mappingSelected===item.sliceUid){fixtureSelection.disabled[item.sliceUid]=fixtureSelection.disabled[item.sliceUid]!==true;saveFixtureSelection();}else{mappingSelected=item.sliceUid;renderMappingList();}
+ const hits=items.filter(f=>fixtureHitDistance(f,u,v,rect.width,rect.height)<=7);if(!hits.length){if(!event.ctrlKey&&!event.shiftKey)selectMapping(null);return;}
+ hits.sort((a,b)=>{const area=f=>Math.abs(f.uv.reduce((sum,p,i)=>{const q=f.uv[(i+1)%f.uv.length];return sum+p[0]*q[1]-q[0]*p[1];},0));return fixtureHitDistance(a,u,v,rect.width,rect.height)-fixtureHitDistance(b,u,v,rect.width,rect.height)||area(a)-area(b);});
+ const item=hits[0];selectMapping(item.sliceUid,event);
 });
+const marquee=document.createElement('div');marquee.id='mappingMarquee';marquee.hidden=true;marquee.style.cssText='position:fixed;pointer-events:none;z-index:8;border:1px solid #ff9b38;background:#ff9b3828';document.body.append(marquee);
+let mappingDrag=null;
+Yi.addEventListener('pointerdown',event=>{if(!mappingEditing||pixelEditing||event.button!==0)return;mappingDrag={x:event.clientX,y:event.clientY,add:event.ctrlKey||event.metaKey||event.shiftKey,seed:new Set(mappingSelection),dragged:false};Yi.setPointerCapture(event.pointerId);});
+Yi.addEventListener('pointermove',event=>{
+ if(!mappingDrag)return;const d=mappingDrag;if(Math.hypot(event.clientX-d.x,event.clientY-d.y)<4&&!d.dragged)return;d.dragged=true;
+ const r=Yi.getBoundingClientRect(),left=Math.max(r.left,Math.min(d.x,event.clientX)),right=Math.min(r.right,Math.max(d.x,event.clientX)),top=Math.max(r.top,Math.min(d.y,event.clientY)),bottom=Math.min(r.bottom,Math.max(d.y,event.clientY));
+ marquee.hidden=false;Object.assign(marquee.style,{left:left+'px',top:top+'px',width:Math.max(0,right-left)+'px',height:Math.max(0,bottom-top)+'px'});
+ mappingSelection=d.add?new Set(d.seed):new Set();
+ for(const item of wn.outputFixtures||[])if(fixtureIntersectsRect(item,(left-r.left)/r.width,1-(bottom-r.top)/r.height,(right-r.left)/r.width,1-(top-r.top)/r.height))mappingSelection.add(item.sliceUid);
+ mappingSelected=[...mappingSelection].at(-1)||null;paintMappingSelection();
+});
+Yi.addEventListener('pointerup',event=>{if(!mappingDrag)return;suppressMappingClick=mappingDrag.dragged;mappingDrag=null;marquee.hidden=true;setTimeout(()=>suppressMappingClick=false,0);renderPixelGrid();window.apcWiring?.refresh();if(Yi.hasPointerCapture(event.pointerId))Yi.releasePointerCapture(event.pointerId);});
+Yi.addEventListener('pointercancel',()=>{mappingDrag=null;marquee.hidden=true;});
 function drawMappingPixelOverlay(){
  if(!mappingEditing||!pixelEditing)return;const item=(wn.outputFixtures||[]).find(f=>f.sliceUid===mappingSelected);if(!item)return;
  for(let i=0;i<item.pixels;i++){const [u,v]=fixturePixelUV(item,i);i0.fillStyle=previewEnabled(item,i)?"#67e8bd":"#ef6972";i0.fillRect(u*Yi.width-2,(1-v)*Yi.height-2,4,4);}
 }
-Ye("mappingExport").onclick=()=>{const blob=new Blob([JSON.stringify({version:1,preset:wn.preset,selection:fixtureSelection},null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="preview-selection.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
+Ye("mappingExport").onclick=()=>{const blob=new Blob([JSON.stringify({version:1,preset:wn.preset,selection:fixtureSelection,wiring:window.apcWiring.export()},null,2)],{type:"application/json"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="preview-selection.json";a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 const selectionImport=document.createElement("input");selectionImport.type="file";selectionImport.accept=".json";selectionImport.hidden=true;mappingEditor.append(selectionImport);Ye("mappingImport").onclick=()=>selectionImport.click();
-selectionImport.onchange=async()=>{try{const file=selectionImport.files[0];if(!file)return;if(file.size>1024*1024)throw Error("Selection file is too large");const data=JSON.parse(await file.text());if(data.version!==1||data.preset!==wn.preset||!data.selection||!data.selection.disabled||Array.isArray(data.selection.disabled)||typeof data.selection.disabled!=="object"||!data.selection.pixels||Array.isArray(data.selection.pixels)||typeof data.selection.pixels!=="object")throw Error("Choose a selection exported for this preset");fixtureSelection=data.selection;saveFixtureSelection();}catch(error){di(error.message);}finally{selectionImport.value="";}};
+selectionImport.onchange=async()=>{try{const file=selectionImport.files[0];if(!file)return;if(file.size>1024*1024)throw Error("Selection file is too large");const data=JSON.parse(await file.text());if(data.version!==1||data.preset!==wn.preset||!data.selection||!data.selection.disabled||Array.isArray(data.selection.disabled)||typeof data.selection.disabled!=="object"||!data.selection.pixels||Array.isArray(data.selection.pixels)||typeof data.selection.pixels!=="object")throw Error("Choose a selection exported for this preset");if(data.wiring)window.apcWiring.import(data.wiring);fixtureSelection=data.selection;saveFixtureSelection();}catch(error){di(error.message);}finally{selectionImport.value="";}};
 saveFixtureSelection();
 
 mappingEditorReady=true;
@@ -4244,7 +4410,56 @@ function setupProjection(){
  for(const node of shells){const board=new node.constructor(flatBoard(node),boardMaterial);board.userData.board=true;board.position.copy(node.position);board.quaternion.copy(node.quaternion);board.scale.copy(node.scale);node.parent.add(board);node.visible=false;boards.push(board);}
  Ye("projStatus").textContent=boards.length?boards.length+" flat boards replace the mesh shells. Preview only.":"No mesh shells in this room model to turn into boards.";
 }
-Ko();window.__preview={FIX:sn,scene:U0,camera:R0,setView:jo,frame:Ko};})();
+const viewTabs=document.createElement('nav');viewTabs.id='visualizerNav';viewTabs.setAttribute('aria-label','Visualizer views');viewTabs.style.cssText='position:fixed;z-index:20;top:0;left:0;right:0;height:48px;background:#101820;border-bottom:1px solid #303b4b;display:flex;align-items:center;gap:12px;padding:0 14px;font:13px system-ui;color:#edf2f7';viewTabs.innerHTML='<strong>APC40 Visualizer</strong><a aria-current="page" style="color:#74e6c1" href="preview.html'+location.search+'">Visualizer</a><button id="mappingTab">Output mapping</button><a style="color:#cad7e2" href="editor.html'+location.search+'">3D Editor</a>';document.body.prepend(viewTabs);viewTabs.querySelector('a[href^="editor.html"]').onclick=async event=>{event.preventDefault();try{await saveSharedPreviewState();location.href='editor.html'+location.search;}catch(error){di('Could not preserve input: '+error.message);}};Ye('panel').style.top='62px';Ye('panel').style.maxHeight='calc(100vh - 90px)';
+
+
+function applyChainRoom(){
+ document.body.classList.toggle("apc-chain-edit",chainIsolation!==null);
+ if(chainIsolation!==null&&ki){if(chainRoom?.node!==ki)chainRoom={node:ki,visible:ki.visible};ki.visible=false;}
+ else if(chainRoom){chainRoom.node.visible=chainRoom.visible;chainRoom=null;}
+}
+function setChainIsolation(ids){
+ const next=ids===null?null:new Set(ids);
+ if(chainIsolation===null&&next===null){applyChainRoom();return;}
+ chainIsolation=next;applyChainRoom();F4();
+}
+const wiringPositions=new Map(sn.map(f=>[f.sliceUid,f.pos])),wiringPoint=new v;
+window.apcWiring=window.APCWiring.install({
+ layout:()=>wn,selected:()=>mappingSelected,navigation:viewTabs,mapper:mappingEditor,canvas:c0.domElement,message:di,
+ isMapping:()=>mappingEditing,leaveMapping:()=>setMappingEditing(false),select:uid=>selectMapping(uid),changed:()=>saveFixtureSelection(),
+ positions:uid=>wiringPositions.get(uid),visible:uid=>fixtureSelection.disabled[uid]!==true,
+ project:point=>{const p=wiringPoint.fromArray(point).project(R0);return p.z>=-1&&p.z<=1&&Number.isFinite(p.x)&&Number.isFinite(p.y)?[(p.x+1)*innerWidth/2,(1-p.y)*innerHeight/2]:null;},
+ setWiring:setChainIsolation
+});
+renderMappingList();F4();
+Ye('mappingTab').onclick=()=>editMapping.click();
+if(location.hash==='#mapping')setMappingEditing(true);
+viewTabs.querySelector('a').onclick=event=>{event.preventDefault();if(mappingEditing)Ye('mappingDone').click();};
+
+var previewPaused=false,previewPauseOffset=0,previewPausedAt=0,pausedTexture=null;
+const pausedFrame=document.createElement('canvas');
+function setPreviewPaused(paused){
+ if(paused===previewPaused)return;
+ if(paused){
+  const source=_0==='test'?ui:At,w=_0==='test'?Cn:At.videoWidth,h=_0==='test'?Bn:At.videoHeight;
+  const scale=Math.min(1,1280/Math.max(1,w),720/Math.max(1,h));pausedFrame.width=Math.max(1,Math.round(w*scale));pausedFrame.height=Math.max(1,Math.round(h*scale));
+  const ctx=pausedFrame.getContext('2d');ctx.fillStyle='#000';ctx.fillRect(0,0,pausedFrame.width,pausedFrame.height);
+  try{if(w&&h)ctx.drawImage(source,0,0,pausedFrame.width,pausedFrame.height);}catch(error){di('Could not freeze preview: '+error.message);return;}
+  pausedTexture=new Xs(pausedFrame);pausedTexture.colorSpace=tt;pi.map.value=pausedTexture;
+  previewPausedAt=R4.getElapsedTime();if(_0==='video')At.pause();previewPaused=true;
+ }else{
+  previewPauseOffset+=R4.getElapsedTime()-previewPausedAt;previewPaused=false;pi.map.value=_0==='test'?Tr:Yo;
+  pausedTexture?.dispose();pausedTexture=null;pausedFrame.width=pausedFrame.height=1;
+  if(_0==='video')At.play().catch(error=>{if(!previewPaused&&error.name!=='AbortError')di('Could not resume input: '+error.message);});
+ }
+ pausePreviewButton.textContent=previewPaused?'Resume':'Pause';pausePreviewButton.setAttribute('aria-pressed',String(previewPaused));
+}
+const pausePreviewButton=document.createElement('button');pausePreviewButton.id='pausePreview';pausePreviewButton.textContent='Pause';pausePreviewButton.setAttribute('aria-pressed','false');pausePreviewButton.title='Freeze this preview only. Camera and mapping remain interactive; Arena keeps running.';
+pausePreviewButton.style.cssText='position:fixed;z-index:12;top:62px;min-width:82px;background:#18232f;color:#edf2f7;border:1px solid #485b70;border-radius:7px;padding:9px 13px;font:600 12px/1.4 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif';document.body.append(pausePreviewButton);
+function placePausePreview(){pausePreviewButton.style.left=Math.max(12,Math.min(innerWidth-100,(mappingEditing?mappingEditor:Ye('panel')).getBoundingClientRect().right+10))+'px';window.apcWiring?.placeControl();}
+pausePreviewButton.onclick=()=>setPreviewPaused(!previewPaused);addEventListener('resize',placePausePreview);Ye('collapse').addEventListener('click',placePausePreview);placePausePreview();
+addEventListener('pagehide',()=>pausedTexture?.dispose());
+window.apcPanelLayout?.(placePausePreview);Ko();window.__preview={FIX:sn,scene:U0,camera:R0,setView:jo,frame:Ko};})();
 </script>
 </body>
 </html>

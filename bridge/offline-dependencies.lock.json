@@ -33,5 +33,16 @@
     "url": "https://www.tobias-erichsen.de/wp-content/uploads/2020/01/loopMIDISetup_1_0_16_27.zip",
     "setup_sha256": "86db060b586b57dbeeaab32412602a9dd7f9e4298ab7586e667b7e7dbcf60ed6",
     "redistribution": "Not included in public builds. Prior written author permission is required."
+  },
+  "webview2_sdk": {
+    "version": "1.0.4314.35",
+    "file": "microsoft.web.webview2.1.0.4314.35.nupkg",
+    "url": "https://api.nuget.org/v3-flatcontainer/microsoft.web.webview2/1.0.4314.35/microsoft.web.webview2.1.0.4314.35.nupkg",
+    "sha256": "90778deb1b77e36292828b4b5833c9255c27533f40e0ddd55891ae718944edc4"
+  },
+  "webview2_runtime": {
+    "file": "MicrosoftEdgeWebView2RuntimeInstallerX64.exe",
+    "url": "https://msedge.sf.dl.delivery.mp.microsoft.com/filestreamingservice/files/0126536e-e048-416f-923b-202f7f6fa64b/MicrosoftEdgeWebView2RuntimeInstallerX64.exe",
+    "sha256": "2688308af55753c62fda4e8140024e230c1ffc16b7c091b25889572f38dff6e8"
   }
 }
