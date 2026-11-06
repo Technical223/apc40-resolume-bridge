@@ -133,6 +133,40 @@ console.log('Selection checks passed');
         subprocess.run(['node','-e',script,str(VIEWER/'preview.html')],check=True,capture_output=True,text=True)
 
 
+class DirectionTest(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('node'), 'Node checks physical pixel order in both preview views')
+    def test_reversal_swaps_3d_samples_mapper_endpoints_and_grid_masks(self):
+        script=r"""
+import fs from 'node:fs';import vm from 'node:vm';import assert from 'node:assert/strict';import path from 'node:path';import {pathToFileURL} from 'node:url';
+const T=await import(pathToFileURL(path.resolve('bridge/visualizer/editor-vendor/three.module.js'))),html=fs.readFileSync('bridge/visualizer/preview.html','utf8');
+let reverse=false;const drawn=[];const fixture={sliceUid:'a',width:1,height:3,pixels:3,uv:[[0,1],[1,1],[1,0],[0,0]]};
+const window={apcWiring:{hasSignal:()=>true,pixelIndex:(uid,i,count)=>reverse?count-1-i:i}};
+const state={window,wn:{preset:'test'},localStorage:{getItem(){return null}},mappingEditing:true,mappingSelection:new Set(['a']),
+ i0:{fillRect(...args){drawn.push({color:this.fillStyle,xy:args.slice(0,2)});},save(){},restore(){},strokeText(){},fillText(){},beginPath(){},moveTo(){},lineTo(){},stroke(){}}};
+vm.createContext(state);vm.runInContext(html.slice(html.indexOf('var fixtureSelection='),html.indexOf('var Ye=s=>')),state);
+vm.runInContext(html.slice(html.indexOf('function drawMappingDirection('),html.indexOf('function P4(){')),state);
+state.drawMappingDirection(fixture,100,300);const normal=drawn.splice(0);reverse=true;state.drawMappingDirection(fixture,100,300);
+assert.deepEqual(normal[0].xy,drawn[1].xy);assert.deepEqual(normal[1].xy,drawn[0].xy);assert.equal(drawn[0].color,'#51f29b');
+// The 3D geometry stays put; only sampled source UVs and source-indexed masks reverse.
+const physical={kind:'metrovka',sliceUid:'a',pos:[[0,0,0],[1,0,0],[2,0,0]],uv:[[.1,.2],[.3,.4],[.5,.6]]};
+Object.assign(state,{sn:[physical],vr:[],ji:[],qi:{metrovka:1,neon:1},Zs:T.SphereGeometry,Ks:T.CylinderGeometry,Oe:T.Matrix4,Mt:T.Quaternion,v:T.Vector3,si:T.InstancedMesh,b0:T.InstancedBufferAttribute,v4:new T.MeshBasicMaterial(),U0:new T.Group(),Ji:-1,Qc(){}});
+reverse=false;vm.runInContext(html.slice(html.indexOf('function Oc(){'),html.indexOf('var hi=',html.indexOf('function Oc(){'))),state);
+const matrices=Array.from(state.ji[0].instanceMatrix.array),uvs=Array.from(state.ji[0].geometry.getAttribute('aUv').array);
+reverse=true;state.F4();const reversed=Array.from(state.ji[0].geometry.getAttribute('aUv').array);assert.deepEqual(reversed,[...uvs.slice(4,6),...uvs.slice(2,4),...uvs.slice(0,2)]);assert.deepEqual(Array.from(state.ji[0].instanceMatrix.array),matrices);
+// A tiny DOM runs the actual paginated grid, including its click handler.
+const controls={};const element=()=>({children:[],hidden:false,style:{},replaceChildren(){this.children=[]},append(v){this.children.push(v)},setAttribute(){}});
+for(const id of ['mappingPixelPage','mappingPixelGrid','mappingHint','mappingPixelStatus'])controls[id]=element();
+Object.assign(state,{document:{createElement:element},pixelControls:{querySelector:()=>element()},pixelEditing:true,mappingSelected:'a',mappingPixelPage:0,mappingPixelSelected:-1,fixtureTitle:()=> 'Strip',Ye:id=>controls[id],saveFixtureSelection(){}});state.wn.outputFixtures=[fixture];
+vm.runInContext(html.slice(html.indexOf('function renderPixelGrid(){'),html.indexOf('function selectMapping(')),state);
+state.renderPixelGrid();let buttons=controls.mappingPixelGrid.children;assert.equal(buttons[0].textContent,1);buttons[0].onclick();assert.equal(state.fixtureSelection.pixels.a[2],true);assert.equal(state.mappingPixelSelected,2);
+reverse=false;state.renderPixelGrid();assert(controls.mappingPixelStatus.textContent.includes('Pixel 3 selected'));assert.equal(state.fixtureSelection.pixels.a[2],true);
+const tall={...fixture,pixels:1250,height:1250};assert.equal(state.fixtureSourcePixel(tall,0),0);reverse=true;assert.equal(state.fixtureSourcePixel(tall,0),1249);assert.equal(Math.floor(state.fixtureSourcePixel(tall,1249)/64),0);
+state.U0.traverse(o=>{o.geometry?.dispose();o.material?.dispose();});
+"""
+        result=subprocess.run(['node','--input-type=module','-e',script],cwd=ROOT,capture_output=True,text=True,encoding='utf-8',timeout=20)
+        self.assertEqual(result.returncode,0,result.stderr)
+
+
 class PauseTest(unittest.TestCase):
     @unittest.skipUnless(shutil.which('node'), 'Node checks pause snapshot lifecycle')
     def test_snapshot_stops_video_and_releases_texture_on_resume(self):

@@ -107,3 +107,7 @@ hidden tab. The loopback helper serves only viewer assets at `127.0.0.1:18741` a
 exits about 90 seconds after its last tab heartbeat. A browser-suspended tab may
 also expire; reopen Visualizer from Bridge. Large imported models still use GPU
 memory, so close the preview if Arena needs those resources.
+
+## Direction in the preview
+
+**Reverse direction** changes sampled pixel order in the 3D visualizer and the mapper's green IN / red OUT markers, arrow and numbered pixel grid. Pixel 1 follows the configured physical input end. Selection masks remain tied to source pixels, so reversing does not erase or rewrite them. The composition image behind the mapping stays unchanged. These are local preview settings: they do not change Arena's Advanced Output, DMX addresses or hardware output.
